@@ -2,7 +2,7 @@
 # Kakioki
 Created by Neuwair | 🍋 Illustrator and Programmer | イラストレーター兼プログラミング学生
 - [Twitter](https://x.com/neuwair) | [Pixiv](https://www.pixiv.net/en/users/102019144) | [Insta](https://www.instagram.com/neuwair404) | [YouTube](https://www.youtube.com/@Neuwair)
-<img width="2500" height="1000" alt="Untitled-1" src="https://github.com/user-attachments/assets/909a8468-0887-401c-b3ac-127e58684a42" />
+<img width="2500" height="1000" alt="Untitled-1" src="https://github.com/user-attachments/assets/5f46774a-7446-46a1-9575-0a28bef2bb0a" />
 
 ## My second programming project
 Kakioki is a technical showcase built to demonstrate my understanding of modern web development and application architecture.
@@ -17,9 +17,8 @@ It includes dark mode, consistent UI dynamics, and detailed error logging for te
 
 Good things take time.
 - [🍋 Kakioki Website](https://kakioki.vercel.app/)
-
-<img width="2500" height="1000" alt="Untitled-2" src="https://github.com/user-attachments/assets/9121a3ba-0092-45a9-bb4e-7b95eef762f6" />
-
+> [!TIP]
+> **You don’t need to use a real email address, accounts are automatically deleted after 2 days.**
 
 ## 🧩 Challenges I faced while creating Kakioki
 Kakioki is the first project where I’ve worked with frameworks, and naturally, it took some time to get comfortable with them.
@@ -34,20 +33,18 @@ Getting started with React was challenging at first, but I got used to it pretty
 Tailwind can feel a bit messy, but in my experience, it’s much more efficient and faster than plain CSS though, as always, it’s a trade-off.
 
 ## UI Overview
-> [!TIP]
-> **You don’t need to use a real email address, accounts are automatically deleted after 2 days.**
-## Dark mode
+### Dark mode
 <img width="396" height="816" alt="1" src="https://github.com/user-attachments/assets/258c32db-482b-43e3-a5f2-0f1f80bfbff0" />
 <img width="397" height="813" alt="3" src="https://github.com/user-attachments/assets/64fa2248-3907-4a48-9213-843b2ca9414f" />
 
-## Friend search
+### Friend search
 <img width="597" height="309" alt="2" src="https://github.com/user-attachments/assets/4df4825e-1c18-4850-ac67-b5dfb0061f7e" />
 <img width="597" height="613" alt="5" src="https://github.com/user-attachments/assets/1f6ae646-8e7d-4589-8e73-0164c5c7fc28" />
 
-## Avatar cropper
+### Avatar cropper
 <img width="393" height="814" alt="4" src="https://github.com/user-attachments/assets/d2779655-60db-4136-a76b-7aed2e374e8c" />
 
-## Chat interface
+### Chat interface
 <img width="598" height="614" alt="7" src="https://github.com/user-attachments/assets/41dd1683-e1d5-45be-a610-693dda4317ae" />
 <img width="597" height="613" alt="8" src="https://github.com/user-attachments/assets/3074284d-32cd-40f8-90fa-46af66130a09" />
 <img width="599" height="615" alt="9" src="https://github.com/user-attachments/assets/e966e3a4-b84e-4c3b-957f-cf4e3835bbaa" />
