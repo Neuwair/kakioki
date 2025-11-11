@@ -23,42 +23,6 @@
   }
 }
 
-@layer utilities {
-  .bounce-in {
-    animation: bounceIn 420ms cubic-bezier(0.2, 0.9, 0.2, 1) both;
-  }
-
-  .bounce-out {
-    animation: bounceOut 300ms cubic-bezier(0.4, 0, 0.2, 1) both;
-  }
-
-  @keyframes bounceIn {
-    0% {
-      transform: translateY(20px) scale(0.95);
-      opacity: 0;
-    }
-    60% {
-      transform: translateY(-6px) scale(1.02);
-      opacity: 1;
-    }
-    100% {
-      transform: translateY(0) scale(1);
-      opacity: 1;
-    }
-  }
-
-  @keyframes bounceOut {
-    0% {
-      transform: translateY(0) scale(1);
-      opacity: 1;
-    }
-    100% {
-      transform: translateY(20px) scale(0.95);
-      opacity: 0;
-    }
-  }
-}
-
 @layer base {
   * {
     margin: 0;
@@ -70,7 +34,7 @@
   body {
     height: 100%;
     overflow-x: hidden;
-    background-image: url(https://cdn.pixabay.com/photo/2018/03/23/05/10/snow-3252673_1280.jpg);
+    background-image: url(https://cdn.pixabay.com/photo/2020/01/16/02/07/water-4769489_1280.jpg);
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;

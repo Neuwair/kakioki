@@ -5,7 +5,6 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCheck,
   faTimes,
-  faPaperPlane,
   faSpinner,
 } from "@fortawesome/free-solid-svg-icons";
 import type { FriendListEntry } from "@/public/shared/hooks/useFriendRelationships";
@@ -121,7 +120,7 @@ export const FriendRequestsHeader: React.FC<FriendRequestsHeaderProps> = ({
               </div>
               <button
                 type="button"
-                className="px-3 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-md text-sm flex items-center gap-1"
+                className="px-3 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-md text-sm flex items-center gap-1 cancel-btn"
                 onClick={() => onCancel(entry.user.id)}
                 disabled={isCanceling}
               >
@@ -132,7 +131,7 @@ export const FriendRequestsHeader: React.FC<FriendRequestsHeaderProps> = ({
                     className="text-amber-50/70 animate-spin"
                   />
                 ) : (
-                  <FontAwesomeIcon icon={faPaperPlane} />
+                  <FontAwesomeIcon icon={faTimes} />
                 )}
                 {isCanceling ? "Cancelling" : "Cancel"}
               </button>

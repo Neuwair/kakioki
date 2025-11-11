@@ -13,7 +13,6 @@ interface SignInFormProps {
 export const SignInForm: React.FC<SignInFormProps> = ({
   onSubmit,
   onSwitchToSignUp,
-  onSwitchToSignIn = () => {},
   isLoading = false,
 }) => {
   const { email, setEmail, password, setPassword, handleSubmit } =
@@ -22,14 +21,12 @@ export const SignInForm: React.FC<SignInFormProps> = ({
   return (
     <div className="max-w-md w-full  bg-black/20 backdrop-blur-lg border border-white/20 rounded-lg shadow-lg p-8 cursor-default">
       <div className="text-center mb-6">
-        <button
-          type="button"
-          onClick={onSwitchToSignIn}
-          className="font-bold text-amber-50 mb-2 inline-block"
+        <h2
+          className=" font-bold text-amber-50 mb-2 cursor-default"
           style={{ fontSize: "clamp(2vh, 1vw, 10rem)" }}
         >
           Sign In
-        </button>
+        </h2>
         <p
           className=" text-amber-50"
           style={{ fontSize: "clamp(2vh, 1vw, 10rem)" }}

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { UserRepository } from "@/lib";
+import { scheduleAccountDeletion } from "@/lib/Service/AccountDeletionScheduler";
 import { generateUserId } from "@/lib/Connections/DatabaseConnections";
 import {
   ensureJwtSecretForProduction,
@@ -108,6 +109,8 @@ export async function POST(request: Request) {
       public_key: publicKeyBase64,
       secret_key_encrypted: secretKeyEncrypted,
     });
+
+    await scheduleAccountDeletion(newUser);
 
     let token: string;
     try {

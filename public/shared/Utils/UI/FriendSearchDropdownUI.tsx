@@ -112,7 +112,7 @@ export const FriendSearchDropdown: React.FC<FriendSearchDropdownProps> = ({
             </div>
             <div className="flex items-center gap-2">
               {user.status === "friends" && (
-                <span className="px-3 py-1 bg-green-600 text-white rounded-md text-sm flex items-center gap-1">
+                <span className="px-3 py-1 bg-green-600 text-amber-50 rounded-md text-sm flex items-center gap-1 cursor-default">
                   <FontAwesomeIcon icon={faUserCheck} />
                   Friends
                 </span>
@@ -120,7 +120,7 @@ export const FriendSearchDropdown: React.FC<FriendSearchDropdownProps> = ({
               {user.status === "outgoing" && (
                 <button
                   type="button"
-                  className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded-md flex items-center gap-2"
+                  className="px-3 py-1 border border-white/20 hover:bg-red-500 text-amber-50 rounded-md flex items-center gap-2 cancel-btn"
                   onClick={() => onCancel(user.id)}
                   disabled={isCanceling}
                 >
@@ -132,13 +132,13 @@ export const FriendSearchDropdown: React.FC<FriendSearchDropdownProps> = ({
                   ) : (
                     <FontAwesomeIcon icon={faTimes} />
                   )}
-                  Cancel
+                  {isCanceling ? "Cancelling" : "Cancel"}
                 </button>
               )}
               {user.status === "incoming" && (
                 <button
                   type="button"
-                  className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-md flex items-center gap-2"
+                  className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-amber-50 rounded-md flex items-center gap-2"
                   onClick={() => onAccept(user.id)}
                   disabled={isAccepting}
                 >
@@ -156,7 +156,7 @@ export const FriendSearchDropdown: React.FC<FriendSearchDropdownProps> = ({
               {user.status === "none" && (
                 <button
                   type="button"
-                  className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-md flex items-center gap-2"
+                  className="px-3 py-1 border border-white/20 bg-white/5 hover:bg-gray-700/50 text-amber-50 rounded-md flex items-center gap-2 interface-btn"
                   onClick={() => onAdd(user.id)}
                   disabled={isRequesting}
                 >
@@ -168,7 +168,7 @@ export const FriendSearchDropdown: React.FC<FriendSearchDropdownProps> = ({
                   ) : (
                     <FontAwesomeIcon icon={faUserPlus} />
                   )}
-                  Add
+                  {isRequesting ? "Sending Request" : "Add"}
                 </button>
               )}
             </div>

@@ -23,6 +23,10 @@ import {
 } from "@/public/shared/Helpers/KeyHelpers";
 import { getRealtimeClient } from "@/public/shared/Realtime/ablyClient";
 import { userPresenceChannel } from "@/lib/Realtime/UserPresence";
+import {
+  userLifecycleChannel,
+  type AccountLifecycleEvent,
+} from "@/lib/Realtime/UserLifecycleEvents";
 
 interface AuthContextType {
   user: User | null;
@@ -36,12 +40,38 @@ interface AuthContextType {
     email: string,
     username: string,
     password: string
-  ) => Promise<{ success: boolean; error?: string }>;
+  ) => Promise<{ success: boolean; userId?: number; error?: string }>;
   updateAvatar: (file: File) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+const AUTH_COOKIE_NAME = "kakiokiToken";
+
+type LifecycleChannel = {
+  subscribe: (listener: (message: { data: unknown }) => void) => void;
+  unsubscribe: (listener: (message: { data: unknown }) => void) => void;
+};
+
+function setAuthCookie(token: string) {
+  if (typeof document === "undefined") {
+    return;
+  }
+  const maxAge = 60 * 60 * 24 * 7;
+  const secure =
+    typeof window !== "undefined" && window.location.protocol === "https:"
+      ? "; secure"
+      : "";
+  document.cookie = `${AUTH_COOKIE_NAME}=${token}; path=/; max-age=${maxAge}; samesite=lax${secure}`;
+}
+
+function clearAuthCookie() {
+  if (typeof document === "undefined") {
+    return;
+  }
+  document.cookie = `${AUTH_COOKIE_NAME}=; path=/; max-age=0; samesite=lax`;
+}
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
@@ -141,6 +171,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         sessionStorage.setItem("kakiokiUser", JSON.stringify(result.user));
         sessionStorage.setItem("kakiokiToken", result.token);
         sessionStorage.setItem(PASSWORD_STORAGE_KEY, password);
+        setAuthCookie(result.token);
         if (result.user.publicKey) {
           await cachePublicKey(result.user.publicKey);
         }
@@ -170,24 +201,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         return { success: false, error: result.error || "Registration failed" };
       }
 
-      if (result.user && result.token) {
-        setUser(result.user);
-        sessionStorage.setItem("kakiokiUser", JSON.stringify(result.user));
-        sessionStorage.setItem("kakiokiToken", result.token);
-        sessionStorage.setItem(PASSWORD_STORAGE_KEY, password);
-        if (result.user.publicKey) {
-          await cachePublicKey(result.user.publicKey);
-        }
-        if (result.user.secretKeyEncrypted) {
-          try {
-            await ensurePrivateKey(password, result.user.secretKeyEncrypted);
-          } catch (keyError) {
-            console.error("Failed to unlock private key:", keyError);
-          }
-        }
-      }
-
-      return { success: true };
+      return { success: true, userId: result.user?.id };
     } catch (error) {
       console.error("Registration error:", error);
       return { success: false, error: "An unexpected error occurred" };
@@ -202,8 +216,59 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     sessionStorage.removeItem("kakiokiToken");
     sessionStorage.removeItem(PASSWORD_STORAGE_KEY);
     clearStoredPrivateKey();
+    clearAuthCookie();
     router.push("/");
   }, [router]);
+
+  useEffect(() => {
+    if (!user?.id) {
+      return undefined;
+    }
+
+    let isActive = true;
+    let channel: LifecycleChannel | null = null;
+    let listener: ((message: { data: unknown }) => void) | null = null;
+
+    const subscribe = async () => {
+      try {
+        const client = await getRealtimeClient();
+        if (!isActive) {
+          return;
+        }
+        channel = client.channels.get(
+          userLifecycleChannel(user.id)
+        ) as LifecycleChannel;
+        listener = (message) => {
+          const payload = message.data as AccountLifecycleEvent;
+          if (payload?.type === "account_deleted") {
+            console.log(
+              `Account deletion trigger received for user ${user.id}`
+            );
+            void logout();
+          }
+        };
+        channel.subscribe(listener);
+      } catch (error) {
+        console.error("Account lifecycle subscription error:", error);
+      }
+    };
+
+    subscribe();
+
+    return () => {
+      isActive = false;
+      if (channel && listener) {
+        try {
+          channel.unsubscribe(listener);
+        } catch (unsubscribeError) {
+          console.error(
+            "Account lifecycle unsubscribe error:",
+            unsubscribeError
+          );
+        }
+      }
+    };
+  }, [user?.id, logout]);
 
   useEffect(() => {
     if (!user?.id) {

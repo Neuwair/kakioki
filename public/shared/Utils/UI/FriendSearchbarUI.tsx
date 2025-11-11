@@ -110,7 +110,7 @@ export const FriendSearchHeader: React.FC = () => {
       </div>
 
       {showDropdown && (
-        <div className="absolute z-10 mt-1 w-full bg-gray-800/80 backdrop-blur-md border border-white/20 rounded-lg shadow-lg max-h-72 overflow-y-auto">
+        <div className="absolute z-10 mt-2 w-full bg-gray-500/50 backdrop-blur-md border border-white/20 rounded-lg shadow-lg max-h-50 overflow-y-auto scrollbar-hide user-header animate-dropdown-appear">
           <FriendSearchDropdown
             query={query}
             results={results}

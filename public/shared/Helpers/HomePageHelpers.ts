@@ -4,11 +4,12 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/context/AuthClientUI";
 
-type ViewMode = "home" | "signin" | "signup";
+type ViewMode = "home" | "signin" | "signup" | "avatar";
 
 export function UseHomePageLogic() {
   const [currentView, setCurrentView] = useState<ViewMode>("home");
   const [error, setError] = useState<string | null>(null);
+  const [newUserId, setNewUserId] = useState<number | null>(null);
   const { isAuthenticated, login, signup, isLoading } = useAuth();
   const router = useRouter();
 
@@ -44,7 +45,8 @@ export function UseHomePageLogic() {
       const result = await signup(email, username, password);
 
       if (result.success) {
-        setCurrentView("signin");
+        setNewUserId(result.userId || null);
+        setCurrentView("avatar");
       } else if (result.error) {
         setError(result.error);
       }
@@ -62,5 +64,6 @@ export function UseHomePageLogic() {
     isLoading,
     handleSignIn,
     handleSignUp,
+    newUserId,
   } as const;
 }

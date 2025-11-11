@@ -10,11 +10,15 @@ import { UseAvatarModalLogic } from "@/public/shared/hooks/AvatarUploadHooks";
 interface AvatarUploadModalProps {
   isOpen: boolean;
   onClose: () => void;
+  userId?: number;
+  onUploadSuccess?: () => void;
 }
 
 export const AvatarUploadModal: React.FC<AvatarUploadModalProps> = ({
   isOpen,
   onClose,
+  userId,
+  onUploadSuccess,
 }) => {
   const {
     selectedFile,
@@ -30,7 +34,7 @@ export const AvatarUploadModal: React.FC<AvatarUploadModalProps> = ({
     handleCropCancel,
     handleSubmit,
     resetState,
-  } = UseAvatarModalLogic(onClose);
+  } = UseAvatarModalLogic(onClose, userId, onUploadSuccess);
 
   useEffect(() => {
     if (isOpen) {

@@ -4,8 +4,13 @@ import {
   resizeImageBlob,
 } from "@/public/shared/Tools/AvatarCropper";
 import { useAuth } from "@/lib/context/AuthClientUI";
+import { uploadAvatar } from "@/lib/Auth/AuthClient";
 
-export const UseAvatarModalLogic = (onClose: () => void) => {
+export const UseAvatarModalLogic = (
+  onClose: () => void,
+  userId?: number,
+  onUploadSuccess?: () => void
+) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [croppedBlob, setCroppedBlob] = useState<Blob | null>(null);
@@ -112,7 +117,9 @@ export const UseAvatarModalLogic = (onClose: () => void) => {
 
       try {
         console.debug("Uploading file:", fileToUpload.name);
-        const result = await updateAvatar(fileToUpload);
+        const result = userId
+          ? await uploadAvatar(fileToUpload, userId)
+          : await updateAvatar(fileToUpload);
 
         if (result.success) {
           console.debug("Avatar updated successfully");
@@ -122,6 +129,7 @@ export const UseAvatarModalLogic = (onClose: () => void) => {
             } catch {}
           }
           resetState();
+          onUploadSuccess?.();
           onClose();
         } else {
           console.error("Avatar update failed:", result.error);
@@ -134,7 +142,16 @@ export const UseAvatarModalLogic = (onClose: () => void) => {
         setIsUploading(false);
       }
     },
-    [croppedBlob, selectedFile, previewUrl, updateAvatar, onClose, resetState]
+    [
+      croppedBlob,
+      selectedFile,
+      previewUrl,
+      updateAvatar,
+      onClose,
+      resetState,
+      userId,
+      onUploadSuccess,
+    ]
   );
 
   return {

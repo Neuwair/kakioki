@@ -133,13 +133,6 @@ export function useFriendSearch() {
       const previous = results.find((item) => item.id === targetUserId);
       setRequestingIds((prev) => new Set(prev).add(targetUserId));
 
-      if (previous) {
-        updateResult(targetUserId, (item) => ({
-          ...item,
-          status: "outgoing",
-        }));
-      }
-
       try {
         const response = await fetch("/api/friend/request", {
           method: "POST",
@@ -154,21 +147,13 @@ export function useFriendSearch() {
           throw new Error(`Request failed with status ${response.status}`);
         }
 
-        const data = await response.json();
-        updateResult(targetUserId, (item) => ({
-          ...item,
-          status: "outgoing",
-          requestId: data?.request?.id ?? item.requestId,
-          requesterId: data?.request?.from_id ?? item.requesterId,
-          addresseeId: data?.request?.to_id ?? item.addresseeId,
-        }));
+        // Note: Status update moved to realtime handler
       } catch (err) {
         console.error("Send friend request error:", err);
         if (previous) {
           updateResult(targetUserId, () => previous);
         }
         setError("Unable to send friend request");
-      } finally {
         setRequestingIds((prev) => {
           const next = new Set(prev);
           next.delete(targetUserId);
@@ -188,13 +173,6 @@ export function useFriendSearch() {
       const previous = results.find((item) => item.id === targetUserId);
       setCancelingIds((prev) => new Set(prev).add(targetUserId));
 
-      if (previous) {
-        updateResult(targetUserId, (item) => ({
-          ...item,
-          status: "none",
-        }));
-      }
-
       try {
         const response = await fetch("/api/friend/request", {
           method: "DELETE",
@@ -209,20 +187,13 @@ export function useFriendSearch() {
           throw new Error(`Cancel failed with status ${response.status}`);
         }
 
-        updateResult(targetUserId, (item) => ({
-          ...item,
-          status: "none",
-          requestId: null,
-          requesterId: null,
-          addresseeId: null,
-        }));
+        // Note: Status update moved to realtime handler
       } catch (err) {
         console.error("Cancel friend request error:", err);
         if (previous) {
           updateResult(targetUserId, () => previous);
         }
         setError("Unable to cancel friend request");
-      } finally {
         setCancelingIds((prev) => {
           const next = new Set(prev);
           next.delete(targetUserId);
@@ -334,6 +305,11 @@ export function useFriendSearch() {
             requesterId: event.request.from_id,
             addresseeId: event.request.to_id,
           }));
+          setRequestingIds((prev) => {
+            const next = new Set(prev);
+            next.delete(event.request.to_id);
+            return next;
+          });
         } else if (event.request.to_id === currentUserId) {
           updateResult(event.request.from_id, (item) => ({
             ...item,
@@ -352,6 +328,11 @@ export function useFriendSearch() {
             requesterId: null,
             addresseeId: null,
           }));
+          setCancelingIds((prev) => {
+            const next = new Set(prev);
+            next.delete(event.toUserId);
+            return next;
+          });
         } else if (event.toUserId === currentUserId) {
           updateResult(event.fromUserId, (item) => ({
             ...item,

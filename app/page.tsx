@@ -3,6 +3,7 @@
 import React from "react";
 import { SignInForm } from "@/public/shared/Utils/Interface/SignInForm";
 import { SignUpForm } from "@/public/shared/Utils/Interface/SignUpForm";
+import { AvatarForm } from "@/public/shared/Utils/Interface/avatarForm";
 import { UseHomePageLogic } from "@/public/shared/Helpers/HomePageHelpers";
 
 export default function HomePage() {
@@ -13,6 +14,7 @@ export default function HomePage() {
     isLoading,
     handleSignIn,
     handleSignUp,
+    newUserId,
   } = UseHomePageLogic();
 
   const renderContent = () => {
@@ -31,6 +33,14 @@ export default function HomePage() {
             onSubmit={handleSignUp}
             onSwitchToSignIn={() => setCurrentView("signin")}
             isLoading={isLoading}
+          />
+        );
+      case "avatar":
+        return (
+          <AvatarForm
+            userId={newUserId}
+            onSkip={() => setCurrentView("signin")}
+            onUploadSuccess={() => setCurrentView("signin")}
           />
         );
       default:
@@ -80,7 +90,7 @@ export default function HomePage() {
         </div>
       )}
       {renderContent()}
-      {currentView !== "home" && (
+      {currentView !== "home" && currentView !== "avatar" && (
         <button
           onClick={() => setCurrentView("home")}
           className="absolute top-4 left-4 text-amber-50 hover:text-blue-200 transition-colors duration-200 bg-transparent border-none cursor-pointer z-40"

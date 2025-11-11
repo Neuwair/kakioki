@@ -113,15 +113,26 @@ CREATE TABLE IF NOT EXISTS user_blocks (
 CREATE INDEX IF NOT EXISTS idx_user_blocks_blocker ON user_blocks(blocker_id);
 CREATE INDEX IF NOT EXISTS idx_user_blocks_blocked ON user_blocks(blocked_id);
 
+CREATE TABLE IF NOT EXISTS account_deletion_queue (
+    user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    execute_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_account_deletion_queue_execute_at ON account_deletion_queue(execute_at);
+
 CREATE OR REPLACE FUNCTION cleanup_old_accounts()
 RETURNS INTEGER AS $$
 DECLARE
-    deleted_count INTEGER;
+    queued_count INTEGER;
 BEGIN
-    DELETE FROM users 
-    WHERE created_at < CURRENT_TIMESTAMP - INTERVAL '2 days';
-    
-    GET DIAGNOSTICS deleted_count = ROW_COUNT;
-    RETURN deleted_count;
+    INSERT INTO account_deletion_queue (user_id, execute_at)
+    SELECT id, CURRENT_TIMESTAMP
+    FROM users
+    WHERE created_at < CURRENT_TIMESTAMP - INTERVAL '2 days'
+    ON CONFLICT (user_id) DO NOTHING;
+
+    GET DIAGNOSTICS queued_count = ROW_COUNT;
+    RETURN queued_count;
 END;
 $$ LANGUAGE plpgsql;

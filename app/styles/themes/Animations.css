@@ -45,6 +45,7 @@ input[type="range"]:active,
   }
 }
 
-.animate-input-push {
+.animate-input-push,
+.animate-dropdown-appear {
   animation: inputPushUp 360ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }

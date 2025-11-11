@@ -86,10 +86,6 @@ export const ImageCropper: React.FC<{
                   height: "auto",
                   objectFit: "contain",
                   display: "block",
-                  // Apply visual scaling via CSS transform so the slider
-                  // actually zooms the displayed image. We use transform
-                  // origin center so zoom keeps image centered within the
-                  // crop area.
                   transform: `scale(${scale})`,
                   transformOrigin: "center center",
                 }}

@@ -16,30 +16,70 @@ export const FriendListHeader: React.FC<FriendListHeaderProps> = ({
   onSelect,
 }) => {
   const scrollRef = React.useRef<HTMLDivElement | null>(null);
+  const [canScroll, setCanScroll] = React.useState(false);
+  const lastScrollTime = React.useRef(0);
 
-  const handleWheel = React.useCallback((event: WheelEvent) => {
+  const checkScrollability = React.useCallback(() => {
     const el = scrollRef.current;
-    if (!el) return;
-
-    const canScrollHorizontally = el.scrollWidth > el.clientWidth;
-    if (!canScrollHorizontally) return;
-
-    if (Math.abs(event.deltaY) > Math.abs(event.deltaX)) {
-      el.scrollLeft += event.deltaY;
+    if (el) {
+      const hasScrollableContent = el.scrollWidth > el.clientWidth;
+      setCanScroll(hasScrollableContent);
     }
   }, []);
+
+  const handleWheel = React.useCallback(
+    (event: WheelEvent) => {
+      const el = scrollRef.current;
+      if (!el) return;
+
+      const now = Date.now();
+      if (now - lastScrollTime.current < 16) return;
+      lastScrollTime.current = now;
+
+      if (canScroll && Math.abs(event.deltaY) > Math.abs(event.deltaX)) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        const scrollAmount = event.deltaY * 2.5;
+        el.scrollBy({
+          left: scrollAmount,
+          behavior: "smooth",
+        });
+      }
+    },
+    [canScroll]
+  );
 
   React.useEffect(() => {
     const element = scrollRef.current;
     if (!element) {
       return;
     }
-    const listener = (event: WheelEvent) => handleWheel(event);
-    element.addEventListener("wheel", listener, { passive: true });
+
+    checkScrollability();
+    const resizeObserver = new ResizeObserver(checkScrollability);
+    resizeObserver.observe(element);
+
+    const timeoutId = setTimeout(() => {
+      const listener = (event: WheelEvent) => handleWheel(event);
+      element.addEventListener("wheel", listener, {
+        passive: false,
+        capture: true,
+      });
+      return () => {
+        element.removeEventListener("wheel", listener, true);
+      };
+    }, 100);
+
     return () => {
-      element.removeEventListener("wheel", listener);
+      clearTimeout(timeoutId);
+      resizeObserver.disconnect();
     };
-  }, [handleWheel]);
+  }, [handleWheel, checkScrollability]);
+
+  React.useEffect(() => {
+    checkScrollability();
+  }, [friends, checkScrollability]);
   if (isLoading) {
     return (
       <div className="relative overflow-hidden">
@@ -62,24 +102,31 @@ export const FriendListHeader: React.FC<FriendListHeaderProps> = ({
   }
 
   return (
-    <div
-      ref={scrollRef}
-      className="relative w-full overflow-x-auto scrollbar-hide"
-      style={{ WebkitOverflowScrolling: "touch" }}
-    >
-      <div className="min-h-[80px] p-4 rounded-lg bg-white/5 backdrop-blur-sm border border-white/10 text-amber-50 my-2">
-        <div className="flex flex-row items-center whitespace-nowrap">
-          {friends.map((entry) => (
-            <div key={entry.user.id} className="inline-block">
+    <div className="relative w-full overflow-hidden">
+      <div
+        ref={scrollRef}
+        className="w-full overflow-x-auto scrollbar-hide"
+        style={{
+          WebkitOverflowScrolling: "touch",
+          scrollbarWidth: "none",
+          msOverflowStyle: "none",
+          scrollbarGutter: "stable",
+          scrollBehavior: "smooth",
+        }}
+      >
+        <div className="inline-block min-w-full p-4 rounded-lg bg-white/5 backdrop-blur-sm border border-white/10 text-amber-50 my-2">
+          <div className="flex flex-row items-center whitespace-nowrap gap-3">
+            {friends.map((entry) => (
               <FriendItem
+                key={entry.user.id}
                 friend={{
                   username: entry.user.username,
                   avatarUrl: entry.user.avatarUrl,
                 }}
                 onClick={() => onSelect?.(entry)}
               />
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
     </div>
