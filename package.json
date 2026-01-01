@@ -30,7 +30,7 @@
     "linkify-react": "^4.3.2",
     "linkifyjs": "^4.3.2",
     "lite-youtube-embed": "^0.3.3",
-    "next": "15.5.2",
+    "next": "15.5.9",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-image-crop": "^11.0.10",
