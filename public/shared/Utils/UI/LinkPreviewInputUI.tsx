@@ -66,7 +66,7 @@ export const InputLinkPreviewArea: React.FC<InputLinkPreviewAreaProps> = ({
                 >
                   <FontAwesomeIcon
                     icon={faTimes}
-                    className="text-white text-xs"
+                    className="text-amber-50 text-xs"
                   />
                 </button>
               </div>

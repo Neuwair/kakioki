@@ -33,9 +33,6 @@ export function useUserPresence(targetUserId: number | null): PresenceResult {
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    setStatus("offline");
-    setIsReady(false);
-
     let isActive = true;
     let channel: PresenceChannel | null = null;
     let listener: ((message: PresenceMessage) => void) | null = null;

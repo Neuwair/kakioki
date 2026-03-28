@@ -45,7 +45,7 @@ export default function HomePage() {
         );
       default:
         return (
-          <div className="max-w-md w-full bg-black/20 backdrop-blur-lg border border-white/20 rounded-lg shadow-xl p-8 cursor-default">
+          <div className="max-w-md w-full bg-black/20 backdrop-blur-lg border border-white/20 rounded-4xl shadow-xl p-8 cursor-default">
             <div className="text-center">
               <h1
                 className="font-bold text-amber-50 mb-2"
@@ -75,7 +75,46 @@ export default function HomePage() {
                   Create Account
                 </button>
               </div>
-              <div className="mt-8 text-responsive text-amber-50"></div>
+              <div className="text-amber-50/70 text-center cursor-default mt-8">
+                <div className="flex flex-row align-middle justify-center">
+                  <div>Created by Neuwair | Illustrator and Programmer</div>
+                </div>
+
+                <div className=" flex flex-row flex-wrap items-center justify-center gap-4">
+                  <a
+                    href="https://x.com/neuwair"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-indigo-300 hover:underline bouncy-hover"
+                  >
+                    Twitter
+                  </a>
+                  <a
+                    href="https://www.pixiv.net/en/users/102019144"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-indigo-300 hover:underline bouncy-hover"
+                  >
+                    Pixiv
+                  </a>
+                  <a
+                    href="https://www.youtube.com/@Neuwair"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-indigo-300 hover:underline bouncy-hover"
+                  >
+                    YouTube
+                  </a>
+                  <a
+                    href="https://github.com/Neuwair"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-indigo-300 hover:underline bouncy-hover"
+                  >
+                    GitHub
+                  </a>
+                </div>
+              </div>
             </div>
           </div>
         );
@@ -85,7 +124,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen flex items-center justify-center p-5 backdrop-blur-lg">
       {error && (
-        <div className="absolute top-20 left-1/2 transform -translate-x-1/2 p-3 bg-red-500/80 backdrop-blur-sm text-white rounded-lg max-w-md w-full z-50">
+        <div className="absolute top-20 left-1/2 transform -translate-x-1/2 p-3 bg-red-500/80 backdrop-blur-sm text-amber-50 rounded-lg max-w-md w-full z-50">
           {error}
         </div>
       )}

@@ -94,7 +94,7 @@ export const FriendListHeader: React.FC<FriendListHeaderProps> = ({
   if (friends.length === 0) {
     return (
       <div className="relative overflow-hidden">
-        <div className="flex items-center justify-center min-h-[80px] p-4 rounded-lg bg-white/5 backdrop-blur-sm border border-white/10 text-amber-50/60 my-2">
+        <div className="flex items-center justify-center min-h-[80px] p-4 rounded-lg backdrop-blur-sm border border-white/10 text-amber-50/60 my-2">
           <p className="text-center">You don&apos;t have any friends yet.</p>
         </div>
       </div>
@@ -115,7 +115,7 @@ export const FriendListHeader: React.FC<FriendListHeaderProps> = ({
         }}
       >
         <div className="inline-block min-w-full p-4 rounded-lg bg-white/5 backdrop-blur-sm border border-white/10 text-amber-50 my-2">
-          <div className="flex flex-row items-center whitespace-nowrap gap-3">
+          <div className="flex flex-row items-center whitespace-nowrap gap-4">
             {friends.map((entry) => (
               <FriendItem
                 key={entry.user.id}

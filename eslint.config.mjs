@@ -1,8 +1,7 @@
-import { configs } from "eslint-config-next";
+import nextConfig from "eslint-config-next";
 
 const eslintConfig = [
-  ...configs.flat.recommended,
-  ...configs.flat.typescript,
+  ...nextConfig,
   {
     ignores: [
       "node_modules/**",

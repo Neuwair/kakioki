@@ -117,7 +117,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
           onClick={() => handleSendDecision()}
           disabled={disabled || isSending}
           className={
-            "p-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white flex items-center justify-center cursor-pointer send-message-btn interface-btn" +
+            "p-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-amber-50 flex items-center justify-center cursor-pointer send-message-btn interface-btn" +
             (disabled || isSending ? " opacity-60 cursor-not-allowed" : "")
           }
         >

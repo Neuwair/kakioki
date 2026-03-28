@@ -19,16 +19,16 @@ export const ImageModal: React.FC<ImageModalProps> = ({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90">
       <div className="relative w-[70vw] h-[50vh] max-w-6xl max-h-[50vh] flex flex-col items-center justify-center">
         <div className="w-full flex justify-end mb-5">
           <button
             onClick={onClose}
-            className="p-5 bg-black/70 hover:bg-red-500/90 rounded-full transition-all duration-200 hover:scale-110 cursor-pointer btnRemoveMedia"
+            className="p-5 bg-black/70 hover:bg-red-500/90 rounded-lg transition-all duration-200 hover:scale-110 cursor-pointer btnRemoveMedia"
           >
             <FontAwesomeIcon
               icon={faTimes}
-              className="text-white w-5 h-5 transition-transform duration-200 group-hover:rotate-90"
+              className="text-amber-50 w-5 h-5 transition-transform duration-200 group-hover:rotate-90"
             />
           </button>
         </div>

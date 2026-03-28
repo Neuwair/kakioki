@@ -172,7 +172,6 @@ export const handleMediaSelectInput = async (
   if (files.length === 0) return;
 
   if (mediaPreviews.length + files.length > 4) {
-    alert("You can only attach up to 4 media files");
     return;
   }
 
@@ -245,7 +244,6 @@ export const handleMediaSelectFiles = async (
   if (fileArray.length === 0) return;
 
   if (currentPreviews.length + fileArray.length > 4) {
-    alert("You can only attach up to 4 media files");
     return;
   }
 

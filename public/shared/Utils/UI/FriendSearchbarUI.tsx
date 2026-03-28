@@ -42,12 +42,6 @@ export const FriendSearchHeader: React.FC = () => {
     };
   }, [isOpen]);
 
-  useEffect(() => {
-    if (!query.trim()) {
-      setIsOpen(false);
-    }
-  }, [query]);
-
   const showDropdown =
     isOpen && (query.trim().length > 0 || isSearching || !!error);
 
@@ -82,8 +76,11 @@ export const FriendSearchHeader: React.FC = () => {
             className="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-amber-50 placeholder-amber-50/50 searchbar-item"
             value={query}
             onChange={(e) => {
-              setQuery(e.target.value);
-              if (!isOpen) {
+              const newQuery = e.target.value;
+              setQuery(newQuery);
+              if (!newQuery.trim()) {
+                setIsOpen(false);
+              } else if (!isOpen) {
                 setIsOpen(true);
               }
             }}
@@ -110,7 +107,7 @@ export const FriendSearchHeader: React.FC = () => {
       </div>
 
       {showDropdown && (
-        <div className="absolute z-10 mt-2 w-full bg-gray-500/50 backdrop-blur-md border border-white/20 rounded-lg shadow-lg max-h-50 overflow-y-auto scrollbar-hide user-header animate-dropdown-appear">
+        <div className="absolute z-10 mt-5 w-full bg-neutral-800/60 border border-white/20 rounded-lg shadow-lg max-h-50 overflow-y-auto scrollbar-hide user-header animate-dropdown-appear">
           <FriendSearchDropdown
             query={query}
             results={results}

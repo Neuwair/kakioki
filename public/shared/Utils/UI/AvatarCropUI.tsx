@@ -55,7 +55,7 @@ export const ImageCropper: React.FC<{
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90">
-      <div className="bg-white/10 backdrop-blur-lg rounded-lg p-6 w-[90%] max-w-2xl border border-white/20 shadow-xl">
+      <div className="bg-white/5 backdrop-blur-lg rounded-lg p-6 w-[90%] max-w-2xl border border-white/20 shadow-xl">
         <div className="flex flex-col items-center mb-4">
           <div
             className="mb-4 max-h-96 overflow-hidden"
@@ -136,7 +136,7 @@ export const ImageCropper: React.FC<{
           </button>
           <button
             type="button"
-            className="px-6 py-2 rounded-lg bg-green-600 hover:bg-green-500 text-white use-crop-btn cursor-pointer"
+            className="px-6 py-2 rounded-lg bg-green-500 hover:bg-green-700 text-amber-50 use-crop-btn cursor-pointer"
             onClick={handleCropComplete}
             disabled={!completedCrop}
           >

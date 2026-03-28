@@ -30,6 +30,7 @@ export default function ChatPage() {
         <FontAwesomeIcon
           icon={faSpinner}
           className="text-amber-50/70 animate-spin w-10 h-10"
+          style={{ width: '2.5rem', height: '2.5rem' }}
         />
       </div>
     );
@@ -44,6 +45,7 @@ export default function ChatPage() {
               <FontAwesomeIcon
                 icon={faSpinner}
                 className="text-amber-50/70 animate-spin w-10 h-10"
+                style={{ width: '2.5rem', height: '2.5rem' }}
               />
             </div>
           }

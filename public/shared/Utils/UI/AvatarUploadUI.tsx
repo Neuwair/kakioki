@@ -55,9 +55,9 @@ export const AvatarUploadModal: React.FC<AvatarUploadModalProps> = ({
       )}
 
       {!showCropper && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90">
           <div
-            className="relative bg-white/10 backdrop-blur-lg rounded-lg p-6 w-[90%] max-w-md border border-white/20 shadow-xl"
+            className="relative bg-white/5 backdrop-blur-lg rounded-lg p-6 w-[90%] max-w-md border border-white/20 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
             <h2 className="text-xl text-center font-bold mb-8 text-amber-50">
@@ -136,7 +136,7 @@ export const AvatarUploadModal: React.FC<AvatarUploadModalProps> = ({
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 rounded-lg no-theme bg-green-600 hover:bg-green-500 text-white save-btn cursor-pointer"
+                  className="px-4 py-2 rounded-lg no-theme bg-green-500 hover:bg-green-700 text-amber-50 save-btn cursor-pointer"
                   disabled={(!selectedFile && !croppedBlob) || isUploading}
                 >
                   {isUploading ? "Uploading..." : "Save"}

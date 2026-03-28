@@ -68,7 +68,7 @@ export const YouTubePreview: React.FC<YouTubePreviewProps> = ({
               <h4 className="text-sm font-medium text-amber-50 truncate">
                 {preview.title || "YouTube Video"}
               </h4>
-              <p className="text-xs text-white truncate">{preview.domain}</p>
+              <p className="text-xs text-amber-50 truncate">{preview.domain}</p>
             </div>
             <button
               onClick={handleOpenInNewTab}
@@ -101,7 +101,7 @@ export const YouTubePreview: React.FC<YouTubePreviewProps> = ({
               <div className="bg-white/20 hover:bg-white/30 backdrop-blur-md rounded-full p-4 shadow-lg transition-all border border-white/20 hover:border-white/30 flex items-center justify-center">
                 <FontAwesomeIcon
                   icon={faPlay}
-                  className="text-white text-xl drop-shadow-md"
+                  className="text-amber-50 text-xl drop-shadow-md"
                 />
               </div>
             </div>
@@ -120,7 +120,7 @@ export const YouTubePreview: React.FC<YouTubePreviewProps> = ({
                 {preview.description}
               </p>
             )}
-            <p className="text-xs text-white truncate">{preview.domain}</p>
+            <p className="text-xs text-amber-50 truncate">{preview.domain}</p>
           </div>
           <button
             onClick={(e) => {

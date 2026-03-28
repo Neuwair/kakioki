@@ -33,7 +33,7 @@ import { useInputLinkPreviews } from "@/public/shared/Tools/Linkify";
 export const ChatInterface: React.FC = () => {
   const { user } = useAuth();
   const [selectedFriend, setSelectedFriend] = useState<FriendListEntry | null>(
-    null
+    null,
   );
   const [messageInput, setMessageInput] = useState<string>("");
   const [mediaPreviews, setMediaPreviews] = useState<MediaPreview[]>([]);
@@ -45,6 +45,9 @@ export const ChatInterface: React.FC = () => {
   const [isUpdatingBlock, setIsUpdatingBlock] = useState(false);
   const [isRemovingFriend, setIsRemovingFriend] = useState(false);
   const [showInputBounce, setShowInputBounce] = useState(false);
+  const [showLimitMessage, setShowLimitMessage] = useState(false);
+  const [isLimitMessageAnimatingOut, setIsLimitMessageAnimatingOut] =
+    useState(false);
 
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const acknowledgedMessagesRef = useRef<Set<string>>(new Set());
@@ -86,7 +89,7 @@ export const ChatInterface: React.FC = () => {
       setMessageInput(next);
       updateLinkPreviewText(next);
     },
-    [updateLinkPreviewText]
+    [updateLinkPreviewText],
   );
 
   const resetComposerState = useCallback(() => {
@@ -128,12 +131,29 @@ export const ChatInterface: React.FC = () => {
       setShowInputBounce(true);
       window.setTimeout(() => setShowInputBounce(false), 420);
     },
-    [cleanupMediaPreviews, clearUnseenBadge, resetComposerState]
+    [cleanupMediaPreviews, clearUnseenBadge, resetComposerState],
   );
 
   const handleMediaSelect = useCallback(
     async (event: React.ChangeEvent<HTMLInputElement>) => {
       const inputElement = event.target;
+      const files = Array.from(event.target.files || []);
+      if (mediaPreviews.length + files.length > 4) {
+        setShowLimitMessage(true);
+        setIsLimitMessageAnimatingOut(false);
+        setTimeout(() => {
+          setIsLimitMessageAnimatingOut(true);
+          setTimeout(() => {
+            setShowLimitMessage(false);
+            setIsLimitMessageAnimatingOut(false);
+          }, 360);
+        }, 2640); // 3000 - 360
+        if (inputElement) {
+          inputElement.value = "";
+        }
+        return;
+      }
+      setShowLimitMessage(false);
       try {
         await handleMediaSelectInput(event, mediaPreviews, setMediaPreviews);
       } finally {
@@ -142,16 +162,16 @@ export const ChatInterface: React.FC = () => {
         }
       }
     },
-    [mediaPreviews]
+    [mediaPreviews],
   );
 
   const handleRemoveMediaPreview = useCallback(
     (index: number) => {
       removeMediaPreviewHelper(index, mediaPreviews, (next) =>
-        setMediaPreviews(next)
+        setMediaPreviews(next),
       );
     },
-    [mediaPreviews]
+    [mediaPreviews],
   );
 
   const handleSendMessage = useCallback(async () => {
@@ -204,7 +224,7 @@ export const ChatInterface: React.FC = () => {
         setSendError(result.error || "Failed to resend message");
       }
     },
-    [retryMessage]
+    [retryMessage],
   );
 
   const handleToggleBlock = useCallback(async () => {
@@ -276,7 +296,7 @@ export const ChatInterface: React.FC = () => {
       }
       const { scrollHeight, scrollTop, clientHeight } = container;
       const distanceFromBottom = Math.abs(
-        scrollHeight - scrollTop - clientHeight
+        scrollHeight - scrollTop - clientHeight,
       );
       const isNearBottom = distanceFromBottom < 120;
       if (isNearBottom || latestMessage.senderId === user?.id) {
@@ -301,12 +321,12 @@ export const ChatInterface: React.FC = () => {
       .filter(
         (message) =>
           message.senderId === selectedFriend.user.id &&
-          message.state !== "read"
+          message.state !== "read",
       )
       .map((message) => message.clientMessageId)
       .filter(
         (clientMessageId) =>
-          !acknowledgedMessagesRef.current.has(clientMessageId)
+          !acknowledgedMessagesRef.current.has(clientMessageId),
       );
     if (unreadIds.length === 0) {
       return;
@@ -369,8 +389,8 @@ export const ChatInterface: React.FC = () => {
                   isUpdatingBlock ? "opacity-60 cursor-not-allowed" : ""
                 } ${
                   blockState.blockedBySelf
-                    ? "bg-red-600 hover:bg-red-500 text-white"
-                    : "bg-white/5 hover:bg-red-500 text-white"
+                    ? "bg-red-500 hover:bg-red-900 text-amber-50"
+                    : "bg-white/5 hover:bg-red-500 text-amber-50"
                 }`}
               >
                 {isUpdatingBlock ? (
@@ -391,7 +411,7 @@ export const ChatInterface: React.FC = () => {
                 onClick={handleRemoveFriend}
                 disabled={isRemovingFriend}
                 title="Remove friend"
-                className={`p-2 rounded-lg flex items-center justify-center cursor-pointer remove-friend-btn transition-colors bg-white/10 text-amber-50 hover:bg-gray-700/50 ${
+                className={`p-2 rounded-lg flex items-center justify-center cursor-pointer remove-friend-btn transition-colors bg-white/5 text-amber-50 hover:bg-gray-700/50 ${
                   isRemovingFriend ? "opacity-60 cursor-not-allowed" : ""
                 }`}
               >
@@ -445,10 +465,10 @@ export const ChatInterface: React.FC = () => {
           }`}
         >
           {!selectedFriend ? (
-            <div className="text-amber-50/70 text-center cursor-default">
+            <div className="text-amber-50/70 text-center cursor-default flex flex-col flex-wrap gap-2">
               <div>Created by Neuwair</div>
-              <div className="mt-1">Illustrator and Programmer</div>
-              <div className="mt-3 flex flex-row items-center justify-center gap-4">
+              <div className="">Illustrator and Programmer</div>
+              <div className="flex flex-row items-center justify-center gap-4">
                 <a
                   href="https://x.com/neuwair"
                   target="_blank"
@@ -482,6 +502,17 @@ export const ChatInterface: React.FC = () => {
                   GitHub
                 </a>
               </div>
+              <div className="">
+                <p></p>
+                <div className=" break-words max-w-lg">
+                  {" "}
+                  This project is intended solely as a demonstration of my
+                  programming skills. To properly test the messaging system, you
+                  will need to create a second account in a separate window or
+                  have another user create an account so you can add each other
+                  and exchange messages.
+                </div>
+              </div>
             </div>
           ) : isLoading && messages.length === 0 ? (
             <div className=" text-amber-50/70 text-center">
@@ -514,6 +545,13 @@ export const ChatInterface: React.FC = () => {
         >
           {selectedFriend ? (
             <div className="flex flex-col relative">
+              {(showLimitMessage || isLimitMessageAnimatingOut) && (
+                <div
+                  className={`flex flex-row justify-center align-middle text-center p-4 text-red-100 cursor-default ${isLimitMessageAnimatingOut ? "animate-input-push-down" : "animate-input-push"}`}
+                >
+                  You can only attach up to 4 media files.
+                </div>
+              )}
               <MediaPreviewGrid
                 mediaPreviews={mediaPreviews}
                 onRemovePreview={handleRemoveMediaPreview}
@@ -544,7 +582,7 @@ export const ChatInterface: React.FC = () => {
                     }
                     clearUnseenBadge();
                   }}
-                  className="absolute left-1/2 -translate-x-1/2 -top-8 bg-indigo-600 text-white px-4 py-2 rounded-full text-sm font-semibold shadow-lg"
+                  className="absolute left-1/2 -translate-x-1/2 -top-8 bg-indigo-600 text-amber-50 px-4 py-2 rounded-full text-sm font-semibold shadow-lg"
                 >
                   {unseenCount} new message{unseenCount > 1 ? "s" : ""}
                 </button>
@@ -559,8 +597,8 @@ export const ChatInterface: React.FC = () => {
                   {blockState.blockedByFriend
                     ? "You cannot message this user right now"
                     : blockState.blockedBySelf
-                    ? "Unblock the user to continue messaging"
-                    : "Select a friend to start chatting"}
+                      ? "Unblock the user to continue messaging"
+                      : "Select a friend to start chatting"}
                 </div>
               ) : null}
             </div>

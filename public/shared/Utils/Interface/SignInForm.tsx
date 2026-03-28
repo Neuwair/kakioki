@@ -19,7 +19,7 @@ export const SignInForm: React.FC<SignInFormProps> = ({
     UseSignInForm(onSubmit);
 
   return (
-    <div className="max-w-md w-full  bg-black/20 backdrop-blur-lg border border-white/20 rounded-lg shadow-lg p-8 cursor-default">
+    <div className="max-w-md w-full  bg-black/20 backdrop-blur-lg border border-white/20 rounded-4xl shadow-lg p-8 cursor-default">
       <div className="text-center mb-6">
         <h2
           className=" font-bold text-amber-50 mb-2 cursor-default"
