@@ -26,7 +26,7 @@ export async function POST(request: Request) {
     if (!userId) {
       return NextResponse.json(
         { error: "No user ID provided" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -37,14 +37,13 @@ export async function POST(request: Request) {
     if (!file.type.startsWith("image/")) {
       return NextResponse.json(
         { error: "Only images are supported for avatars" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    console.log("Creating thumbnail...");
     try {
       try {
-        const testImage = await sharp({
+        await sharp({
           create: {
             width: 10,
             height: 10,
@@ -54,21 +53,14 @@ export async function POST(request: Request) {
         })
           .jpeg()
           .toBuffer();
-
-        console.log(
-          "Sharp test successful, created test image:",
-          testImage.length,
-          "bytes"
-        );
       } catch (testError) {
-        console.error("Sharp test failed:", testError);
         return NextResponse.json(
           {
             error: `Sharp initialization failed: ${
               testError instanceof Error ? testError.message : "Unknown error"
             }`,
           },
-          { status: 500 }
+          { status: 500 },
         );
       }
 
@@ -76,7 +68,7 @@ export async function POST(request: Request) {
         console.error("Buffer is empty or invalid");
         return NextResponse.json(
           { error: "Empty or invalid image data" },
-          { status: 400 }
+          { status: 400 },
         );
       }
 
@@ -95,7 +87,7 @@ export async function POST(request: Request) {
                 : "Unknown error"
             }`,
           },
-          { status: 400 }
+          { status: 400 },
         );
       }
 
@@ -103,7 +95,7 @@ export async function POST(request: Request) {
         buffer,
         200,
         "webp",
-        70
+        70,
       );
       console.log("Thumbnail created successfully", {
         width: processed.width,
@@ -152,7 +144,7 @@ export async function POST(request: Request) {
             error instanceof Error ? error.message : "Unknown error"
           }`,
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
   } catch (error) {
@@ -163,7 +155,7 @@ export async function POST(request: Request) {
           error instanceof Error ? error.message : "Unknown error"
         }`,
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

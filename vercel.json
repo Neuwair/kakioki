@@ -1,4 +1,10 @@
 {
   "buildCommand": "npm run build",
-  "framework": "nextjs"
+  "framework": "nextjs",
+  "crons": [
+    {
+      "path": "/Routes/maintenance/cleanup",
+      "schedule": "* 5 * * *"
+    }
+  ]
 }

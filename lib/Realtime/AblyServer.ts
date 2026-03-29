@@ -8,9 +8,11 @@ import {
   ChatMessageEvent,
   ChatStatusEvent,
   ChatControlEvent,
+  ChatNotificationEvent,
   chatMessageChannel,
   chatStatusChannel,
   chatControlChannel,
+  userChatNotificationChannel,
 } from "@/lib/Realtime/ChatEvents";
 
 const MAX_ABLY_PAYLOAD_BYTES = 63_000;
@@ -82,12 +84,15 @@ export function getAblyRest(): Rest {
 }
 
 export async function publishFriendEvent(
-  event: FriendRealtimeEvent
+  event: FriendRealtimeEvent,
 ): Promise<void> {
   const recipients = new Set<number>();
   if (event.type === "friend_request_cancelled") {
     recipients.add(event.fromUserId);
     recipients.add(event.toUserId);
+  } else if (event.type === "friend_removed") {
+    recipients.add(event.initiatorId);
+    recipients.add(event.targetId);
   } else {
     recipients.add(event.request.from_id);
     recipients.add(event.request.to_id);
@@ -95,14 +100,24 @@ export async function publishFriendEvent(
 
   const rest = getAblyRest();
   const publishTasks = Array.from(recipients).map((userId) =>
-    rest.channels.get(friendChannel(userId)).publish(event.type, event)
+    rest.channels.get(friendChannel(userId)).publish(event.type, event),
   );
 
   await Promise.all(publishTasks);
 }
 
+export async function publishChatNotification(
+  recipientUserId: number,
+  event: ChatNotificationEvent,
+): Promise<void> {
+  const rest = getAblyRest();
+  await rest.channels
+    .get(userChatNotificationChannel(recipientUserId))
+    .publish(event.type, event);
+}
+
 export async function publishChatMessage(
-  event: ChatMessageEvent
+  event: ChatMessageEvent,
 ): Promise<void> {
   const rest = getAblyRest();
   const payload = trimChatMessageEvent(event);
@@ -119,7 +134,7 @@ export async function publishChatStatus(event: ChatStatusEvent): Promise<void> {
 }
 
 export async function publishChatControl(
-  event: ChatControlEvent
+  event: ChatControlEvent,
 ): Promise<void> {
   const rest = getAblyRest();
   await rest.channels

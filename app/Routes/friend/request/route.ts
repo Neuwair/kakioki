@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { FriendRepository, UserRepository } from "@/lib";
+import { FriendRepository, UserRepository, MessageRepository } from "@/lib";
 import { requireAuth } from "@/lib/Auth/AuthServer";
 import { DatabaseError } from "@/lib/Connections/DatabaseConnections";
 import { publishFriendEvent } from "@/lib/Realtime/AblyServer";
@@ -7,6 +7,7 @@ import type { FriendUserPayload } from "@/lib/Realtime/FriendEvents";
 
 const friendRepository = new FriendRepository();
 const userRepository = new UserRepository();
+const messageRepository = new MessageRepository();
 
 function toFriendUserPayload(user: {
   id: number;
@@ -178,11 +179,18 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
+    const blockStatus = await messageRepository.getBlockStatus(user.id, fromUserId);
+    const blockedBySelf = blockStatus.isBlocked && blockStatus.blockedBy === user.id;
+    const blockedByFriend = blockStatus.isBlocked && blockStatus.blockedBy === fromUserId;
+
     await publishFriendEvent({
       type: "friend_request_accepted",
       request: accepted,
       fromUser: toFriendUserPayload(fromUser),
       toUser: toFriendUserPayload(currentUserFull),
+      blockedBySelf,
+      blockedByFriend,
+      blockCreatedAt: blockStatus.recordCreatedAt ?? null,
     });
 
     return NextResponse.json({ success: true, request: accepted });

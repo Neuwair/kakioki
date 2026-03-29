@@ -68,7 +68,7 @@ export async function POST(request: Request) {
     const existingUser = await userRepository.findByEmail(email);
     if (existingUser) {
       return NextResponse.json(
-        { error: "A user with this email already exists" },
+        { error: "You are not allowed to use this email address." },
         { status: 400 }
       );
     }

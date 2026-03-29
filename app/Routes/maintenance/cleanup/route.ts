@@ -4,20 +4,19 @@ import {
   queueEligibleAccountDeletions,
 } from "@/lib/Service/AccountDeletionScheduler";
 
-const HEADER_NAME = "x-cron-secret";
 const CRON_SECRET = process.env.CRON_SECRET;
 
-export async function POST(request: Request) {
+export async function GET(request: Request) {
   if (!CRON_SECRET) {
     console.error("Cleanup route misconfigured: missing CRON_SECRET");
     return NextResponse.json(
       { error: "Server configuration error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 
-  const providedSecret = request.headers.get(HEADER_NAME);
-  if (!providedSecret || providedSecret !== CRON_SECRET) {
+  const authHeader = request.headers.get("authorization");
+  if (!authHeader || authHeader !== `Bearer ${CRON_SECRET}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

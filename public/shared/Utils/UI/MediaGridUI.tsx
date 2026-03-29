@@ -47,17 +47,17 @@ export const MediaPreviewGrid: React.FC<MediaPreviewGridProps> = ({
   if (mediaPreviews.length === 0) return null;
 
   return (
-    <div ref={containerRef} className="p-3 border-b border-white/10">
-      <div className="relative bg-white/5 rounded-lg p-3">
+    <div ref={containerRef} className="">
+      <div className="relative bg-white/5 rounded-lg p-4 border-amber-50">
         <div
           className={`media-preview-grid mx-auto ${
             mediaPreviews.length === 1
               ? "media-preview-grid-1"
               : mediaPreviews.length === 2
-              ? "media-preview-grid-2"
-              : mediaPreviews.length === 3
-              ? "media-preview-grid-3"
-              : "media-preview-grid-4"
+                ? "media-preview-grid-2"
+                : mediaPreviews.length === 3
+                  ? "media-preview-grid-3"
+                  : "media-preview-grid-4"
           }`}
         >
           {mediaPreviews.map((preview, index) => (
@@ -76,11 +76,11 @@ export const MediaPreviewGrid: React.FC<MediaPreviewGridProps> = ({
                   />
                   <button
                     onClick={() => onRemovePreview(index)}
-                    className="absolute top-1 left-1 z-20 p-1 bg-black/70 hover:bg-red-500/90 rounded-full transition-all duration-200 hover:scale-100 cursor-pointer opacity-80 group-hover:opacity-100 btnRemoveMedia"
+                    className="absolute top-1 left-1 z-20 p-1 bg-black/70 hover:bg-red-500/90 rounded-lg transition-all duration-200 hover:scale-100 cursor-pointer opacity-80 group-hover:opacity-100 btnRemoveMedia"
                   >
                     <FontAwesomeIcon
                       icon={faTimes}
-                      className="text-white w-3 h-3"
+                      className="text-amber-50 w-3 h-3"
                     />
                   </button>
                 </>
@@ -99,7 +99,7 @@ export const MediaPreviewGrid: React.FC<MediaPreviewGridProps> = ({
                   >
                     <FontAwesomeIcon
                       icon={faTimes}
-                      className="text-white w-3 h-3"
+                      className="text-amber-50 w-3 h-3"
                     />
                   </button>
                 </>

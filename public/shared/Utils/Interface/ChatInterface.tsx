@@ -19,6 +19,7 @@ import {
   faBan,
   faUserSlash,
   faUserMinus,
+  faRadiation,
 } from "@fortawesome/free-solid-svg-icons";
 import type { MediaPreview } from "@/lib/types/TypesLogic";
 import type { FriendListEntry } from "@/public/shared/hooks/useFriendRelationships";
@@ -33,7 +34,7 @@ import { useInputLinkPreviews } from "@/public/shared/Tools/Linkify";
 export const ChatInterface: React.FC = () => {
   const { user } = useAuth();
   const [selectedFriend, setSelectedFriend] = useState<FriendListEntry | null>(
-    null
+    null,
   );
   const [messageInput, setMessageInput] = useState<string>("");
   const [mediaPreviews, setMediaPreviews] = useState<MediaPreview[]>([]);
@@ -42,9 +43,18 @@ export const ChatInterface: React.FC = () => {
   const [badgeVisible, setBadgeVisible] = useState<boolean>(false);
   const [unseenCount, setUnseenCount] = useState<number>(0);
   const [sendError, setSendError] = useState<string | null>(null);
+  const [chatAlert, setChatAlert] = useState<string | null>(null);
+  const [chatAlertAnimation, setChatAlertAnimation] = useState<
+    "bounce-in" | "bounce-out" | null
+  >(null);
   const [isUpdatingBlock, setIsUpdatingBlock] = useState(false);
   const [isRemovingFriend, setIsRemovingFriend] = useState(false);
+  const [isNukingMessages, setIsNukingMessages] = useState(false);
+  const [isNukeDialogOpen, setIsNukeDialogOpen] = useState(false);
   const [showInputBounce, setShowInputBounce] = useState(false);
+  const [showLimitMessage, setShowLimitMessage] = useState(false);
+  const [isLimitMessageAnimatingOut, setIsLimitMessageAnimatingOut] =
+    useState(false);
 
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const acknowledgedMessagesRef = useRef<Set<string>>(new Set());
@@ -64,6 +74,7 @@ export const ChatInterface: React.FC = () => {
     blockFriend,
     unblockFriend,
     removeFriend,
+    nukeMessages,
   } = useChat({ friend: selectedFriend });
 
   const {
@@ -81,12 +92,39 @@ export const ChatInterface: React.FC = () => {
     setUnseenCount(0);
   }, []);
 
+  const previousChatErrorRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (chatError) {
+      setChatAlert(chatError);
+      if (chatError === "Conversation messages cleared") {
+        setChatAlertAnimation("bounce-in");
+      } else {
+        setChatAlertAnimation(null);
+      }
+    } else if (
+      previousChatErrorRef.current === "Conversation messages cleared"
+    ) {
+      setChatAlertAnimation("bounce-out");
+      const timer = window.setTimeout(() => {
+        setChatAlert(null);
+        setChatAlertAnimation(null);
+      }, 360);
+      return () => window.clearTimeout(timer);
+    } else {
+      setChatAlert(null);
+      setChatAlertAnimation(null);
+    }
+
+    previousChatErrorRef.current = chatError;
+  }, [chatError]);
+
   const handleMessageInputChange = useCallback(
     (next: string) => {
       setMessageInput(next);
       updateLinkPreviewText(next);
     },
-    [updateLinkPreviewText]
+    [updateLinkPreviewText],
   );
 
   const resetComposerState = useCallback(() => {
@@ -128,12 +166,29 @@ export const ChatInterface: React.FC = () => {
       setShowInputBounce(true);
       window.setTimeout(() => setShowInputBounce(false), 420);
     },
-    [cleanupMediaPreviews, clearUnseenBadge, resetComposerState]
+    [cleanupMediaPreviews, clearUnseenBadge, resetComposerState],
   );
 
   const handleMediaSelect = useCallback(
     async (event: React.ChangeEvent<HTMLInputElement>) => {
       const inputElement = event.target;
+      const files = Array.from(event.target.files || []);
+      if (mediaPreviews.length + files.length > 4) {
+        setShowLimitMessage(true);
+        setIsLimitMessageAnimatingOut(false);
+        setTimeout(() => {
+          setIsLimitMessageAnimatingOut(true);
+          setTimeout(() => {
+            setShowLimitMessage(false);
+            setIsLimitMessageAnimatingOut(false);
+          }, 360);
+        }, 2640);
+        if (inputElement) {
+          inputElement.value = "";
+        }
+        return;
+      }
+      setShowLimitMessage(false);
       try {
         await handleMediaSelectInput(event, mediaPreviews, setMediaPreviews);
       } finally {
@@ -142,16 +197,16 @@ export const ChatInterface: React.FC = () => {
         }
       }
     },
-    [mediaPreviews]
+    [mediaPreviews],
   );
 
   const handleRemoveMediaPreview = useCallback(
     (index: number) => {
       removeMediaPreviewHelper(index, mediaPreviews, (next) =>
-        setMediaPreviews(next)
+        setMediaPreviews(next),
       );
     },
-    [mediaPreviews]
+    [mediaPreviews],
   );
 
   const handleSendMessage = useCallback(async () => {
@@ -177,15 +232,17 @@ export const ChatInterface: React.FC = () => {
             ...(hasMedia ? { mediaPreviews } : {}),
           }
         : undefined;
+    setSendError(null);
+    resetComposerState();
+    if (hasMedia) {
+      cleanupMediaPreviews();
+    }
+
     const result = await sendMessage(trimmed, options);
     if (!result.success) {
       setSendError(result.error || "Failed to send message");
     } else {
       setSendError(null);
-      resetComposerState();
-      if (hasMedia) {
-        cleanupMediaPreviews();
-      }
     }
   }, [
     cleanupMediaPreviews,
@@ -204,7 +261,7 @@ export const ChatInterface: React.FC = () => {
         setSendError(result.error || "Failed to resend message");
       }
     },
-    [retryMessage]
+    [retryMessage],
   );
 
   const handleToggleBlock = useCallback(async () => {
@@ -243,6 +300,31 @@ export const ChatInterface: React.FC = () => {
     }
   }, [handleCloseChat, removeFriend, selectedFriend]);
 
+  const handleNukeMessages = useCallback(() => {
+    if (!selectedFriend) {
+      return;
+    }
+    setIsNukeDialogOpen(true);
+  }, [selectedFriend]);
+
+  const executeNukeMessages = useCallback(async () => {
+    if (!selectedFriend || !nukeMessages) {
+      return;
+    }
+    setIsNukeDialogOpen(false);
+    setIsNukingMessages(true);
+    try {
+      const success = await nukeMessages();
+      if (!success) {
+        setSendError("Unable to clear conversation messages");
+      } else {
+        setSendError(null);
+      }
+    } finally {
+      setIsNukingMessages(false);
+    }
+  }, [nukeMessages, selectedFriend]);
+
   useEffect(() => {
     if (!selectedFriend) {
       previousMessageCountRef.current = 0;
@@ -276,7 +358,7 @@ export const ChatInterface: React.FC = () => {
       }
       const { scrollHeight, scrollTop, clientHeight } = container;
       const distanceFromBottom = Math.abs(
-        scrollHeight - scrollTop - clientHeight
+        scrollHeight - scrollTop - clientHeight,
       );
       const isNearBottom = distanceFromBottom < 120;
       if (isNearBottom || latestMessage.senderId === user?.id) {
@@ -301,12 +383,12 @@ export const ChatInterface: React.FC = () => {
       .filter(
         (message) =>
           message.senderId === selectedFriend.user.id &&
-          message.state !== "read"
+          message.state !== "read",
       )
       .map((message) => message.clientMessageId)
       .filter(
         (clientMessageId) =>
-          !acknowledgedMessagesRef.current.has(clientMessageId)
+          !acknowledgedMessagesRef.current.has(clientMessageId),
       );
     if (unreadIds.length === 0) {
       return;
@@ -369,8 +451,8 @@ export const ChatInterface: React.FC = () => {
                   isUpdatingBlock ? "opacity-60 cursor-not-allowed" : ""
                 } ${
                   blockState.blockedBySelf
-                    ? "bg-red-600 hover:bg-red-500 text-white"
-                    : "bg-white/5 hover:bg-red-500 text-white"
+                    ? "bg-red-500 hover:bg-red-900 text-amber-50"
+                    : "bg-white/5 hover:bg-red-500 text-amber-50"
                 }`}
               >
                 {isUpdatingBlock ? (
@@ -391,7 +473,7 @@ export const ChatInterface: React.FC = () => {
                 onClick={handleRemoveFriend}
                 disabled={isRemovingFriend}
                 title="Remove friend"
-                className={`p-2 rounded-lg flex items-center justify-center cursor-pointer remove-friend-btn transition-colors bg-white/10 text-amber-50 hover:bg-gray-700/50 ${
+                className={`p-2 rounded-lg flex items-center justify-center cursor-pointer remove-friend-btn transition-colors bg-white/5 text-amber-50 hover:bg-gray-700/50 ${
                   isRemovingFriend ? "opacity-60 cursor-not-allowed" : ""
                 }`}
               >
@@ -403,6 +485,25 @@ export const ChatInterface: React.FC = () => {
                   />
                 ) : (
                   <FontAwesomeIcon icon={faUserMinus} size="lg" />
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={handleNukeMessages}
+                disabled={isNukingMessages}
+                title="Nuke Messages"
+                className={`p-2 rounded-lg flex items-center justify-center cursor-pointer nuke-btn transition-colors bg-white/5 text-amber-50 hover:bg-amber-700/50 ${
+                  isNukingMessages ? "opacity-60 cursor-not-allowed" : ""
+                }`}
+              >
+                {isNukingMessages ? (
+                  <FontAwesomeIcon
+                    icon={faSpinner}
+                    size="lg"
+                    className="text-amber-50/70 animate-spin"
+                  />
+                ) : (
+                  <FontAwesomeIcon icon={faRadiation} size="lg" />
                 )}
               </button>
             </>
@@ -427,14 +528,53 @@ export const ChatInterface: React.FC = () => {
           );
         })()}
 
+        {isNukeDialogOpen ? (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90">
+            <div className="flex flex-col flex-wrap bg-white/5 backdrop-blur-lg rounded-lg p-6 w-[90%] max-w-md border border-white/20 shadow-xl">
+              <h2 className="text-xl text-center font-bold mb-5 text-amber-50">
+                Confirm nuke messages
+              </h2>
+              <p className="text-sm text-amber-50 mb-5 font-light">
+                This will permanently delete the entire conversation history for
+                both users. This cannot be undone.
+              </p>
+              <div className="flex flex-row flex-wrap gap-2.5 justify-center">
+                <button
+                  type="button"
+                  onClick={() => setIsNukeDialogOpen(false)}
+                  className="px-4 py-2 rounded-lg no-theme bg-transparent hover:bg-amber-50/10 text-amber-50 cancel-btn cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={executeNukeMessages}
+                  className="px-4 py-2 rounded-lg no-theme bg-amber-500/50 hover:bg-amber-700 text-amber-50 nuke-btn cursor-pointer"
+                >
+                  Nuke
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : null}
+
         {blockBanner ? (
-          <div className="px-4 py-2 bg-red-500/20 text-red-100 text-center text-sm">
+          <div className="px-4 py-2 bg-red-500/20 text-red-100 text-center text-sm animate-alert-bounce-in">
             {blockBanner}
           </div>
         ) : null}
-        {chatError ? (
-          <div className="px-4 py-2 bg-red-500/10 text-red-200 text-center text-sm">
-            {chatError}
+        {chatAlert ? (
+          <div
+            className={
+              "px-4 py-2 bg-red-500/10 text-red-200 text-center text-sm " +
+              (chatAlertAnimation === "bounce-in"
+                ? "animate-alert-bounce-in"
+                : chatAlertAnimation === "bounce-out"
+                  ? "animate-alert-bounce-out"
+                  : "")
+            }
+          >
+            {chatAlert}
           </div>
         ) : null}
 
@@ -445,10 +585,10 @@ export const ChatInterface: React.FC = () => {
           }`}
         >
           {!selectedFriend ? (
-            <div className="text-amber-50/70 text-center cursor-default">
+            <div className="text-amber-50/70 text-center cursor-default flex flex-col flex-wrap gap-2">
               <div>Created by Neuwair</div>
-              <div className="mt-1">Illustrator and Programmer</div>
-              <div className="mt-3 flex flex-row items-center justify-center gap-4">
+              <div className="">Illustrator and Programmer</div>
+              <div className="flex flex-row items-center justify-center gap-4">
                 <a
                   href="https://x.com/neuwair"
                   target="_blank"
@@ -482,6 +622,17 @@ export const ChatInterface: React.FC = () => {
                   GitHub
                 </a>
               </div>
+              <div className="">
+                <p></p>
+                <div className=" break-words max-w-lg">
+                  {" "}
+                  This project is intended solely as a demonstration of my
+                  programming skills. To properly test the messaging system, you
+                  will need to create a second account in a separate window or
+                  have another user create an account so you can add each other
+                  and exchange messages.
+                </div>
+              </div>
             </div>
           ) : isLoading && messages.length === 0 ? (
             <div className=" text-amber-50/70 text-center">
@@ -514,6 +665,13 @@ export const ChatInterface: React.FC = () => {
         >
           {selectedFriend ? (
             <div className="flex flex-col relative">
+              {(showLimitMessage || isLimitMessageAnimatingOut) && (
+                <div
+                  className={`flex flex-row justify-center align-middle text-center p-4 text-red-100 cursor-default ${isLimitMessageAnimatingOut ? "animate-input-push-down" : "animate-input-push"}`}
+                >
+                  You can only attach up to 4 media files.
+                </div>
+              )}
               <MediaPreviewGrid
                 mediaPreviews={mediaPreviews}
                 onRemovePreview={handleRemoveMediaPreview}
@@ -544,7 +702,7 @@ export const ChatInterface: React.FC = () => {
                     }
                     clearUnseenBadge();
                   }}
-                  className="absolute left-1/2 -translate-x-1/2 -top-8 bg-indigo-600 text-white px-4 py-2 rounded-full text-sm font-semibold shadow-lg"
+                  className="absolute left-1/2 -translate-x-1/2 -top-8 bg-indigo-600 text-amber-50 px-4 py-2 rounded-full text-sm font-semibold shadow-lg"
                 >
                   {unseenCount} new message{unseenCount > 1 ? "s" : ""}
                 </button>
@@ -555,12 +713,12 @@ export const ChatInterface: React.FC = () => {
                 </div>
               ) : null}
               {!canSend ? (
-                <div className="mt-2 text-sm text-amber-200/70 text-center">
+                <div className="mt-2 text-sm text-red-200/80 bg-neutral-700/50 p-4 text-center animate-alert-bounce-in">
                   {blockState.blockedByFriend
                     ? "You cannot message this user right now"
                     : blockState.blockedBySelf
-                    ? "Unblock the user to continue messaging"
-                    : "Select a friend to start chatting"}
+                      ? "Unblock the user to continue messaging"
+                      : "Select a friend to start chatting"}
                 </div>
               ) : null}
             </div>

@@ -25,6 +25,14 @@ export type FriendRealtimeEvent =
       request: FriendRequestRecord;
       fromUser: FriendUserPayload;
       toUser: FriendUserPayload;
+      blockedBySelf: boolean;
+      blockedByFriend: boolean;
+      blockCreatedAt: string | null;
+    }
+  | {
+      type: "friend_removed";
+      initiatorId: number;
+      targetId: number;
     };
 
 export function friendChannel(userId: number): string {

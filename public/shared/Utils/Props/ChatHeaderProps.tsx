@@ -28,7 +28,7 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({ onSelectFriend }) => {
   } = useFriendRelationships();
 
   return (
-    <div className="p-3 bg-white/20 pb-6 overflow-hidden header-background">
+    <div className="p-3 bg-white/5 pb-6 overflow-hidden header-background">
       <div className="flex flex-col gap-3">
         <UserInfoHeader />
         <FriendSearchHeader />

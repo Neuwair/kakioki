@@ -5,6 +5,7 @@
 .send-message-btn,
 .btnRemoveMedia,
 .block-btn,
+.nuke-btn,
 .remove-friend-btn,
 .signin-btn,
 .signup-btn {
@@ -24,6 +25,7 @@
 .send-message-btn::before,
 .btnRemoveMedia::before,
 .block-btn::before,
+.nuke-btn::before,
 .remove-friend-btn::before,
 .signin-btn::before,
 .signup-btn::before {
@@ -51,6 +53,7 @@
 .send-message-btn:hover,
 .btnRemoveMedia:hover,
 .block-btn:hover,
+.nuke-btn:hover,
 .remove-friend-btn:hover,
 .signin-btn:hover,
 .signup-btn:hover {
@@ -66,6 +69,7 @@
 .send-message-btn:hover::before,
 .btnRemoveMedia:hover::before,
 .block-btn:hover::before,
+.nuke-btn:hover::before,
 .remove-friend-btn:hover::before,
 .signin-btn:hover::before,
 .signup-btn:hover::before {
@@ -79,6 +83,7 @@
 .send-message-btn:active,
 .btnRemoveMedia:active,
 .block-btn:active,
+.nuke-btn:active,
 .remove-friend-btn:active {
   transform: translateY(1px);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1),
@@ -92,6 +97,7 @@
 .send-message-btn > *,
 .btnRemoveMedia > *,
 .block-btn > *,
+.nuke-btn > *,
 .remove-friend-btn > *,
 .signin-btn > *,
 .signup-btn > * {

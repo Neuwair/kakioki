@@ -97,5 +97,6 @@ export interface UseChatReturn {
   blockFriend: () => Promise<boolean>;
   unblockFriend: () => Promise<boolean>;
   removeFriend: () => Promise<boolean>;
+  nukeMessages: () => Promise<boolean>;
   loadLatest: () => Promise<void>;
 }

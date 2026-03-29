@@ -68,7 +68,7 @@ export const FriendRequestsHeader: React.FC<FriendRequestsHeaderProps> = ({
               <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm flex items-center gap-1"
+                  className="px-3 py-1 bg-blue-500 hover:bg-blue-700 text-amber-50 rounded-md text-sm flex items-center gap-1"
                   onClick={() => onAccept(entry.user.id)}
                   disabled={isAccepting}
                 >
@@ -85,7 +85,7 @@ export const FriendRequestsHeader: React.FC<FriendRequestsHeaderProps> = ({
                 </button>
                 <button
                   type="button"
-                  className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm flex items-center gap-1"
+                  className="px-3 py-1 bg-red-500 hover:bg-red-700 text-amber-50 rounded-md text-sm flex items-center gap-1"
                   onClick={() => onDecline(entry.user.id)}
                   disabled={isDeclining}
                 >
@@ -120,7 +120,7 @@ export const FriendRequestsHeader: React.FC<FriendRequestsHeaderProps> = ({
               </div>
               <button
                 type="button"
-                className="px-3 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-md text-sm flex items-center gap-1 cancel-btn"
+                className="px-3 py-1 bg-amber-600 hover:bg-amber-700 text-amber-50 rounded-md text-sm flex items-center gap-1 cancel-btn"
                 onClick={() => onCancel(entry.user.id)}
                 disabled={isCanceling}
               >

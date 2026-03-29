@@ -77,13 +77,13 @@ export const FriendSearchDropdown: React.FC<FriendSearchDropdownProps> = ({
   if (results.length === 0) {
     if (query.trim().length === 0) {
       return (
-        <div className="text-center text-amber-50/70 py-6 text-sm">
+        <div className="text-center text-amber-50/70 bg-white/5 py-6 text-sm">
           Start typing to search for users
         </div>
       );
     }
     return (
-      <div className="text-center text-amber-50/70 py-6 text-sm">
+      <div className="text-center text-amber-50/70 bg-white/5 py-6 text-sm">
         No users found matching “{query.trim()}”
       </div>
     );
@@ -99,10 +99,10 @@ export const FriendSearchDropdown: React.FC<FriendSearchDropdownProps> = ({
         return (
           <li
             key={user.id}
-            className="flex items-center justify-between px-4 py-3 hover:bg-white/10 transition-colors"
+            className="flex items-center justify-between px-4 py-3 hover:bg-white/10 transition-colors backdrop-blur-sm"
           >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-white/5 border border-white/20 flex items-center justify-center overflow-hidden">
+              <div className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center overflow-hidden">
                 {renderAvatar(user.avatarUrl, user.username)}
               </div>
               <div>

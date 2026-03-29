@@ -40,7 +40,7 @@ interface ChatRealtimeParams {
   ensureSharedKey: () => Promise<Uint8Array>;
   fetchEncryptedMessage: (
     targetThreadId: string,
-    clientMessageId: string
+    clientMessageId: string,
   ) => Promise<EncryptedMessageRecord | null>;
   updateBlockState: (update: Partial<BlockState>) => void;
   resetState: () => void;
@@ -66,6 +66,7 @@ export function initialiseChatRealtime({
   historyDecryptAbortRef,
 }: ChatRealtimeParams): () => void {
   let isActive = true;
+  let clearErrorTimer: ReturnType<typeof setTimeout> | null = null;
   const subscriptions: Array<{
     channel: AblyChannel;
     listener: (message: AblyMessage) => void;
@@ -78,13 +79,13 @@ export function initialiseChatRealtime({
         return;
       }
       const messageChannel = client.channels.get(
-        chatMessageChannel(threadId)
+        chatMessageChannel(threadId),
       ) as unknown as AblyChannel;
       const statusChannel = client.channels.get(
-        chatStatusChannel(threadId)
+        chatStatusChannel(threadId),
       ) as unknown as AblyChannel;
       const controlChannel = client.channels.get(
-        chatControlChannel(threadId)
+        chatControlChannel(threadId),
       ) as unknown as AblyChannel;
 
       const handleMessage = (message: AblyMessage) => {
@@ -107,7 +108,7 @@ export function initialiseChatRealtime({
             if (needsFetch) {
               const stored = await fetchEncryptedMessage(
                 payload.threadId,
-                payload.clientMessageId
+                payload.clientMessageId,
               );
               if (!stored) {
                 return;
@@ -189,7 +190,7 @@ export function initialiseChatRealtime({
                 status: nextStatus,
               });
               return { ...entry, status: nextStatus, state: nextState };
-            })
+            }),
           );
         });
       };
@@ -233,16 +234,23 @@ export function initialiseChatRealtime({
           if (payload.threadId === threadId) {
             resetState();
             setThreadId(null);
-            updateBlockState({
-              blockedBySelf: false,
-              blockedByFriend: false,
-              createdAt: null,
-            });
             if (payload.initiatorId !== userId) {
               setError("Friend removed the conversation");
             } else {
               setError("Conversation removed");
             }
+          }
+        } else if (payload.type === "chat_cleared") {
+          if (payload.threadId === threadId) {
+            setMessages([]);
+            setError("Conversation messages cleared");
+            if (clearErrorTimer) {
+              clearTimeout(clearErrorTimer);
+            }
+            clearErrorTimer = setTimeout(() => {
+              setError(null);
+              clearErrorTimer = null;
+            }, 5000);
           }
         }
       };
@@ -265,6 +273,10 @@ export function initialiseChatRealtime({
 
   return () => {
     isActive = false;
+    if (clearErrorTimer) {
+      clearTimeout(clearErrorTimer);
+      clearErrorTimer = null;
+    }
     historyDecryptAbortRef.current?.abort();
     historyDecryptAbortRef.current = null;
     realtimeDecryptAbortRef.current?.abort();

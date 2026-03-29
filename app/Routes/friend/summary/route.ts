@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
     console.error("Friend summary error:", error);
     return NextResponse.json(
       { error: "Failed to load friend data" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

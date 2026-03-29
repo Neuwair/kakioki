@@ -299,7 +299,7 @@ export const InlineVideoPlayer: React.FC<InlineVideoPlayerProps> = ({
         />
       </div>
       <div className="pointer-events-none absolute inset-0 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100" />
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col gap-3 p-2 sm:p-3 text-white opacity-100 sm:opacity-0 mb-2 transition-opacity duration-200 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 items-center">
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col gap-3 p-2 sm:p-3 text-amber-50 opacity-100 sm:opacity-0 mb-2 transition-opacity duration-200 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 items-center">
         <div className="pointer-events-auto flex w-full flex-col items-center gap-2">
           {shouldForceCompact ? (
             <div className="flex items-center gap-2 rounded-full bg-black/45 px-2 py-1 backdrop-blur">
@@ -387,7 +387,7 @@ export const InlineVideoPlayer: React.FC<InlineVideoPlayerProps> = ({
                     aria-label="Volume"
                     className="h-1 w-full max-w-60 cursor-pointer appearance-none rounded-full bg-white/30"
                   />
-                  <span className="whitespace-nowrap text-[0.65rem] font-medium text-white/80 sm:text-xs">
+                  <span className="whitespace-nowrap text-[0.65rem] font-medium text-amber-50/80 sm:text-xs">
                     {timeLabel}
                   </span>
                 </div>

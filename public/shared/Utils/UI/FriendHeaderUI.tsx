@@ -21,7 +21,7 @@ export const ChatUserHeader: React.FC<{
 
   if (!selectedFriend) {
     return (
-      <div className=" bg-white/20 backdrop-blur-lg sticky top-0 z-20 min-h-[80px] flex items-center justify-center user-header">
+      <div className=" bg-white/5 backdrop-blur-lg sticky top-0 z-20 min-h-[80px] flex items-center justify-center user-header">
         <p className="text-lg text-amber-50/70 font-medium cursor-default">
           Select a friend to start a message
         </p>
@@ -34,8 +34,7 @@ export const ChatUserHeader: React.FC<{
       return (
         <div className="mt-1 flex items-center gap-2 text-xs text-amber-100/80">
           <span className="relative flex h-2.5 w-2.5">
-            <span className="absolute inline-flex h-full w-full rounded-full bg-amber-300/40 motion-safe:animate-[ping_1.8s_ease-in-out_infinite]"></span>
-            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-amber-300"></span>
+            <span className="absolute inline-flex h-full w-full rounded-full bg-amber-600 motion-safe:animate-[ping_1.8s_ease-in-out_infinite]"></span>
           </span>
           Checking status…
         </div>
@@ -64,8 +63,8 @@ export const ChatUserHeader: React.FC<{
   })();
 
   return (
-    <div className="bg-white/20 backdrop-blur-lg sticky top-0 z-20 user-header shadow-[0_9px_12px_-4px_rgba(0,0,0,0.20)]">
-      <div className="p-4 flex items-center gap-3">
+    <div className="bg-white/5 sticky top-0 z-20 user-header shadow-[0_9px_12px_-4px_rgba(0,0,0,0.20)]">
+      <div className="p-4 flex items-center gap-4">
         <div className="w-12 h-12 rounded-full bg-white/5 border border-white/20 overflow-hidden flex items-center justify-center">
           {(() => {
             const avatar =
@@ -104,7 +103,7 @@ export const ChatUserHeader: React.FC<{
           {actions}
           <button
             onClick={onClose}
-            className="p-2 rounded-lg bg-white/5 hover:bg-gray-700/50 text-white flex items-center justify-center cursor-pointer transition-all duration-200 interface-btn"
+            className="p-2 rounded-lg bg-white/5 hover:bg-gray-700/50 text-amber-50 flex items-center justify-center cursor-pointer transition-all duration-200 interface-btn"
           >
             <FontAwesomeIcon icon={faTimes} size="lg" />
           </button>
