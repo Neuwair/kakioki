@@ -67,7 +67,11 @@ export const MessageInput: React.FC<MessageInputProps> = ({
           <button
             type="button"
             onClick={onEmojiClick}
-            className="p-2 rounded-lg hover:bg-gray-700/50 text-amber-50 items-center justify-center cursor-pointer transition-colors duration-200 interface-btn emoji-button"
+            disabled={disabled}
+            className={
+              "p-2 rounded-lg hover:bg-gray-700/50 text-amber-50 items-center justify-center transition-colors duration-200 interface-btn emoji-button" +
+              (disabled ? " opacity-60 cursor-not-allowed" : "")
+            }
           >
             <FontAwesomeIcon icon={faFaceSmile} size="lg" />
           </button>
@@ -96,7 +100,11 @@ export const MessageInput: React.FC<MessageInputProps> = ({
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
-          className="p-2 rounded-lg hover:bg-gray-700/50 text-amber-50 flex items-center justify-center cursor-pointer interface-btn"
+          disabled={disabled}
+          className={
+            "p-2 rounded-lg hover:bg-gray-700/50 text-amber-50 flex items-center justify-center interface-btn" +
+            (disabled ? " opacity-60 cursor-not-allowed" : "")
+          }
         >
           <FontAwesomeIcon icon={faPaperclip} size="lg" />
           <input
@@ -110,6 +118,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
             autoComplete="off"
             multiple
             max="4"
+            disabled={disabled}
           />
         </button>
         <button

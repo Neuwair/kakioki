@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/Auth/AuthServer";
 import { MessageRepository, FriendRepository } from "@/lib";
-import { publishChatMessage } from "@/lib/Realtime/AblyServer";
+import {
+  publishChatMessage,
+  publishChatNotification,
+} from "@/lib/Realtime/AblyServer";
 import type {
   MessageMetadata,
   MessageStatusMetadata,
@@ -33,7 +36,7 @@ export async function POST(request: NextRequest) {
   } catch {
     return NextResponse.json(
       { success: false, error: "Invalid JSON payload" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -45,7 +48,7 @@ export async function POST(request: NextRequest) {
   ) {
     return NextResponse.json(
       { success: false, error: "Missing required fields" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -53,14 +56,14 @@ export async function POST(request: NextRequest) {
   if (!Number.isFinite(targetUserId) || targetUserId <= 0) {
     return NextResponse.json(
       { success: false, error: "Invalid recipient" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
   if (targetUserId === user.id) {
     return NextResponse.json(
       { success: false, error: "Cannot message yourself" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -68,6 +71,7 @@ export async function POST(request: NextRequest) {
   let thread = threadId
     ? await messageRepository.getThreadByPublicId(threadId)
     : null;
+  const isNewThread = !thread;
 
   if (thread && thread.threadId !== threadId) {
     thread = null;
@@ -76,7 +80,7 @@ export async function POST(request: NextRequest) {
   if (thread && thread.userAId !== user.id && thread.userBId !== user.id) {
     return NextResponse.json(
       { success: false, error: "Forbidden" },
-      { status: 403 }
+      { status: 403 },
     );
   }
 
@@ -90,7 +94,7 @@ export async function POST(request: NextRequest) {
   if (otherUserId !== targetUserId) {
     return NextResponse.json(
       { success: false, error: "Recipient mismatch" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -102,14 +106,14 @@ export async function POST(request: NextRequest) {
   if (!isFriend) {
     return NextResponse.json(
       { success: false, error: "Users are not friends" },
-      { status: 403 }
+      { status: 403 },
     );
   }
 
   if (blockStatus.isBlocked) {
     return NextResponse.json(
       { success: false, error: "Messaging is blocked" },
-      { status: 403 }
+      { status: 403 },
     );
   }
 
@@ -145,6 +149,15 @@ export async function POST(request: NextRequest) {
     status: storedMessage.statusMetadata,
     createdAt: storedMessage.createdAt,
   });
+
+  if (isNewThread) {
+    await publishChatNotification(otherUserId, {
+      type: "chat_thread_created",
+      threadId: thread.threadId,
+      fromId: user.id,
+      createdAt: storedMessage.createdAt,
+    });
+  }
 
   return NextResponse.json({
     success: true,

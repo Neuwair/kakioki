@@ -82,7 +82,7 @@ export async function unblockFriendAction(
 export async function removeFriendAction(
   deps: ChatActionDeps,
 ): Promise<boolean> {
-  const { friend, threadId, setMessages, updateBlockState } = deps;
+  const { friend, threadId, setMessages } = deps;
   if (!friend) {
     return false;
   }
@@ -102,11 +102,7 @@ export async function removeFriendAction(
       throw new Error(data?.error || "Remove friend failed");
     }
     setMessages([]);
-    updateBlockState({
-      blockedBySelf: false,
-      blockedByFriend: false,
-      createdAt: null,
-    });
+    // keep block state as-is so blocking remains persistent even after removing friendship
     return true;
   } catch (removeError) {
     console.error("Remove friend error:", removeError);

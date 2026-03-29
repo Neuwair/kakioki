@@ -47,12 +47,30 @@ export type ChatControlEvent =
       initiatorId: number;
       targetId: number;
       createdAt: string;
+    }
+  | {
+      type: "chat_cleared";
+      threadId: string;
+      initiatorId: number;
+      targetId: number;
+      createdAt: string;
     };
 
 export type ChatRealtimeEvent =
   | ChatMessageEvent
   | ChatStatusEvent
   | ChatControlEvent;
+
+export type ChatNotificationEvent = {
+  type: "chat_thread_created";
+  threadId: string;
+  fromId: number;
+  createdAt: string;
+};
+
+export function userChatNotificationChannel(userId: number) {
+  return `user:chat:${userId}`;
+}
 
 export function chatMessageChannel(threadId: string) {
   return `chat:thread:${threadId}`;

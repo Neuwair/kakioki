@@ -63,3 +63,37 @@ input[type="range"]:active,
 .animate-input-push-down {
   animation: inputPushDown 360ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
+
+@keyframes alertBounceIn {
+  0% {
+    transform: translateY(-18px) scale(0.96);
+    opacity: 0;
+  }
+  60% {
+    transform: translateY(3px) scale(1.02);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes alertBounceOut {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-18px) scale(0.96);
+    opacity: 0;
+  }
+}
+
+.animate-alert-bounce-in {
+  animation: alertBounceIn 340ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.animate-alert-bounce-out {
+  animation: alertBounceOut 240ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}

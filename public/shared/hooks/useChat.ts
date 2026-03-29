@@ -2,6 +2,12 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "@/lib/context/AuthClientUI";
+import { getAuthHeaders } from "@/public/shared/Helpers/AuthHelpers";
+import { getRealtimeClient } from "@/public/shared/Realtime/ablyClient";
+import {
+  userChatNotificationChannel,
+  type ChatNotificationEvent,
+} from "@/lib/Realtime/ChatEvents";
 import {
   BlockState,
   ChatMessage,
@@ -59,6 +65,7 @@ export function useChat({ friend }: UseChatState): UseChatReturn {
   const activeThreadIdRef = useRef<string | null>(friend?.threadId ?? null);
   const historyDecryptAbortRef = useRef<AbortController | null>(null);
   const realtimeDecryptAbortRef = useRef<AbortController | null>(null);
+  const loadedThreadIdRef = useRef<string | null>(null);
 
   const keyManager = useChatKeyManager(user, friend);
   const {
@@ -76,6 +83,7 @@ export function useChat({ friend }: UseChatState): UseChatReturn {
     setIsLoading(false);
     setIsThreadPreparing(false);
     loadSequenceRef.current += 1;
+    loadedThreadIdRef.current = null;
     historyDecryptAbortRef.current?.abort();
     historyDecryptAbortRef.current = null;
     realtimeDecryptAbortRef.current?.abort();
@@ -142,15 +150,58 @@ export function useChat({ friend }: UseChatState): UseChatReturn {
       });
       return;
     }
-    if (friend.threadId !== threadId) {
+    if (loadedThreadIdRef.current === threadId) {
       return;
     }
     const resolvedFriendKey = friend.user.publicKey ?? friendPublicKey;
     if (!resolvedFriendKey) {
       return;
     }
+    loadedThreadIdRef.current = threadId;
     loadHistory(threadId);
   }, [friend, friendPublicKey, threadId, loadHistory]);
+
+  useEffect(() => {
+    if (!user?.id || !friend || threadId) {
+      return undefined;
+    }
+    let isActive = true;
+    type AblyChannel = {
+      subscribe: (listener: (msg: { data: unknown }) => void) => void;
+      unsubscribe: (listener: (msg: { data: unknown }) => void) => void;
+    };
+    let channel: AblyChannel | null = null;
+    let listener: ((msg: { data: unknown }) => void) | null = null;
+    const subscribe = async () => {
+      const client = await getRealtimeClient();
+      if (!isActive) return;
+      channel = client.channels.get(
+        userChatNotificationChannel(user.id),
+      ) as unknown as AblyChannel;
+      listener = (message) => {
+        const payload = message.data as ChatNotificationEvent | undefined;
+        if (
+          payload?.type === "chat_thread_created" &&
+          payload.fromId === friend.user.id &&
+          payload.threadId
+        ) {
+          setThreadId(payload.threadId);
+        }
+      };
+      channel.subscribe(listener);
+    };
+    void subscribe();
+    return () => {
+      isActive = false;
+      if (channel && listener) {
+        try {
+          channel.unsubscribe(listener);
+        } catch {
+          /* ignore */
+        }
+      }
+    };
+  }, [user?.id, friend, threadId]);
 
   const updateBlockState = useCallback((update: Partial<BlockState>) => {
     setBlockState((prev) => ({
@@ -260,6 +311,31 @@ export function useChat({ friend }: UseChatState): UseChatReturn {
     [threadId],
   );
 
+  const nukeMessages = useCallback(async (): Promise<boolean> => {
+    if (!friend || !threadId || !user?.id) {
+      return false;
+    }
+    try {
+      const response = await fetch("/api/chat/nuke", {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          threadId,
+          targetUserId: friend.user.id,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok || !data?.success) {
+        throw new Error(data?.error || "Failed to nuke messages");
+      }
+      setMessages([]);
+      return true;
+    } catch (error) {
+      console.error("Nuke messages error:", error);
+      return false;
+    }
+  }, [friend, threadId, user?.id]);
+
   const actionDeps = useMemo(
     () => ({
       friend,
@@ -313,6 +389,7 @@ export function useChat({ friend }: UseChatState): UseChatReturn {
     blockFriend,
     unblockFriend,
     removeFriend,
+    nukeMessages,
     loadLatest,
   };
 }

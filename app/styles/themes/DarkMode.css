@@ -1,6 +1,7 @@
 [data-theme="dark"] .interface-btn,
 [data-theme="dark"] .remove-friend-btn,
-[data-theme="dark"] .block-btn {
+[data-theme="dark"] .block-btn,
+[data-theme="dark"] .nuke-btn {
   backdrop-filter: blur(6px);
   background: rgba(39, 39, 39, 0.5);
   border-color: rgba(255, 255, 255, 0.06);
@@ -36,4 +37,8 @@
 [data-theme="dark"] .btnRemoveMedia:hover,
 [data-theme="dark"] .block-btn:hover {
   background-color: var(--color-red-500);
+}
+
+[data-theme="dark"] .nuke-btn:hover {
+    background-color: var(--color-amber-700);
 }

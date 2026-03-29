@@ -237,6 +237,22 @@ export class MessageRepository {
     return { userAId: thread.userAId, userBId: thread.userBId };
   }
 
+  async deleteMessagesByThreadPublicId(threadPublicId: string): Promise<boolean> {
+    const thread = await this.getThreadByPublicId(threadPublicId);
+    if (!thread) {
+      return false;
+    }
+    try {
+      await sql`
+        DELETE FROM messages
+        WHERE thread_id = ${thread.internalId}
+      `;
+      return true;
+    } catch (error) {
+      handleDatabaseError("Failed to delete thread messages", error);
+    }
+  }
+
   async getMessageByClientId(
     threadPublicId: string,
     clientMessageId: string

@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/Auth/AuthServer";
 import { FriendRepository, MessageRepository } from "@/lib";
-import { publishChatControl, publishFriendEvent } from "@/lib/Realtime/AblyServer";
+import { publishChatControl } from "@/lib/Realtime/AblyServer";
 
 const friendRepository = new FriendRepository();
 const messageRepository = new MessageRepository();
 
-type RemovePayload = {
+type NukePayload = {
   threadId?: string | null;
   targetUserId?: number;
 };
@@ -18,9 +18,9 @@ export async function POST(request: NextRequest) {
   }
 
   const { user } = authResult;
-  let payload: RemovePayload;
+  let payload: NukePayload;
   try {
-    payload = (await request.json()) as RemovePayload;
+    payload = (await request.json()) as NukePayload;
   } catch {
     return NextResponse.json(
       { success: false, error: "Invalid JSON payload" },
@@ -70,50 +70,31 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const friendshipRemoved = await friendRepository.removeFriendship(
-    user.id,
-    targetUserId
-  );
-
   if (!thread) {
-    thread = await messageRepository.findThreadByParticipants(
-      user.id,
-      targetUserId
-    );
+    thread = await messageRepository.findThreadByParticipants(user.id, targetUserId);
   }
 
   if (!thread) {
-    thread = await messageRepository.getOrCreateThread(user.id, targetUserId);
-  }
-
-  let removedThread = false;
-  if (thread) {
-    removedThread = await messageRepository.deleteThreadByPublicId(
-      thread.threadId
+    return NextResponse.json(
+      { success: false, error: "Thread not found" },
+      { status: 404 }
     );
   }
 
-  if (thread) {
-    await publishChatControl({
-      type: "chat_removed",
-      threadId: thread.threadId,
-      initiatorId: user.id,
-      targetId: targetUserId,
-      createdAt: new Date().toISOString(),
-    });
-  }
+  const deleted = await messageRepository.deleteMessagesByThreadPublicId(thread.threadId);
 
-  await publishFriendEvent({
-    type: "friend_removed",
+  await publishChatControl({
+    type: "chat_cleared",
+    threadId: thread.threadId,
     initiatorId: user.id,
     targetId: targetUserId,
+    createdAt: new Date().toISOString(),
   });
 
   return NextResponse.json({
     success: true,
-    removedFriendship: friendshipRemoved,
-    removedThread,
+    deleted,
+    threadId: thread.threadId,
     targetUserId,
-    threadId: thread?.threadId ?? null,
   });
 }

@@ -242,28 +242,28 @@ export function useFriendRelationships() {
           : event.request.from_id;
       const friendPayload =
         event.request.from_id === user.id ? event.toUser : event.fromUser;
+
+      const isAcceptor = event.request.to_id === user.id;
+      const blockedBySelf = isAcceptor
+        ? (event.blockedBySelf ?? false)
+        : (event.blockedByFriend ?? false);
+      const blockedByFriend = isAcceptor
+        ? (event.blockedByFriend ?? false)
+        : (event.blockedBySelf ?? false);
+
       const entry: FriendListEntry = {
         user: mapUserPayload(friendPayload),
         request: event.request,
         threadId: null,
-        blockedBySelf: false,
-        blockedByFriend: false,
-        blockCreatedAt: null,
+        blockedBySelf,
+        blockedByFriend,
+        blockCreatedAt: event.blockCreatedAt ?? null,
       };
 
       setFriends((prev) => {
-        const existing = prev.find(
-          (current) => current.user.id === entry.user.id
-        );
+        const existing = prev.find((current) => current.user.id === entry.user.id);
         const merged = existing
-          ? {
-              ...entry,
-              threadId: existing.threadId ?? entry.threadId,
-              blockedBySelf: existing.blockedBySelf ?? entry.blockedBySelf,
-              blockedByFriend:
-                existing.blockedByFriend ?? entry.blockedByFriend,
-              blockCreatedAt: existing.blockCreatedAt ?? entry.blockCreatedAt,
-            }
+          ? { ...entry, threadId: existing.threadId ?? null }
           : entry;
         return mergeUnique(prev, merged, true);
       });
@@ -281,9 +281,13 @@ export function useFriendRelationships() {
         handleCancelledEvent(event);
       } else if (event.type === "friend_request_accepted") {
         handleAcceptedEvent(event);
+      } else if (event.type === "friend_removed") {
+        const otherUserId =
+          event.initiatorId === user?.id ? event.targetId : event.initiatorId;
+        setFriends((prev) => removeUser(prev, otherUserId));
       }
     },
-    [handleAcceptedEvent, handleCancelledEvent, handleSentEvent]
+    [handleAcceptedEvent, handleCancelledEvent, handleSentEvent, user?.id]
   );
 
   useFriendRealtime(realtimeHandler);
