@@ -4,7 +4,7 @@
   "crons": [
     {
       "path": "/Routes/maintenance/cleanup",
-      "schedule": "* * * * 5"
+      "schedule": "0 0 * * *"
     }
   ]
 }
