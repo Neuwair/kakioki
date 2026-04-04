@@ -1,0 +1,179 @@
+.interface-btn,
+.cancel-btn,
+.save-btn,
+.online-btn,
+.away-btn,
+.offline-btn,
+.use-crop-btn,
+.send-message-btn,
+.btnRemoveMedia,
+.block-btn,
+.nuke-btn,
+.view-btn,
+.remove-friend-btn,
+.accept-friend-btn,
+.signin-btn,
+.signup-btn {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow:
+    0 4px 6px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+
+.interface-btn::before,
+.cancel-btn::before,
+.save-btn::before,
+.online-btn::before,
+.away-btn::before,
+.offline-btn::before,
+.use-crop-btn::before,
+.send-message-btn::before,
+.btnRemoveMedia::before,
+.block-btn::before,
+.nuke-btn::before,
+.view-btn::before,
+.remove-friend-btn::before,
+.accept-friend-btn::before,
+.signin-btn::before,
+.signup-btn::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    to bottom right,
+    rgba(255, 255, 255, 0.2) 0%,
+    rgba(255, 255, 255, 0.05) 40%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  pointer-events: none;
+  z-index: 1;
+  mix-blend-mode: overlay;
+}
+
+.interface-btn:hover,
+.cancel-btn:hover,
+.save-btn:hover,
+.online-btn:hover,
+.away-btn:hover,
+.offline-btn:hover,
+.use-crop-btn:hover,
+.send-message-btn:hover,
+.btnRemoveMedia:hover,
+.block-btn:hover,
+.nuke-btn:hover,
+.view-btn:hover,
+.remove-friend-btn:hover,
+.accept-friend-btn:hover,
+.signin-btn:hover,
+.signup-btn:hover {
+  box-shadow:
+    0 8px 12px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.interface-btn:hover::before,
+.cancel-btn:hover::before,
+.save-btn:hover::before,
+.online-btn:hover::before,
+.away-btn:hover::before,
+.offline-btn:hover::before,
+.use-crop-btn:hover::before,
+.send-message-btn:hover::before,
+.btnRemoveMedia:hover::before,
+.block-btn:hover::before,
+.nuke-btn:hover::before,
+.view-btn:hover::before,
+.remove-friend-btn:hover::before,
+.accept-friend-btn:hover::before,
+.signin-btn:hover::before,
+.signup-btn:hover::before {
+  opacity: 0.8;
+}
+
+.interface-btn > *,
+.cancel-btn > *,
+.save-btn > *,
+.online-btn > *,
+.away-btn > *,
+.offline-btn > *,
+.use-crop-btn > *,
+.send-message-btn > *,
+.btnRemoveMedia > *,
+.block-btn > *,
+.nuke-btn > *,
+.view-btn > *,
+.remove-friend-btn > *,
+.accept-friend-btn > *,
+.signin-btn > *,
+.signup-btn > * {
+  position: relative;
+  z-index: 3;
+}
+
+button,
+input[type="button"],
+input[type="submit"],
+.btn {
+  will-change: transform;
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.12s ease;
+  cursor: pointer;
+}
+
+.slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 12px;
+  border-radius: 9999px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.12),
+    rgba(255, 255, 255, 0.02)
+  );
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 2px 6px rgba(0, 0, 0, 0.12);
+  outline: none;
+  cursor: pointer;
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 9999px;
+  background: linear-gradient(180deg, #ffffff 0%, #f0fdf4 100%);
+  border: 2px solid rgba(0, 0, 0, 0.12);
+  box-shadow:
+    0 6px 14px rgba(3, 7, 18, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.slider::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 9999px;
+  background: linear-gradient(180deg, #ffffff 0%, #f0fdf4 100%);
+  border: 2px solid rgba(0, 0, 0, 0.12);
+  box-shadow:
+    0 6px 14px rgba(3, 7, 18, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.slider-scale {
+  background: linear-gradient(180deg, #afec3e 0%, #7ab905 60%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22);
+}
+
+input[type="range"].slider {
+  padding: 6px 0;
+}

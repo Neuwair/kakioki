@@ -1,0 +1,43 @@
+@import "tailwindcss";
+@import "./styles/DarkMode.css";
+@import "./styles/Animations.css";
+@import "./styles/Buttons.css";
+@import "./styles/Media.css";
+@import "./styles/Interface.css";
+
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 1rem);
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@layer base {
+  * {
+    margin: 0;
+    padding: 0;
+    font-family: "Gill Sans", "Gill Sans MT", "Calibri", "Trebuchet MS",
+      sans-serif;
+    box-sizing: border-box;
+  }
+  body {
+    height: 100%;
+    overflow-x: hidden;
+    background-image: url(https://images.pexels.com/photos/15063603/pexels-photo-15063603.jpeg);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+  }
+}
