@@ -475,7 +475,6 @@ export default function UserSettings({ onBack }: { onBack?: () => void } = {}) {
       if (!response.ok || !data?.success) {
         throw new Error(data?.error || "Unblock failed");
       }
-
       await refreshRelationships();
     } catch (unblockError) {
       console.error("Unblock user error:", unblockError);
@@ -487,7 +486,6 @@ export default function UserSettings({ onBack }: { onBack?: () => void } = {}) {
       });
     }
   };
-
   return (
     <div className="text-neutral-50 flex flex-col flex-wrap gap-4">
       <div className="flex flex-row-reverse">
@@ -538,7 +536,6 @@ export default function UserSettings({ onBack }: { onBack?: () => void } = {}) {
                 </div>
               </div>
             </div>
-
             <div className="flex flex-col justify-center flex-2 min-w-0">
               <div className="h-full min-w-0">
                 {isEditingBio ? (
@@ -703,7 +700,6 @@ export default function UserSettings({ onBack }: { onBack?: () => void } = {}) {
             </div>
           </form>
         </div>
-
         <div className="flex flex-col flex-wrap p-4 rounded-lg bg-white/5 border border-white/10 flex-1 justify-center">
           <form
             onSubmit={handleEmailSubmit}
@@ -776,7 +772,6 @@ export default function UserSettings({ onBack }: { onBack?: () => void } = {}) {
             </div>
           </form>
         </div>
-
         <EmojiPicker
           isOpen={isEmojiPickerOpen}
           triggerRef={bioEmojiButtonRef}
@@ -825,7 +820,6 @@ export default function UserSettings({ onBack }: { onBack?: () => void } = {}) {
                 <ul className="divide-y divide-white/10">
                   {blockedUsers.map((entry) => {
                     const isUnblocking = unblockingIds.has(entry.user.id);
-
                     return (
                       <li
                         key={entry.user.id}
@@ -885,7 +879,6 @@ export default function UserSettings({ onBack }: { onBack?: () => void } = {}) {
           </div>
         </div>
       </div>
-
       <div className="flex flex-col flex-wrap p-4 rounded-lg bg-white/5 border border-white/10 flex-1 justify-start min-h-0">
         <div className="flex flex-col gap-4">
           <label
@@ -916,7 +909,6 @@ export default function UserSettings({ onBack }: { onBack?: () => void } = {}) {
           </div>
         </div>
       </div>
-
       <AvatarUploadModal
         isOpen={isAvatarModalOpen}
         onClose={closeAvatarModal}
