@@ -1,0 +1,21 @@
+.chat-container {
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  flex-direction: column;
+  max-height: 100vh;
+}
+
+.chat-input-area {
+  position: sticky;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(16px);
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  z-index: 10;
+  margin-top: auto;
+}
+
+.chat-background {
+    background: rgba(53, 53, 53, 0.6);
+}

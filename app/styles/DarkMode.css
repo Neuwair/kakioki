@@ -1,0 +1,66 @@
+[data-theme="dark"] .chat-background {
+  background: rgba(34, 34, 34, 0.95);
+}
+
+[data-theme="dark"] .interface-btn,
+[data-theme="dark"] .remove-friend-btn,
+[data-theme="dark"] .accept-friend-btn,
+[data-theme="dark"] .block-btn,
+[data-theme="dark"] .nuke-btn,
+[data-theme="dark"] .view-btn,
+[data-theme="dark"] .cancel-btn,
+[data-theme="dark"] .btn-close {
+  backdrop-filter: blur(6px);
+  background: rgba(39, 39, 39, 0.5);
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+[data-theme="dark"] .interface-btn:hover,
+[data-theme="dark"] .remove-friend-btn:hover,
+[data-theme="dark"] .accept-friend-btn:hover,
+[data-theme="dark"] .btn-close:hover,
+[data-theme="dark"] .cancel-btn:hover {
+  background: rgba(34, 34, 34, 0.9);
+}
+
+[data-theme="dark"] .media-preview-item {
+  background: rgba(0, 0, 0, 0.35);
+}
+
+[data-theme="dark"] .dropdown-ui {
+  background: rgba(39, 39, 39, 0.5);
+}
+
+[data-theme="dark"] .text-item {
+  color: white;
+}
+
+[data-theme="dark"] .text-status-item {
+  color: lightgray;
+}
+
+[data-theme="dark"] .send-btn {
+  backdrop-filter: blur(6px);
+  background: rgba(36, 144, 238, 0.5);
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+[data-theme="dark"] .send-btn:hover {
+  background: rgba(78, 184, 246, 0.683);
+}
+
+[data-theme="dark"] .btnRemoveMedia:hover,
+[data-theme="dark"] .block-btn:hover,
+[data-theme="dark"] .nuke-btn:hover,
+[data-theme="dark"] .remove-friend-btn:hover {
+  background-color: var(--color-red-500);
+}
+
+[data-theme="dark"] .accept-friend-btn:hover,
+[data-theme="dark"] .view-btn:hover {
+  background-color: var(--color-lime-700);
+}
+
+[data-theme="dark"] .nuke-btn:hover {
+  background-color: var(--color-amber-700);
+}

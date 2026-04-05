@@ -1,0 +1,10 @@
+{
+  "buildCommand": "next build",
+  "framework": "nextjs",
+  "crons": [
+    {
+      "path": "/api/database",
+      "schedule": "0 0 * * *"
+    }
+  ]
+}
