@@ -13,14 +13,14 @@ import type {
 type LiteYouTubeElement = HTMLElement & { activate?: () => unknown };
 
 async function sendMessageHandler(
-  _params: unknown
+  _params: unknown,
 ): Promise<{ success: boolean; error?: string; data?: unknown }> {
   return { success: false, error: "Not implemented" };
 }
 
 function formatApiMessageToClientMessage(
   apiMessage: unknown,
-  _userId?: number
+  _userId?: number,
 ): {
   id: string;
   content: string;
@@ -113,16 +113,16 @@ export function getDomainFromUrl(url: string): string {
 
 export function getYouTubeThumbnail(
   videoId: string,
-  quality: "default" | "medium" | "high" | "maxres" = "high"
+  quality: "default" | "medium" | "high" | "maxres" = "high",
 ): string {
   const key =
     quality === "default"
       ? "default"
       : quality === "medium"
-      ? "mqdefault"
-      : quality === "high"
-      ? "hqdefault"
-      : "maxresdefault";
+        ? "mqdefault"
+        : quality === "high"
+          ? "hqdefault"
+          : "maxresdefault";
   return `https://img.youtube.com/vi/${videoId}/${key}.jpg`;
 }
 
@@ -133,7 +133,7 @@ export function sanitizeUrl(url: string): string {
   return url;
 }
 export async function fetchPreviewForUrl(
-  url: string
+  url: string,
 ): Promise<LinkPreview | null> {
   try {
     const response = await fetch("/api/interface", {
@@ -152,7 +152,7 @@ export async function fetchPreviewForUrl(
 }
 
 export async function fetchPreviewsForText(
-  text?: string
+  text?: string,
 ): Promise<LinkPreview[]> {
   if (!text) return [];
   const urlLinks = find(text, "url");
@@ -162,7 +162,7 @@ export async function fetchPreviewsForText(
   const promises = urls.map((u: string) => fetchPreviewForUrl(u));
   const results = await Promise.all(promises);
   return results.filter(
-    (r: LinkPreview | null): r is LinkPreview => r !== null
+    (r: LinkPreview | null): r is LinkPreview => r !== null,
   );
 }
 
@@ -216,7 +216,7 @@ export const TextWithLinks: React.FC<TextWithLinksProps> = ({
   return React.createElement(
     "span",
     { className },
-    React.createElement(Linkify, { options: customOptions }, text)
+    React.createElement(Linkify, { options: customOptions }, text),
   );
 };
 
@@ -345,7 +345,7 @@ interface SendWithLinkPreviewsParams {
       encrypted?: boolean;
       sending?: boolean;
       local_id?: string | number;
-    }
+    },
   ) => void;
 }
 
@@ -374,7 +374,7 @@ export async function SendWithLinkPreviews({
     if (resp && resp.data) {
       const data = resp.data;
       const toMessageWithUser = (
-        x: ApiMessageResponse
+        x: ApiMessageResponse,
       ): {
         id: number;
         sender_id: number;
@@ -409,7 +409,7 @@ export async function SendWithLinkPreviews({
             const apiMsg = toMessageWithUser(m);
             const formatted = formatApiMessageToClientMessage(
               apiMsg,
-              user?.id ?? -1
+              user?.id ?? -1,
             );
             addMessageInOrder(formatted);
             if (typeof localId !== "undefined") {
@@ -422,7 +422,7 @@ export async function SendWithLinkPreviews({
           const apiMsg = toMessageWithUser(data as ApiMessageResponse);
           const formatted = formatApiMessageToClientMessage(
             apiMsg,
-            user?.id ?? -1
+            user?.id ?? -1,
           );
           addMessageInOrder(formatted);
           if (typeof localId !== "undefined") {
@@ -447,7 +447,7 @@ interface UseInputLinkPreviewsReturn {
 }
 
 export const useInputLinkPreviews = (
-  debounceMs: number = 800
+  debounceMs: number = 800,
 ): UseInputLinkPreviewsReturn => {
   const [linkPreviews, setLinkPreviews] = useState<LinkPreview[]>([]);
   const [dismissedUrls, setDismissedUrls] = useState<Set<string>>(new Set());
@@ -459,9 +459,11 @@ export const useInputLinkPreviews = (
     async (text: string) => {
       const urlLinks = find(text, "url");
       const urls = urlLinks.map((link: { href: string }) => link.href);
-      const newUrls = urls.filter((url: string) => !dismissedUrls.has(url));
+      const firstEligibleUrl = urls.find(
+        (url: string) => !dismissedUrls.has(url),
+      );
 
-      if (newUrls.length === 0) {
+      if (!firstEligibleUrl) {
         setLinkPreviews([]);
         setIsLoading(false);
         return;
@@ -470,29 +472,18 @@ export const useInputLinkPreviews = (
       setError(null);
 
       try {
-        const previewPromises = newUrls.map(async (url) => {
-          try {
-            const response = await fetch("/api/interface", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ url }),
-            });
-            if (response.ok) {
-              return await response.json();
-            }
-          } catch (err) {
-            console.error(`Failed to fetch preview for ${url}:`, err);
-          }
-          return null;
+        const response = await fetch("/api/interface", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url: firstEligibleUrl }),
         });
 
-        const results = await Promise.all(previewPromises);
-        const validPreviews = results.filter(
-          (preview: LinkPreview | null): preview is LinkPreview =>
-            preview !== null
-        );
+        if (!response.ok) {
+          throw new Error("Failed to fetch link preview");
+        }
 
-        setLinkPreviews(validPreviews);
+        const preview = (await response.json()) as LinkPreview;
+        setLinkPreviews(preview ? [preview] : []);
       } catch (err) {
         console.error("Error fetching link previews:", err);
         setError("Failed to load link previews");
@@ -501,7 +492,7 @@ export const useInputLinkPreviews = (
         setIsLoading(false);
       }
     },
-    [dismissedUrls]
+    [dismissedUrls],
   );
 
   const updateText = useCallback(
@@ -521,7 +512,7 @@ export const useInputLinkPreviews = (
         fetchPreviewsForTextCb(text);
       }, debounceMs);
     },
-    [fetchPreviewsForTextCb, debounceMs]
+    [fetchPreviewsForTextCb, debounceMs],
   );
 
   useEffect(() => {

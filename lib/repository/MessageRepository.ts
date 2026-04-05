@@ -12,7 +12,7 @@ function orderPair(a: number, b: number) {
 }
 
 function toJsonString(
-  payload: MessageMetadata | MessageStatusMetadata | null | undefined
+  payload: MessageMetadata | MessageStatusMetadata | null | undefined,
 ) {
   if (!payload) {
     return JSON.stringify({});
@@ -43,7 +43,7 @@ function parseJson<T>(value: unknown, fallback: T): T {
 
 export class MessageRepository {
   async getThreadByPublicId(
-    threadId: string
+    threadId: string,
   ): Promise<MessageThreadRecord | null> {
     try {
       const rows = await sql`
@@ -64,7 +64,7 @@ export class MessageRepository {
 
   async getOrCreateThread(
     userIdA: number,
-    userIdB: number
+    userIdB: number,
   ): Promise<MessageThreadRecord> {
     const [userAId, userBId] = orderPair(userIdA, userIdB);
     try {
@@ -115,7 +115,7 @@ export class MessageRepository {
 
   async findThreadByParticipants(
     userIdA: number,
-    userIdB: number
+    userIdB: number,
   ): Promise<MessageThreadRecord | null> {
     const [userAId, userBId] = orderPair(userIdA, userIdB);
     try {
@@ -207,7 +207,7 @@ export class MessageRepository {
           LIMIT ${limit}
         `;
         return rows.map((row) =>
-          this.mapMessage(row as Record<string, unknown>, thread.threadId)
+          this.mapMessage(row as Record<string, unknown>, thread.threadId),
         );
       }
       const rows = await sql`
@@ -219,7 +219,7 @@ export class MessageRepository {
       `;
       return rows
         .map((row) =>
-          this.mapMessage(row as Record<string, unknown>, thread.threadId)
+          this.mapMessage(row as Record<string, unknown>, thread.threadId),
         )
         .reverse();
     } catch (error) {
@@ -228,7 +228,7 @@ export class MessageRepository {
   }
 
   async getThreadParticipants(
-    threadPublicId: string
+    threadPublicId: string,
   ): Promise<{ userAId: number; userBId: number } | null> {
     const thread = await this.getThreadByPublicId(threadPublicId);
     if (!thread) {
@@ -237,7 +237,9 @@ export class MessageRepository {
     return { userAId: thread.userAId, userBId: thread.userBId };
   }
 
-  async deleteMessagesByThreadPublicId(threadPublicId: string): Promise<boolean> {
+  async deleteMessagesByThreadPublicId(
+    threadPublicId: string,
+  ): Promise<boolean> {
     const thread = await this.getThreadByPublicId(threadPublicId);
     if (!thread) {
       return false;
@@ -255,7 +257,7 @@ export class MessageRepository {
 
   async getMessageByClientId(
     threadPublicId: string,
-    clientMessageId: string
+    clientMessageId: string,
   ): Promise<EncryptedMessageRecord | null> {
     const thread = await this.getThreadByPublicId(threadPublicId);
     if (!thread) {
@@ -277,7 +279,7 @@ export class MessageRepository {
 
       return this.mapMessage(
         rows[0] as Record<string, unknown>,
-        thread.threadId
+        thread.threadId,
       );
     } catch (error) {
       handleDatabaseError("Failed to load message", error);
@@ -303,7 +305,7 @@ export class MessageRepository {
 
   async deleteThreadByParticipants(
     userIdA: number,
-    userIdB: number
+    userIdB: number,
   ): Promise<boolean> {
     const [userAId, userBId] = orderPair(userIdA, userIdB);
     try {
@@ -321,7 +323,7 @@ export class MessageRepository {
 
   async updateMessageStatusByClientId(
     clientMessageId: string,
-    updates: MessageStatusMetadata
+    updates: MessageStatusMetadata,
   ): Promise<EncryptedMessageRecord | null> {
     const payload = toJsonString(updates ?? {});
     try {
@@ -387,7 +389,7 @@ export class MessageRepository {
 
   async getBlockStatus(
     userId: number,
-    otherUserId: number
+    otherUserId: number,
   ): Promise<{
     isBlocked: boolean;
     blockedBy?: number;
@@ -433,7 +435,7 @@ export class MessageRepository {
 
   private mapMessage(
     row: Record<string, unknown>,
-    threadPublicId: string
+    threadPublicId: string,
   ): EncryptedMessageRecord {
     return {
       id: row.id as number,

@@ -90,7 +90,7 @@ export interface UseChatReturn {
   error: string | null;
   sendMessage: (
     text: string,
-    options?: SendMessageOptions
+    options?: SendMessageOptions,
   ) => Promise<SendMessageResult>;
   retryMessage: (clientMessageId: string) => Promise<SendMessageResult>;
   markAsRead: (clientMessageIds: string[]) => Promise<void>;

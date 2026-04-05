@@ -2,6 +2,7 @@ import { Rest } from "ably";
 import { Buffer } from "node:buffer";
 import {
   FriendRealtimeEvent,
+  FriendUserPayload,
   friendChannel,
   ChatMessageEvent,
   ChatStatusEvent,
@@ -91,6 +92,8 @@ export async function publishFriendEvent(
   } else if (event.type === "friend_removed") {
     recipients.add(event.initiatorId);
     recipients.add(event.targetId);
+  } else if (event.type === "friend_profile_updated") {
+    recipients.add(event.user.id);
   } else {
     recipients.add(event.request.from_id);
     recipients.add(event.request.to_id);
@@ -99,6 +102,29 @@ export async function publishFriendEvent(
   const rest = getAblyRest();
   const publishTasks = Array.from(recipients).map((userId) =>
     rest.channels.get(friendChannel(userId)).publish(event.type, event),
+  );
+
+  await Promise.all(publishTasks);
+}
+
+export async function publishFriendProfileUpdated(
+  recipientUserIds: number[],
+  user: FriendUserPayload,
+): Promise<void> {
+  if (recipientUserIds.length === 0) {
+    return;
+  }
+
+  const event: FriendRealtimeEvent = {
+    type: "friend_profile_updated",
+    user,
+  };
+
+  const rest = getAblyRest();
+  const publishTasks = recipientUserIds.map((recipientUserId) =>
+    rest.channels
+      .get(friendChannel(recipientUserId))
+      .publish(event.type, event),
   );
 
   await Promise.all(publishTasks);

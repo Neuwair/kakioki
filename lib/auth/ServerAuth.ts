@@ -17,7 +17,7 @@ export interface AuthResult {
 
 export async function authenticateRequest(
   request: NextRequest,
-  userRepository?: UserRepository
+  userRepository?: UserRepository,
 ): Promise<AuthResult> {
   try {
     const token = getBearerToken(request as unknown as Request);
@@ -48,14 +48,14 @@ export async function authenticateRequest(
 }
 
 export async function requireAuth(
-  request: NextRequest
+  request: NextRequest,
 ): Promise<{ user: AuthenticatedUser } | Response> {
   const authResult = await authenticateRequest(request);
 
   if (!authResult.success || !authResult.user) {
     return new Response(
       JSON.stringify({ error: authResult.error || "Unauthorized" }),
-      { status: 401, headers: { "Content-Type": "application/json" } }
+      { status: 401, headers: { "Content-Type": "application/json" } },
     );
   }
 

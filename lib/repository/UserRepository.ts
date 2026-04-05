@@ -9,8 +9,7 @@ import type {
 export class UserRepository {
   async create(userData: CreateUserData): Promise<DbUser> {
     try {
-      const defaultBio =
-        userData.bio || KAKIOKI_CONFIG.account.defaultBio;
+      const defaultBio = userData.bio || KAKIOKI_CONFIG.account.defaultBio;
       const result = await sql`
         INSERT INTO users (user_id, email, username, password_hash, public_key, secret_key_encrypted, avatar_url, bio, verification_token)
         VALUES (
@@ -52,7 +51,7 @@ export class UserRepository {
     } catch (error) {
       throw new DatabaseError(
         "Failed to find DbUser by DbUser ID",
-        error as Error
+        error as Error,
       );
     }
   }
@@ -104,14 +103,17 @@ export class UserRepository {
       `;
       return (result[0] as DbUser) || null;
     } catch (error) {
-      throw new DatabaseError("Failed to update DbUser credentials", error as Error);
+      throw new DatabaseError(
+        "Failed to update DbUser credentials",
+        error as Error,
+      );
     }
   }
 
   async update(id: number, updateData: UpdateUserData): Promise<DbUser | null> {
     try {
       const filteredData = Object.fromEntries(
-        Object.entries(updateData).filter(([, value]) => value !== undefined)
+        Object.entries(updateData).filter(([, value]) => value !== undefined),
       );
 
       if (Object.keys(filteredData).length === 0) {
@@ -126,7 +128,7 @@ export class UserRepository {
         if (filteredData.avatar_url.length > 100) {
           console.log(
             "Avatar URL preview:",
-            filteredData.avatar_url.substring(0, 50) + "..."
+            filteredData.avatar_url.substring(0, 50) + "...",
           );
         }
       }
@@ -144,10 +146,7 @@ export class UserRepository {
         return (result[0] as DbUser) || null;
       }
 
-      if (
-        "email" in filteredData &&
-        Object.keys(filteredData).length === 1
-      ) {
+      if ("email" in filteredData && Object.keys(filteredData).length === 1) {
         const result = await sql`
           UPDATE users
           SET email = ${filteredData.email}, updated_at = CURRENT_TIMESTAMP
@@ -209,10 +208,7 @@ export class UserRepository {
         return (result[0] as DbUser) || null;
       }
 
-      if (
-        "bio" in filteredData &&
-        Object.keys(filteredData).length === 1
-      ) {
+      if ("bio" in filteredData && Object.keys(filteredData).length === 1) {
         const result = await sql`
           UPDATE users 
           SET bio = ${filteredData.bio}, updated_at = CURRENT_TIMESTAMP
@@ -261,7 +257,7 @@ export class UserRepository {
       ];
 
       const entries = Object.entries(filteredData).filter(([k]) =>
-        allowedFields.includes(k)
+        allowedFields.includes(k),
       );
 
       if (entries.length === 0) {
@@ -269,7 +265,7 @@ export class UserRepository {
       }
 
       const setFragments = entries.map(
-        ([key, value]) => sql`${sql.unsafe(key)} = ${value}`
+        ([key, value]) => sql`${sql.unsafe(key)} = ${value}`,
       );
       let setClause = setFragments[0];
       for (let i = 1; i < setFragments.length; i++) {
@@ -293,7 +289,7 @@ export class UserRepository {
   async searchUsers(
     query: string,
     excludeUserId?: number,
-    limit: number = 50
+    limit: number = 50,
   ): Promise<DbUser[]> {
     try {
       const result = excludeUserId

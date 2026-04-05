@@ -13,7 +13,7 @@ function mapRelationship(
   currentUserId: number,
   status?: string,
   requesterId?: number | null,
-  addresseeId?: number | null
+  addresseeId?: number | null,
 ): "none" | "incoming" | "outgoing" | "friends" {
   if (status === "accepted") {
     return "friends";
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
         console.error("Friend search payload parse error:", parseError);
         return NextResponse.json(
           { error: "Invalid search payload" },
-          { status: 400 }
+          { status: 400 },
         );
       }
     }
@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
     const matches = await friendRepository.searchUsersFuzzy(
       query,
       user.id,
-      limit
+      limit,
     );
 
     const results = matches.map((match) => ({
@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
         user.id,
         match.friendship_status,
         match.requester_id,
-        match.addressee_id
+        match.addressee_id,
       ),
       requestId: match.friendship_id ?? null,
       requesterId: match.requester_id ?? null,
@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
     console.error("Friend search error:", error);
     return NextResponse.json(
       { error: "Failed to search for friends" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -17,12 +17,13 @@ import {
 export async function POST(request: Request) {
   try {
     const { email, username, password } = await request.json();
-    const normalizedEmail = typeof email === "string" ? email.trim().toLowerCase() : "";
+    const normalizedEmail =
+      typeof email === "string" ? email.trim().toLowerCase() : "";
 
     if (!normalizedEmail || !username || !password) {
       return NextResponse.json(
         { error: "Email, username, and password are required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -30,7 +31,7 @@ export async function POST(request: Request) {
     if (!emailRegex.test(normalizedEmail)) {
       return NextResponse.json(
         { error: "Invalid email format" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -41,7 +42,7 @@ export async function POST(request: Request) {
     if (password.length < 8) {
       return NextResponse.json(
         { error: "Password must be at least 8 characters long" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -50,7 +51,7 @@ export async function POST(request: Request) {
         {
           error: `Username must be at most ${KAKIOKI_CONFIG.account.maxUsernameLength} characters`,
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -60,7 +61,7 @@ export async function POST(request: Request) {
       console.error("Registration configuration error:", configError);
       return NextResponse.json(
         { error: "Server configuration error. Please try again later." },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -70,7 +71,7 @@ export async function POST(request: Request) {
     if (existingUser) {
       return NextResponse.json(
         { error: "You are not allowed to use this email address." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -88,7 +89,7 @@ export async function POST(request: Request) {
       if (newId.length !== KAKIOKI_CONFIG.account.userIdLength) {
         return NextResponse.json(
           { error: "Failed to generate valid user ID" },
-          { status: 500 }
+          { status: 500 },
         );
       }
       userId = newId;
@@ -98,7 +99,7 @@ export async function POST(request: Request) {
     const { publicKey, privateKey } = await generateKeyPair();
     const publicKeyBase64 = sodium.to_base64(
       publicKey,
-      sodium.base64_variants.URLSAFE_NO_PADDING
+      sodium.base64_variants.URLSAFE_NO_PADDING,
     );
     const secretKeyEncrypted = await encryptPrivateKey(privateKey, password);
 
@@ -128,7 +129,7 @@ export async function POST(request: Request) {
       } catch (cleanupError) {
         console.error(
           "Failed to rollback user after token error:",
-          cleanupError
+          cleanupError,
         );
       }
       return NextResponse.json(
@@ -136,7 +137,7 @@ export async function POST(request: Request) {
           error:
             "Registration temporarily unavailable. Please try again later.",
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -156,13 +157,13 @@ export async function POST(request: Request) {
         },
         token,
       },
-      { status: 201 }
+      { status: 201 },
     );
   } catch (error) {
     console.error("Registration error:", error);
     return NextResponse.json(
       { error: "An error occurred during registration" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

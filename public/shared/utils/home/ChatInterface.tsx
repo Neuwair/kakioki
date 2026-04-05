@@ -535,6 +535,7 @@ export const ChatInterface: React.FC = () => {
                       avatarUrl: selectedFriend.user.avatarUrl,
                       avatar_url: selectedFriend.user.avatarUrl ?? null,
                       userId: selectedFriend.user.userId,
+                      bio: selectedFriend.user.bio ?? null,
                     }
                   : null
               }

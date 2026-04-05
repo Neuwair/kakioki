@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth/ServerAuth";
 import { FriendRepository, MessageRepository } from "@/lib";
-import { publishChatControl, publishFriendEvent } from "@/lib/server/AblyServer";
+import {
+  publishChatControl,
+  publishFriendEvent,
+} from "@/lib/server/AblyServer";
 
 const friendRepository = new FriendRepository();
 const messageRepository = new MessageRepository();
@@ -24,7 +27,7 @@ export async function POST(request: NextRequest) {
   } catch {
     return NextResponse.json(
       { success: false, error: "Invalid JSON payload" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -37,7 +40,7 @@ export async function POST(request: NextRequest) {
   if (thread && thread.userAId !== user.id && thread.userBId !== user.id) {
     return NextResponse.json(
       { success: false, error: "Forbidden" },
-      { status: 403 }
+      { status: 403 },
     );
   }
 
@@ -48,37 +51,37 @@ export async function POST(request: NextRequest) {
   if (!targetUserId) {
     return NextResponse.json(
       { success: false, error: "Target user missing" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
   if (targetUserId === user.id) {
     return NextResponse.json(
       { success: false, error: "Invalid target" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
   const isFriend = await friendRepository.hasAcceptedFriendship(
     user.id,
-    targetUserId
+    targetUserId,
   );
   if (!isFriend) {
     return NextResponse.json(
       { success: false, error: "Users are not friends" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
   const friendshipRemoved = await friendRepository.removeFriendship(
     user.id,
-    targetUserId
+    targetUserId,
   );
 
   if (!thread) {
     thread = await messageRepository.findThreadByParticipants(
       user.id,
-      targetUserId
+      targetUserId,
     );
   }
 
@@ -89,7 +92,7 @@ export async function POST(request: NextRequest) {
   let removedThread = false;
   if (thread) {
     removedThread = await messageRepository.deleteThreadByPublicId(
-      thread.threadId
+      thread.threadId,
     );
   }
 

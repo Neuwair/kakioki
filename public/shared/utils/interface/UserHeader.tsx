@@ -12,7 +12,10 @@ import {
 import { KAKIOKI_CONFIG } from "@/lib/config/KakiokiConfig";
 import { SafeImage } from "@/public/shared/utils/chat/MessageMedia";
 import { getAuthHeaders } from "@/public/shared/helpers/AuthHelpers";
-import { useUserPresence } from "@/public/shared/logic/UserPresenceRealtime";
+import {
+  useFriendRealtime,
+  useUserPresence,
+} from "@/public/shared/logic/UserPresenceRealtime";
 import type { FriendListEntry } from "@/public/shared/hooks/FriendRelationships";
 import { AvatarUploadModal } from "@/public/shared/utils/interface/AvatarSelection";
 import { useAuth } from "@/lib/auth/ClientAuth";
@@ -39,6 +42,13 @@ type FriendProfileResponse = {
   friend?: FriendProfile;
   error?: string;
 };
+
+function resolveBio(bio: string | null | undefined): string {
+  const trimmed = bio?.trim();
+  return trimmed && trimmed.length > 0
+    ? trimmed
+    : KAKIOKI_CONFIG.account.defaultBio;
+}
 
 export const ChatUserHeader: React.FC<{
   selectedFriend?: SelectedFriendPreview | null;
@@ -76,7 +86,10 @@ export const ChatUserHeader: React.FC<{
           return;
         }
 
-        setFriendProfile(data.friend);
+        setFriendProfile({
+          ...data.friend,
+          bio: resolveBio(data.friend.bio),
+        });
       } catch (error) {
         if (
           controller.signal.aborted ||
@@ -93,6 +106,29 @@ export const ChatUserHeader: React.FC<{
       controller.abort();
     };
   }, [selectedFriend]);
+
+  useFriendRealtime(
+    useCallback(
+      (event) => {
+        if (
+          event.type !== "friend_profile_updated" ||
+          !selectedFriend ||
+          event.user.id !== selectedFriend.id
+        ) {
+          return;
+        }
+
+        setFriendProfile((previous) => ({
+          id: event.user.id,
+          userId: event.user.user_id,
+          username: event.user.username,
+          avatarUrl: event.user.avatar_url ?? previous?.avatarUrl ?? undefined,
+          bio: resolveBio(event.user.bio ?? previous?.bio),
+        }));
+      },
+      [selectedFriend],
+    ),
+  );
 
   if (!selectedFriend) {
     return (
@@ -115,8 +151,9 @@ export const ChatUserHeader: React.FC<{
     resolvedFriendProfile?.username ?? selectedFriend.username;
   const previewUserId =
     resolvedFriendProfile?.userId || selectedFriend.userId || "----";
-  const previewBio =
-    resolvedFriendProfile?.bio?.trim() || KAKIOKI_CONFIG.account.defaultBio;
+  const previewBio = resolveBio(
+    resolvedFriendProfile?.bio ?? selectedFriend.bio,
+  );
 
   const statusContent = (() => {
     if (!presence.isReady) {
@@ -131,10 +168,23 @@ export const ChatUserHeader: React.FC<{
     }
 
     const isOnline = presence.status === "online";
-    const label = isOnline ? "Online" : "Offline";
-    const labelColor = isOnline ? "text-emerald-200" : "text-rose-200";
-    const dotColor = isOnline ? "bg-emerald-400" : "bg-rose-400";
-    const haloColor = isOnline ? "bg-emerald-400/60" : "bg-rose-400/50";
+    const isAway = presence.status === "away";
+    const label = isOnline ? "Online" : isAway ? "Away" : "Offline";
+    const labelColor = isOnline
+      ? "text-emerald-200"
+      : isAway
+        ? "text-amber-200"
+        : "text-rose-200";
+    const dotColor = isOnline
+      ? "bg-emerald-400"
+      : isAway
+        ? "bg-amber-400"
+        : "bg-rose-400";
+    const haloColor = isOnline
+      ? "bg-emerald-400/60"
+      : isAway
+        ? "bg-amber-400/50"
+        : "bg-rose-400/50";
     const dotAnimation = isOnline ? "animate-pulse" : "";
 
     return (
@@ -246,8 +296,7 @@ export const ChatUserHeader: React.FC<{
   );
 };
 
-export const UserInfoHeader: React.FC<{
-}> = () => {
+export const UserInfoHeader: React.FC<{}> = () => {
   const { logout, user } = useAuth();
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
 

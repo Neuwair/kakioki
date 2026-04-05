@@ -14,6 +14,12 @@ import { KAKIOKI_CONFIG } from "@/lib/config/KakiokiConfig";
 import { useFriendRelationships } from "@/public/shared/hooks/FriendRelationships";
 import { getAuthHeaders } from "@/public/shared/helpers/AuthHelpers";
 import { PASSWORD_STORAGE_KEY } from "@/public/shared/helpers/LibsodiumHelpers";
+import {
+  buildPresencePayload,
+  setStoredCurrentUserPresenceStatus,
+  type PresenceStatus,
+} from "@/public/shared/logic/UserPresenceRealtime";
+import { getRealtimeClient } from "@/public/shared/services/AblyRealtime";
 import { SafeImage } from "@/public/shared/utils/chat/MessageMedia";
 import { EmojiPicker } from "@/public/shared/utils/interface/EmojiPicker";
 import { AvatarUploadModal } from "@/public/shared/utils/interface/AvatarSelection";
@@ -44,6 +50,8 @@ export default function UserSettings({ onBack }: { onBack?: () => void } = {}) {
   const [emailSuccess, setEmailSuccess] = useState(false);
   const [isSavingEmail, setIsSavingEmail] = useState(false);
   const [isSavingBio, setIsSavingBio] = useState(false);
+  const [isUpdatingStatus, setIsUpdatingStatus] =
+    useState<PresenceStatus | null>(null);
   const [unblockingIds, setUnblockingIds] = useState<Set<number>>(new Set());
   const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false);
   const [alertVisible, setAlertVisible] = useState(false);
@@ -69,10 +77,23 @@ export default function UserSettings({ onBack }: { onBack?: () => void } = {}) {
     }
 
     const isOnline = presence.status === "online";
-    const label = isOnline ? "Online" : "Offline";
-    const labelColor = isOnline ? "text-emerald-200" : "text-rose-200";
-    const dotColor = isOnline ? "bg-emerald-400" : "bg-rose-400";
-    const haloColor = isOnline ? "bg-emerald-400/60" : "bg-rose-400/50";
+    const isAway = presence.status === "away";
+    const label = isOnline ? "Online" : isAway ? "Away" : "Offline";
+    const labelColor = isOnline
+      ? "text-emerald-200"
+      : isAway
+        ? "text-amber-200"
+        : "text-rose-200";
+    const dotColor = isOnline
+      ? "bg-emerald-400"
+      : isAway
+        ? "bg-amber-400"
+        : "bg-rose-400";
+    const haloColor = isOnline
+      ? "bg-emerald-400/60"
+      : isAway
+        ? "bg-amber-400/50"
+        : "bg-rose-400/50";
     const dotAnimation = isOnline ? "animate-pulse" : "";
 
     return (
@@ -486,6 +507,48 @@ export default function UserSettings({ onBack }: { onBack?: () => void } = {}) {
       });
     }
   };
+
+  const handleStatusChange = async (nextStatus: PresenceStatus) => {
+    if (
+      !user?.id ||
+      !user.userId ||
+      isUpdatingStatus ||
+      presence.status === nextStatus
+    ) {
+      return;
+    }
+
+    setIsUpdatingStatus(nextStatus);
+
+    try {
+      const client = await getRealtimeClient();
+      const channel = client.channels.get(
+        `user:${user.id}:presence`,
+      ) as unknown as {
+        attach: () => Promise<unknown>;
+        presence: {
+          enter: (data: unknown) => Promise<unknown>;
+          update: (data: unknown) => Promise<unknown>;
+        };
+      };
+      const payload = buildPresencePayload(user.userId, nextStatus);
+
+      await channel.attach();
+
+      try {
+        await channel.presence.update(payload);
+      } catch {
+        await channel.presence.enter(payload);
+      }
+
+      setStoredCurrentUserPresenceStatus(nextStatus);
+    } catch (statusError) {
+      console.error("User status update error:", statusError);
+    } finally {
+      setIsUpdatingStatus(null);
+    }
+  };
+
   return (
     <div className="text-neutral-50 flex flex-col flex-wrap gap-4">
       <div className="flex flex-row-reverse">
@@ -890,21 +953,48 @@ export default function UserSettings({ onBack }: { onBack?: () => void } = {}) {
           <div className="flex flex-row gap-2">
             <button
               type="button"
+              onClick={() => handleStatusChange("online")}
+              disabled={isUpdatingStatus !== null}
               className="px-4 py-2 rounded-lg no-theme bg-lime-700 hover:bg-lime-800 text-neutral-50 online-btn cursor-pointer disabled:cursor-not-allowed"
             >
-              Online
+              {isUpdatingStatus === "online" ? (
+                <span className="flex items-center gap-2 justify-center">
+                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Online
+                </span>
+              ) : (
+                "Online"
+              )}
             </button>
             <button
               type="button"
+              onClick={() => handleStatusChange("away")}
+              disabled={isUpdatingStatus !== null}
               className="px-4 py-2 rounded-lg no-theme bg-amber-600 hover:bg-amber-700 text-neutral-50 away-btn cursor-pointer disabled:cursor-not-allowed"
             >
-              Away
+              {isUpdatingStatus === "away" ? (
+                <span className="flex items-center gap-2 justify-center">
+                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Away
+                </span>
+              ) : (
+                "Away"
+              )}
             </button>
             <button
               type="button"
+              onClick={() => handleStatusChange("offline")}
+              disabled={isUpdatingStatus !== null}
               className="px-4 py-2 rounded-lg no-theme bg-red-600 hover:bg-red-800 text-neutral-50 offline-btn cursor-pointer disabled:cursor-not-allowed"
             >
-              Offline
+              {isUpdatingStatus === "offline" ? (
+                <span className="flex items-center gap-2 justify-center">
+                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Offline
+                </span>
+              ) : (
+                "Offline"
+              )}
             </button>
           </div>
         </div>

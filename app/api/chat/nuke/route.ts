@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
   } catch {
     return NextResponse.json(
       { success: false, error: "Invalid JSON payload" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
   if (thread && thread.userAId !== user.id && thread.userBId !== user.id) {
     return NextResponse.json(
       { success: false, error: "Forbidden" },
-      { status: 403 }
+      { status: 403 },
     );
   }
 
@@ -48,40 +48,45 @@ export async function POST(request: NextRequest) {
   if (!targetUserId) {
     return NextResponse.json(
       { success: false, error: "Target user missing" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
   if (targetUserId === user.id) {
     return NextResponse.json(
       { success: false, error: "Invalid target" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
   const isFriend = await friendRepository.hasAcceptedFriendship(
     user.id,
-    targetUserId
+    targetUserId,
   );
   if (!isFriend) {
     return NextResponse.json(
       { success: false, error: "Users are not friends" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
   if (!thread) {
-    thread = await messageRepository.findThreadByParticipants(user.id, targetUserId);
+    thread = await messageRepository.findThreadByParticipants(
+      user.id,
+      targetUserId,
+    );
   }
 
   if (!thread) {
     return NextResponse.json(
       { success: false, error: "Thread not found" },
-      { status: 404 }
+      { status: 404 },
     );
   }
 
-  const deleted = await messageRepository.deleteMessagesByThreadPublicId(thread.threadId);
+  const deleted = await messageRepository.deleteMessagesByThreadPublicId(
+    thread.threadId,
+  );
 
   await publishChatControl({
     type: "chat_cleared",

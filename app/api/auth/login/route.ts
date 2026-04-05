@@ -15,12 +15,13 @@ import {
 export async function POST(request: Request) {
   try {
     const { email, password } = await request.json();
-    const normalizedEmail = typeof email === "string" ? email.trim().toLowerCase() : "";
+    const normalizedEmail =
+      typeof email === "string" ? email.trim().toLowerCase() : "";
 
     if (!normalizedEmail || !password) {
       return NextResponse.json(
         { error: "Email and password are required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -34,7 +35,7 @@ export async function POST(request: Request) {
       console.error("Login configuration error:", configError);
       return NextResponse.json(
         { error: "Server configuration error. Please try again later." },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -44,14 +45,14 @@ export async function POST(request: Request) {
     if (!user || !user.password_hash) {
       return NextResponse.json(
         { error: "Invalid email or password" },
-        { status: 401 }
+        { status: 401 },
       );
     }
     const isPasswordValid = await verifyPassword(password, user.password_hash);
     if (!isPasswordValid) {
       return NextResponse.json(
         { error: "Invalid email or password" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -62,7 +63,7 @@ export async function POST(request: Request) {
       const { publicKey: pk, privateKey } = await generateKeyPair();
       publicKey = sodium.to_base64(
         pk,
-        sodium.base64_variants.URLSAFE_NO_PADDING
+        sodium.base64_variants.URLSAFE_NO_PADDING,
       );
       secretKeyEncrypted = await encryptPrivateKey(privateKey, password);
       const updated = await userRepository.update(user.id, {
@@ -94,7 +95,7 @@ export async function POST(request: Request) {
           error:
             "Authentication temporarily unavailable. Please try again later.",
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -116,7 +117,7 @@ export async function POST(request: Request) {
     console.error("Login error:", error);
     return NextResponse.json(
       { error: "An error occurred during login" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

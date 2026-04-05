@@ -38,7 +38,7 @@ function resolveTheme(): PickerTheme {
 export function UseEmojiPickerLogic(
   isOpen: boolean,
   onClickOutside: () => void,
-  options: UseEmojiPickerLogicOptions = {}
+  options: UseEmojiPickerLogicOptions = {},
 ) {
   const { placement = "above", triggerRef } = options;
   const pickerRef = useRef<HTMLDivElement | null>(null);
@@ -68,7 +68,8 @@ export function UseEmojiPickerLogic(
     if (typeof document === "undefined" || typeof window === "undefined") {
       return;
     }
-    const emojiButton = triggerRef?.current ?? document.querySelector(".emoji-button");
+    const emojiButton =
+      triggerRef?.current ?? document.querySelector(".emoji-button");
     if (!emojiButton) {
       setPosition((prev) => ({ ...prev, ready: false }));
       return;

@@ -1,7 +1,10 @@
 import type { EncryptedMessageRecord } from "@/lib/media/MediaTypes";
 import { decryptRecord } from "@/public/shared/chat/ChatEncryption";
 import { sortMessages } from "@/public/shared/chat/MessageUtils";
-import type { BlockState, ChatMessage } from "@/public/shared/chat/types/ChatTypes";
+import type {
+  BlockState,
+  ChatMessage,
+} from "@/public/shared/chat/types/ChatTypes";
 import { getAuthHeaders } from "@/public/shared/helpers/AuthHelpers";
 import type { FriendListEntry } from "@/public/shared/hooks/FriendRelationships";
 

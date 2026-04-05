@@ -1,21 +1,27 @@
 import { NextResponse } from "next/server";
-import { UserRepository } from "@/lib";
+import { FriendRepository, UserRepository } from "@/lib";
 import { KAKIOKI_CONFIG } from "@/lib/config/KakiokiConfig";
 import { hashPassword, verifyPassword } from "@/lib/security/ArgonConfig";
-import { decryptPrivateKey, encryptPrivateKey } from "@/lib/security/LibsodiumEncryption";
+import {
+  decryptPrivateKey,
+  encryptPrivateKey,
+} from "@/lib/security/LibsodiumEncryption";
+import { publishFriendProfileUpdated } from "@/lib/server/AblyServer";
 
 export async function PUT(request: Request) {
   try {
-    const { userId, username, biography, currentPassword, newPassword, email } = await request.json();
+    const { userId, username, biography, currentPassword, newPassword, email } =
+      await request.json();
 
     if (!userId) {
       return NextResponse.json(
         { error: "No user ID provided" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     const userRepository = new UserRepository();
+    const friendRepository = new FriendRepository();
     const userIdNumber = parseInt(userId, 10);
 
     if (isNaN(userIdNumber)) {
@@ -27,7 +33,11 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    const profileUpdateData: { username?: string; bio?: string; email?: string } = {};
+    const profileUpdateData: {
+      username?: string;
+      bio?: string;
+      email?: string;
+    } = {};
     let nextPasswordHash: string | null = null;
     let nextSecretKeyEncrypted: string | undefined;
 
@@ -38,14 +48,14 @@ export async function PUT(request: Request) {
       if (normalizedEmail === user.email.toLowerCase()) {
         return NextResponse.json(
           { error: "This @email address is the same as the current one." },
-          { status: 400 }
+          { status: 400 },
         );
       }
 
       if (!isValidEmail || normalizedEmail.length > 255) {
         return NextResponse.json(
           { error: "This @email address is invalid." },
-          { status: 400 }
+          { status: 400 },
         );
       }
 
@@ -53,7 +63,7 @@ export async function PUT(request: Request) {
       if (existingUser && existingUser.id !== userIdNumber) {
         return NextResponse.json(
           { error: "This @email address is invalid." },
-          { status: 400 }
+          { status: 400 },
         );
       }
 
@@ -66,7 +76,7 @@ export async function PUT(request: Request) {
           {
             error: `Username must be at most ${KAKIOKI_CONFIG.account.maxUsernameLength} characters`,
           },
-          { status: 400 }
+          { status: 400 },
         );
       }
       profileUpdateData.username = username;
@@ -78,10 +88,11 @@ export async function PUT(request: Request) {
           {
             error: `Biography must be at most ${KAKIOKI_CONFIG.account.maxBioLength} characters`,
           },
-          { status: 400 }
+          { status: 400 },
         );
       }
-      profileUpdateData.bio = biography.trim() || KAKIOKI_CONFIG.account.defaultBio;
+      profileUpdateData.bio =
+        biography.trim() || KAKIOKI_CONFIG.account.defaultBio;
     }
 
     if (currentPassword && newPassword) {
@@ -90,17 +101,29 @@ export async function PUT(request: Request) {
       }
       const isValid = await verifyPassword(currentPassword, user.password_hash);
       if (!isValid) {
-        return NextResponse.json({ error: "Current password is incorrect" }, { status: 400 });
+        return NextResponse.json(
+          { error: "Current password is incorrect" },
+          { status: 400 },
+        );
       }
       nextPasswordHash = await hashPassword(newPassword);
 
       if (user.secret_key_encrypted) {
         try {
-          const privateKey = await decryptPrivateKey(user.secret_key_encrypted, currentPassword);
-          nextSecretKeyEncrypted = await encryptPrivateKey(privateKey, newPassword);
+          const privateKey = await decryptPrivateKey(
+            user.secret_key_encrypted,
+            currentPassword,
+          );
+          nextSecretKeyEncrypted = await encryptPrivateKey(
+            privateKey,
+            newPassword,
+          );
         } catch (error) {
           console.error("Failed to re-encrypt private key:", error);
-          return NextResponse.json({ error: "Failed to update encryption keys" }, { status: 500 });
+          return NextResponse.json(
+            { error: "Failed to update encryption keys" },
+            { status: 500 },
+          );
         }
       }
     }
@@ -112,7 +135,10 @@ export async function PUT(request: Request) {
     let updatedUser = user;
 
     if (Object.keys(profileUpdateData).length > 0) {
-      const profileUpdatedUser = await userRepository.update(userIdNumber, profileUpdateData);
+      const profileUpdatedUser = await userRepository.update(
+        userIdNumber,
+        profileUpdateData,
+      );
       if (!profileUpdatedUser) {
         return NextResponse.json({ error: "User not found" }, { status: 404 });
       }
@@ -135,6 +161,27 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
+    if (Object.prototype.hasOwnProperty.call(profileUpdateData, "bio")) {
+      try {
+        const friendSummary =
+          await friendRepository.getFriendSummary(userIdNumber);
+        const recipientUserIds = friendSummary.friends.map(
+          (entry) => entry.user.id,
+        );
+
+        await publishFriendProfileUpdated(recipientUserIds, {
+          id: updatedUser.id,
+          user_id: updatedUser.user_id,
+          username: updatedUser.username,
+          avatar_url: updatedUser.avatar_url,
+          bio: updatedUser.bio || KAKIOKI_CONFIG.account.defaultBio,
+          public_key: updatedUser.public_key,
+        });
+      } catch (publishError) {
+        console.error("Failed to publish friend profile update:", publishError);
+      }
+    }
+
     return NextResponse.json({
       success: true,
       user: {
@@ -150,7 +197,7 @@ export async function PUT(request: Request) {
     console.error("Error updating profile:", error);
     return NextResponse.json(
       { error: "Error updating profile" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

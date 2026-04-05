@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
 
     const requestRecord = await friendRepository.sendFriendRequest(
       user.id,
-      toUserId
+      toUserId,
     );
     const currentUserFull = await userRepository.findById(user.id);
 
@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
     console.error("Friend request send error:", error);
     return NextResponse.json(
       { error: "Failed to send friend request" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -91,13 +91,13 @@ export async function DELETE(request: NextRequest) {
     if (typeof toUserId === "number") {
       const cancelled = await friendRepository.cancelFriendRequest(
         user.id,
-        toUserId
+        toUserId,
       );
 
       if (!cancelled) {
         return NextResponse.json(
           { error: "No pending request" },
-          { status: 404 }
+          { status: 404 },
         );
       }
 
@@ -113,13 +113,13 @@ export async function DELETE(request: NextRequest) {
     if (typeof fromUserId === "number") {
       const declined = await friendRepository.declineFriendRequest(
         fromUserId,
-        user.id
+        user.id,
       );
 
       if (!declined) {
         return NextResponse.json(
           { error: "No pending request" },
-          { status: 404 }
+          { status: 404 },
         );
       }
 
@@ -137,7 +137,7 @@ export async function DELETE(request: NextRequest) {
     console.error("Friend request cancel error:", error);
     return NextResponse.json(
       { error: "Failed to cancel friend request" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -156,19 +156,19 @@ export async function PATCH(request: NextRequest) {
     if (typeof fromUserId !== "number") {
       return NextResponse.json(
         { error: "Invalid fromUserId" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     const accepted = await friendRepository.acceptFriendRequest(
       fromUserId,
-      user.id
+      user.id,
     );
 
     if (!accepted) {
       return NextResponse.json(
         { error: "No pending request" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -179,9 +179,14 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    const blockStatus = await messageRepository.getBlockStatus(user.id, fromUserId);
-    const blockedBySelf = blockStatus.isBlocked && blockStatus.blockedBy === user.id;
-    const blockedByFriend = blockStatus.isBlocked && blockStatus.blockedBy === fromUserId;
+    const blockStatus = await messageRepository.getBlockStatus(
+      user.id,
+      fromUserId,
+    );
+    const blockedBySelf =
+      blockStatus.isBlocked && blockStatus.blockedBy === user.id;
+    const blockedByFriend =
+      blockStatus.isBlocked && blockStatus.blockedBy === fromUserId;
 
     await publishFriendEvent({
       type: "friend_request_accepted",
@@ -198,7 +203,7 @@ export async function PATCH(request: NextRequest) {
     console.error("Friend request accept error:", error);
     return NextResponse.json(
       { error: "Failed to accept friend request" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

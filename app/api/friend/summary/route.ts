@@ -11,6 +11,7 @@ function sanitizeUser(user: DbUser) {
     user_id: user.user_id,
     username: user.username,
     avatar_url: user.avatar_url ?? null,
+    bio: user.bio ?? null,
     public_key: user.public_key ?? null,
   };
 }

@@ -28,7 +28,7 @@ function wrapDatabaseError(message: string, error: unknown): DatabaseError {
   if (isUndefinedTableError(error)) {
     return new DatabaseError(
       "Friend features require database migrations. Run `npm run db:migrate`.",
-      error as Error
+      error as Error,
     );
   }
   return new DatabaseError(message, error as Error);
@@ -42,7 +42,7 @@ export class FriendRepository {
   async searchUsersFuzzy(
     query: string,
     currentUserId: number,
-    limit: number = 20
+    limit: number = 20,
   ): Promise<FriendSearchResult[]> {
     const trimmed = query.trim();
     if (trimmed.length === 0) {
@@ -99,7 +99,7 @@ export class FriendRepository {
 
   async sendFriendRequest(
     fromUserId: number,
-    toUserId: number
+    toUserId: number,
   ): Promise<FriendRequestRecord> {
     if (fromUserId === toUserId) {
       throw new DatabaseError("Cannot send friend request to yourself");
@@ -141,7 +141,7 @@ export class FriendRepository {
 
   async cancelFriendRequest(
     fromUserId: number,
-    toUserId: number
+    toUserId: number,
   ): Promise<FriendRequestRecord | null> {
     try {
       const deleted = await sql`
@@ -164,7 +164,7 @@ export class FriendRepository {
 
   async declineFriendRequest(
     fromUserId: number,
-    toUserId: number
+    toUserId: number,
   ): Promise<FriendRequestRecord | null> {
     try {
       const deleted = await sql`
@@ -187,7 +187,7 @@ export class FriendRepository {
 
   async acceptFriendRequest(
     fromUserId: number,
-    toUserId: number
+    toUserId: number,
   ): Promise<FriendRequestRecord | null> {
     try {
       const updated = await sql`
@@ -225,6 +225,7 @@ export class FriendRepository {
           u.username AS user_username,
           u.password_hash AS user_password_hash,
           u.avatar_url AS user_avatar_url,
+          u.bio AS user_bio,
           u.public_key AS user_public_key,
           u.secret_key_encrypted AS user_secret_key_encrypted,
           u.is_verified AS user_is_verified,
@@ -266,6 +267,7 @@ export class FriendRepository {
           u.username AS user_username,
           u.password_hash AS user_password_hash,
           u.avatar_url AS user_avatar_url,
+          u.bio AS user_bio,
           u.public_key AS user_public_key,
           u.secret_key_encrypted AS user_secret_key_encrypted,
           u.is_verified AS user_is_verified,
@@ -301,6 +303,7 @@ export class FriendRepository {
           u.username AS user_username,
           u.password_hash AS user_password_hash,
           u.avatar_url AS user_avatar_url,
+          u.bio AS user_bio,
           u.public_key AS user_public_key,
           u.secret_key_encrypted AS user_secret_key_encrypted,
           u.is_verified AS user_is_verified,
@@ -329,6 +332,7 @@ export class FriendRepository {
         username: row.user_username as string,
         password_hash: row.user_password_hash as string | undefined,
         avatar_url: row.user_avatar_url as string | undefined,
+        bio: row.user_bio as string | undefined,
         public_key: row.user_public_key as string | undefined,
         secret_key_encrypted: row.user_secret_key_encrypted as
           | string
@@ -340,7 +344,7 @@ export class FriendRepository {
       });
 
       const mapRowToRequest = (
-        row: Record<string, unknown>
+        row: Record<string, unknown>,
       ): FriendRequestRecord => ({
         id: row.request_id as number,
         from_id: row.from_id as number,
@@ -368,13 +372,13 @@ export class FriendRepository {
 
       return {
         friends: friends.map((row) =>
-          mapToSummary(row as Record<string, unknown>)
+          mapToSummary(row as Record<string, unknown>),
         ),
         incoming: incoming.map((row) =>
-          mapToSummary(row as Record<string, unknown>)
+          mapToSummary(row as Record<string, unknown>),
         ),
         outgoing: outgoing.map((row) =>
-          mapToSummary(row as Record<string, unknown>)
+          mapToSummary(row as Record<string, unknown>),
         ),
       };
     } catch (error) {
@@ -401,7 +405,7 @@ export class FriendRepository {
 
   async hasAcceptedFriendship(
     userId: number,
-    friendId: number
+    friendId: number,
   ): Promise<boolean> {
     try {
       const result = await sql`

@@ -34,10 +34,10 @@ export function sortMessages(list: ChatMessage[]): ChatMessage[] {
 
 export function mergeMessage(
   list: ChatMessage[],
-  next: ChatMessage
+  next: ChatMessage,
 ): ChatMessage[] {
   const index = list.findIndex(
-    (item) => item.clientMessageId === next.clientMessageId
+    (item) => item.clientMessageId === next.clientMessageId,
   );
   if (index === -1) {
     return sortMessages([...list, next]);

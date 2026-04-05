@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
   if (!friendIdParam) {
     return NextResponse.json(
       { error: "friendId is required" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -33,12 +33,12 @@ export async function GET(request: NextRequest) {
   try {
     const hasFriendship = await friendRepository.hasAcceptedFriendship(
       user.id,
-      friendId
+      friendId,
     );
     if (!hasFriendship) {
       return NextResponse.json(
         { error: "Friendship not found" },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
     console.error("Friend profile fetch error:", error);
     return NextResponse.json(
       { error: "Failed to load friend profile" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

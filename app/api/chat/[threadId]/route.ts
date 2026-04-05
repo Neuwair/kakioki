@@ -7,7 +7,7 @@ const friendRepository = new FriendRepository();
 
 export async function GET(
   request: NextRequest,
-  context: { params: Promise<{ threadId: string }> }
+  context: { params: Promise<{ threadId: string }> },
 ) {
   const authResult = await requireAuth(request);
   if (authResult instanceof Response) {
@@ -19,7 +19,7 @@ export async function GET(
   if (!threadId) {
     return NextResponse.json(
       { success: false, error: "Thread id missing" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -27,14 +27,14 @@ export async function GET(
   if (!thread) {
     return NextResponse.json(
       { success: false, error: "Thread not found" },
-      { status: 404 }
+      { status: 404 },
     );
   }
 
   if (thread.userAId !== user.id && thread.userBId !== user.id) {
     return NextResponse.json(
       { success: false, error: "Forbidden" },
-      { status: 403 }
+      { status: 403 },
     );
   }
 

@@ -19,6 +19,12 @@ import {
   ensurePrivateKey,
   PASSWORD_STORAGE_KEY,
 } from "@/public/shared/helpers/LibsodiumHelpers";
+import {
+  buildPresencePayload,
+  CURRENT_USER_PRESENCE_STATUS_EVENT,
+  CURRENT_USER_PRESENCE_STATUS_STORAGE_KEY,
+  getStoredCurrentUserPresenceStatus,
+} from "@/public/shared/logic/UserPresenceRealtime";
 import { getRealtimeClient } from "@/public/shared/services/AblyRealtime";
 
 interface AuthContextType {
@@ -421,6 +427,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     > | null = null;
     let hasEntered = false;
 
+    const updatePresenceStatus = async () => {
+      if (!channel) {
+        return;
+      }
+
+      const payload = buildPresencePayload(
+        user.userId,
+        getStoredCurrentUserPresenceStatus(),
+      );
+
+      try {
+        if (!hasEntered) {
+          await channel.presence.enter(payload);
+          hasEntered = true;
+          return;
+        }
+
+        await channel.presence.update(payload);
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : String(error ?? "");
+
+        if (/not entered|not present/i.test(message)) {
+          await channel.presence.enter(payload);
+          hasEntered = true;
+          return;
+        }
+
+        if (!/connection closed|connection failed/i.test(message)) {
+          console.error("User presence update error:", error);
+        }
+      }
+    };
+
     const maintainPresence = async () => {
       try {
         const client = await getRealtimeClient();
@@ -432,20 +472,47 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         if (!isActive) {
           return;
         }
-        await channel.presence.enter({ userId: user.userId });
-        hasEntered = true;
+        await updatePresenceStatus();
       } catch (error) {
-        const msg = error instanceof Error ? error.message : String(error ?? "");
+        const msg =
+          error instanceof Error ? error.message : String(error ?? "");
         if (!/connection closed|connection failed/i.test(msg)) {
           console.error("User presence enter error:", error);
         }
       }
     };
 
+    const handleStoredStatusChange = () => {
+      if (!isActive) {
+        return;
+      }
+
+      void updatePresenceStatus();
+    };
+
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key && event.key !== CURRENT_USER_PRESENCE_STATUS_STORAGE_KEY) {
+        return;
+      }
+
+      handleStoredStatusChange();
+    };
+
+    window.addEventListener(
+      CURRENT_USER_PRESENCE_STATUS_EVENT,
+      handleStoredStatusChange,
+    );
+    window.addEventListener("storage", handleStorage);
+
     void maintainPresence();
 
     return () => {
       isActive = false;
+      window.removeEventListener(
+        CURRENT_USER_PRESENCE_STATUS_EVENT,
+        handleStoredStatusChange,
+      );
+      window.removeEventListener("storage", handleStorage);
       if (channel) {
         const cleanupPresence = async () => {
           if (hasEntered) {

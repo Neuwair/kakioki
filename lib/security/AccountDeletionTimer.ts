@@ -109,7 +109,7 @@ export async function queueEligibleAccountDeletions(): Promise<number> {
 }
 
 export async function processDueAccountDeletions(
-  limit: number = DEFAULT_BATCH_SIZE
+  limit: number = DEFAULT_BATCH_SIZE,
 ): Promise<number> {
   try {
     await ensureAccountDeletionQueueTable();

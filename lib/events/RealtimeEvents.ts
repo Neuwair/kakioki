@@ -91,6 +91,7 @@ export interface FriendUserPayload {
   user_id: string;
   username: string;
   avatar_url?: string;
+  bio?: string;
   public_key?: string;
 }
 
@@ -119,6 +120,10 @@ export type FriendRealtimeEvent =
       type: "friend_removed";
       initiatorId: number;
       targetId: number;
+    }
+  | {
+      type: "friend_profile_updated";
+      user: FriendUserPayload;
     };
 
 export function friendChannel(userId: number): string {

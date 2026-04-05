@@ -27,7 +27,7 @@ export const EmojiPicker: React.FC<EmojiPickerProps> = ({
   const { pickerRef, portalElement, position, theme } = UseEmojiPickerLogic(
     isOpen,
     onClickOutside,
-    { placement, triggerRef }
+    { placement, triggerRef },
   );
   const containerRef = useRef<HTMLDivElement | null>(null);
   const pickerInstanceRef = useRef<
@@ -71,7 +71,7 @@ export const EmojiPicker: React.FC<EmojiPickerProps> = ({
       emojiSize: 20,
       maxFrequentRows: 1,
     }),
-    [onEmojiSelect, theme]
+    [onEmojiSelect, theme],
   );
 
   useEffect(() => {

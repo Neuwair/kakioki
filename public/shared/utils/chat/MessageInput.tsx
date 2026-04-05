@@ -52,7 +52,8 @@ export const MessageInput: React.FC<MessageInputProps> = ({
     const maxHeight = 180;
     const newHeight = Math.min(textArea.scrollHeight, maxHeight);
     textArea.style.height = `${newHeight}px`;
-    textArea.style.overflowY = textArea.scrollHeight > maxHeight ? "auto" : "hidden";
+    textArea.style.overflowY =
+      textArea.scrollHeight > maxHeight ? "auto" : "hidden";
   };
 
   useEffect(() => {
@@ -127,7 +128,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
       />
 
       <div
-        className={`flex items-baseline gap-2 p-4 bg-white/5 chatInputUI transition-colors duration-200 ${
+        className={`flex items-center gap-2 p-4 bg-white/5 chatInputUI transition-colors duration-200 ${
           isDragging
             ? "bg-blue-500/20 border-2 border-dashed border-blue-400"
             : ""

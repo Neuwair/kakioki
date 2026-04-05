@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
     if (file.size > 4 * 1024 * 1024) {
       return NextResponse.json(
         { error: "File size exceeds the 4MB limit" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
           maxWidth: 1280,
           maxHeight: 1280,
           quality: 80,
-        }
+        },
       );
 
       finalBuffer = processedMedia.buffer;
@@ -127,7 +127,7 @@ export async function POST(request: NextRequest) {
       if (mediaType === "image") {
         const thumb = await SharpConfig.createThumbnail(finalBuffer, 150);
         thumbnail = `data:image/${thumb.format};base64,${thumb.buffer.toString(
-          "base64"
+          "base64",
         )}`;
       }
     } catch (err) {
@@ -153,7 +153,7 @@ export async function POST(request: NextRequest) {
     console.error("Error processing upload:", error);
     return NextResponse.json(
       { error: "Failed to process upload" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

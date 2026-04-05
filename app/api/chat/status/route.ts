@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
   } catch {
     return NextResponse.json(
       { success: false, error: "Invalid JSON payload" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
   ) {
     return NextResponse.json(
       { success: false, error: "Invalid payload" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -47,14 +47,14 @@ export async function POST(request: NextRequest) {
   if (!thread) {
     return NextResponse.json(
       { success: false, error: "Thread not found" },
-      { status: 404 }
+      { status: 404 },
     );
   }
 
   if (thread.userAId !== user.id && thread.userBId !== user.id) {
     return NextResponse.json(
       { success: false, error: "Forbidden" },
-      { status: 403 }
+      { status: 403 },
     );
   }
 
@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
     }
     const record = await messageRepository.updateMessageStatusByClientId(
       messageId,
-      statusUpdate
+      statusUpdate,
     );
     if (!record) {
       continue;

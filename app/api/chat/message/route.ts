@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
   if (!threadId || !clientMessageId) {
     return NextResponse.json(
       { success: false, error: "Missing threadId or clientMessageId" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -29,25 +29,25 @@ export async function GET(request: NextRequest) {
   ) {
     return NextResponse.json(
       { success: false, error: "Thread not found" },
-      { status: 404 }
+      { status: 404 },
     );
   }
 
   const message = await messageRepository.getMessageByClientId(
     threadId,
-    clientMessageId
+    clientMessageId,
   );
   if (!message) {
     return NextResponse.json(
       { success: false, error: "Message not found" },
-      { status: 404 }
+      { status: 404 },
     );
   }
 
   if (message.fromId !== user.id && message.toId !== user.id) {
     return NextResponse.json(
       { success: false, error: "Forbidden" },
-      { status: 403 }
+      { status: 403 },
     );
   }
 

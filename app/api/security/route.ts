@@ -33,12 +33,12 @@ export async function POST(request: NextRequest) {
     if (error instanceof MissingAblyKeyError) {
       return NextResponse.json(
         { error: "Ably API key missing" },
-        { status: 503 }
+        { status: 503 },
       );
     }
     return NextResponse.json(
       { error: "Failed to create token" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

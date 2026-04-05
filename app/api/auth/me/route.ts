@@ -9,7 +9,7 @@ export async function POST(request: Request) {
     if (!userId) {
       return NextResponse.json(
         { error: "User ID is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -24,7 +24,7 @@ export async function POST(request: Request) {
     if (!user) {
       return NextResponse.json(
         { success: false, error: "User not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -45,7 +45,7 @@ export async function POST(request: Request) {
     console.error("Error fetching user data:", error);
     return NextResponse.json(
       { error: "An error occurred while fetching user data" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

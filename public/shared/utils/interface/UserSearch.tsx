@@ -182,8 +182,7 @@ export const FriendSearchDropdown: React.FC<FriendSearchDropdownProps> = ({
   );
 };
 
-export const FriendSearchHeader: React.FC<{
-}> = () => {
+export const FriendSearchHeader: React.FC<{}> = () => {
   const router = useRouter();
   const {
     query,

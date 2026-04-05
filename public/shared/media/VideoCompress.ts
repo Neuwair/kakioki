@@ -127,7 +127,7 @@ function estimateBitrate(
   duration: number,
   maxBytes: number,
   target: number,
-  minimum: number
+  minimum: number,
 ): number {
   const safeDuration = Math.max(duration, 0.1);
   const bySize = Math.floor((maxBytes * 8) / safeDuration);
@@ -143,7 +143,7 @@ async function transcodeWithFfmpeg(
     fps: number;
     videoBitsPerSecond: number;
     audioBitsPerSecond: number;
-  }
+  },
 ): Promise<File | null> {
   const ffmpeg = await ensureFFmpeg();
   const inputExt = file.name.includes(".")
@@ -206,7 +206,7 @@ async function transcodeWithFfmpeg(
 
 export async function compressVideoFile(
   file: File,
-  options: VideoCompressionOptions = {}
+  options: VideoCompressionOptions = {},
 ): Promise<File> {
   if (!isClientEnvironment()) return file;
   if (!file.type.startsWith("video/")) return file;
@@ -227,7 +227,7 @@ export async function compressVideoFile(
     metadata.duration,
     maxBytes,
     options.targetBitrate ?? DEFAULT_TARGET_BITRATE,
-    minBitrate
+    minBitrate,
   );
   let width = Math.min(metadata.width, maxWidth);
   let height = Math.min(metadata.height, maxHeight);

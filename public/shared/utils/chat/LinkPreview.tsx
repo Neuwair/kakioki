@@ -37,10 +37,70 @@ interface LinkPreviewProps {
   className?: string;
 }
 
+const isSpotifyPreview = (preview: LinkPreviewType): boolean => {
+  const value = `${preview.domain ?? ""} ${preview.url}`.toLowerCase();
+  return value.includes("spotify.com") || value.includes("spotify.link");
+};
+
+const getSpotifyEmbedUrl = (url: string): string | null => {
+  try {
+    const parsedUrl = new URL(url);
+    const host = parsedUrl.hostname.toLowerCase();
+
+    if (!host.includes("spotify.com")) {
+      return null;
+    }
+
+    const segments = parsedUrl.pathname
+      .split("/")
+      .filter(Boolean)
+      .filter((segment) => !segment.startsWith("intl-"));
+
+    const resourceIndex = segments.findIndex((segment) =>
+      ["track", "album", "playlist", "artist", "episode", "show"].includes(
+        segment,
+      ),
+    );
+
+    if (resourceIndex === -1 || !segments[resourceIndex + 1]) {
+      return null;
+    }
+
+    const resourceType = segments[resourceIndex];
+    const resourceId = segments[resourceIndex + 1];
+    return `https://open.spotify.com/embed/${resourceType}/${resourceId}?utm_source=generator&theme=0`;
+  } catch {
+    return null;
+  }
+};
+
+const getSpotifyEmbedHeight = (url: string): number => {
+  const embedUrl = getSpotifyEmbedUrl(url);
+
+  if (!embedUrl) {
+    return 152;
+  }
+
+  if (
+    embedUrl.includes("/album/") ||
+    embedUrl.includes("/playlist/") ||
+    embedUrl.includes("/artist/") ||
+    embedUrl.includes("/show/")
+  ) {
+    return 352;
+  }
+
+  return 152;
+};
+
 export const LinkPreview: React.FC<LinkPreviewProps> = ({
   preview,
   className = "",
 }) => {
+  if (isSpotifyPreview(preview)) {
+    return <SpotifyPreview preview={preview} className={className} />;
+  }
+
   if (preview.type === "youtube") {
     return <YouTubePreview preview={preview} className={className} />;
   }
@@ -70,7 +130,7 @@ export const YouTubePreview: React.FC<YouTubePreviewProps> = ({
   if (showEmbed && preview.youtubeId) {
     return (
       <div
-        className={`max-w-lg rounded-lg overflow-hidden bg-black/20 backdrop-blur-sm border border-white/10 ${className}`}
+        className={`max-w-full rounded-lg overflow-hidden bg-black/20 backdrop-blur-sm border border-white/10 ${className}`}
       >
         <div className="relative aspect-video">
           <lite-youtube
@@ -89,15 +149,10 @@ export const YouTubePreview: React.FC<YouTubePreviewProps> = ({
           />
           {isLoading && (
             <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-              <FontAwesomeIcon
-                icon={faSpinner}
-                size="lg"
-                className="text-neutral-50/70 animate-spin"
-              />
+              <span className="w-8 h-8 rounded-full border-2 border-white border-t-transparent animate-spin" />
             </div>
           )}
         </div>
-
         <div className="p-3">
           <div className="flex items-center justify-between">
             <div className="flex-1 min-w-0">
@@ -123,7 +178,7 @@ export const YouTubePreview: React.FC<YouTubePreviewProps> = ({
 
   return (
     <div
-      className={`max-w-lg rounded-lg overflow-hidden bg-black/20 backdrop-blur-sm border border-white/10 hover:border-white/20 transition-all cursor-pointer ${className}`}
+      className={`max-w-full rounded-lg overflow-hidden bg-black/20 backdrop-blur-sm border border-white/10 hover:border-white/20 transition-all cursor-pointer ${className}`}
     >
       <div className="relative aspect-video group" onClick={handlePlayClick}>
         {preview.image && (
@@ -182,6 +237,56 @@ interface WebsiteLinkPreviewProps {
   preview: LinkPreviewType;
   className?: string;
 }
+interface SpotifyPreviewProps {
+  preview: LinkPreviewType;
+  className?: string;
+}
+
+const SpotifyPreview: React.FC<SpotifyPreviewProps> = ({
+  preview,
+  className = "",
+}) => {
+  const { handleClick } = UseWebsiteLinkPreviewLogic(preview);
+  const embedUrl = getSpotifyEmbedUrl(preview.url);
+
+  if (!embedUrl) {
+    return <WebsiteLinkPreview preview={preview} className={className} />;
+  }
+
+  return (
+    <div className={`max-w-full overflow-hidden rounded-lg ${className}`}>
+      <div className="p-2">
+        <iframe
+          src={embedUrl}
+          width="100%"
+          height={getSpotifyEmbedHeight(preview.url)}
+          allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+          loading="lazy"
+          className="block w-full rounded-md border-0"
+          title={preview.title || "Spotify preview"}
+        />
+      </div>
+      <div className="flex items-center justify-between px-3 pb-3">
+        <div className="min-w-0 flex-1">
+          <h4 className="truncate text-sm font-medium text-neutral-50">
+            {preview.title || "Spotify"}
+          </h4>
+          <p className="truncate text-xs text-neutral-50/60">
+            {preview.domain || "spotify.com"}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={handleClick}
+          className="ml-2 p-2 text-neutral-50/60 transition-colors hover:text-neutral-50"
+          title="Open in Spotify"
+        >
+          <FontAwesomeIcon icon={faExternalLinkAlt} size="sm" />
+        </button>
+      </div>
+    </div>
+  );
+};
 
 export const WebsiteLinkPreview: React.FC<WebsiteLinkPreviewProps> = ({
   preview,
@@ -191,7 +296,7 @@ export const WebsiteLinkPreview: React.FC<WebsiteLinkPreviewProps> = ({
 
   return (
     <div
-      className={`max-w-lg rounded-lg overflow-hidden bg-black/20 backdrop-blur-sm border border-white/10 hover:border-white/20 transition-all cursor-pointer ${className}`}
+      className={`max-w-full rounded-lg overflow-hidden bg-black/20 backdrop-blur-sm border border-white/10 hover:border-white/20 transition-all cursor-pointer ${className}`}
       onClick={handleClick}
     >
       {preview.image && (
@@ -223,20 +328,16 @@ export const WebsiteLinkPreview: React.FC<WebsiteLinkPreviewProps> = ({
                 {preview.domain}
               </span>
             </div>
-
             <h4 className="text-sm font-medium text-neutral-50 truncate mb-1">
               {preview.title || preview.url}
             </h4>
-
             {preview.description && (
               <p className="text-xs text-neutral-50/70 line-clamp-2 mb-2">
                 {preview.description}
               </p>
             )}
-
             <p className="text-xs text-neutral-50/50 truncate">{preview.url}</p>
           </div>
-
           <div className="ml-2 shrink-0">
             <FontAwesomeIcon
               icon={faExternalLinkAlt}
@@ -256,6 +357,87 @@ interface InputLinkPreviewAreaProps {
   onDismissPreview: (url: string) => void;
   className?: string;
 }
+interface InputLinkPreviewCardProps {
+  preview: LinkPreviewType;
+  onDismissPreview: (url: string) => void;
+}
+
+const InputLinkPreviewCard: React.FC<InputLinkPreviewCardProps> = ({
+  preview,
+  onDismissPreview,
+}) => {
+  if (isSpotifyPreview(preview)) {
+    return (
+      <div className="flex flex-row justify-start overflow-hidden p-4 gap-4 bg-white/5">
+        <div className="relative flex rounded-lg bg-white/5 w-full">
+          <SpotifyPreview className="w-full" preview={preview} />
+        </div>
+        <div className="flex items-start lg:items-center">
+          <button
+            type="button"
+            onClick={() => onDismissPreview(preview.url)}
+            className="flex justify-center items-center rounded-lg hover:bg-neutral-700/50 text-neutral-50 p-4 cancel-btn"
+            title="Remove preview"
+          >
+            <FontAwesomeIcon icon={faTimes} className="text-xl" />
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const { handleClick } = UseWebsiteLinkPreviewLogic(preview);
+  const previewTitle = preview.title || preview.url;
+  const previewDomain = preview.domain || "Link preview";
+
+  return (
+    <div className="flex flex-row justify-start overflow-hidden p-4 gap-4 bg-white/5">
+      <button
+        type="button"
+        onClick={handleClick}
+        className="flex flex-row text-left justify-center items-center align-middle rounded-lg gap-4"
+        title="Open preview"
+      >
+        <div className="relative flex w-35 h-35 rounded-lg bg-white/50">
+          {preview.image ? (
+            <SafeImage
+              src={preview.image}
+              alt={previewTitle}
+              fill
+              className="object-cover rounded-lg"
+              fallbackIcon={false}
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center bg-white/5 text-neutral-50/50">
+              <FontAwesomeIcon
+                icon={preview.type === "youtube" ? faPlay : faGlobe}
+                size="lg"
+              />
+            </div>
+          )}
+        </div>
+        <div className="flex flex-col flex-1 gap-2 p-4 rounded-lg bg-white/5 h-full justify-center align-middle">
+          <h4 className="line-clamp-2 text-lg font-semibold leading-tight text-neutral-50">
+            {previewTitle}
+          </h4>
+          <p className="line-clamp-2 text-lg font-semibold leading-none text-neutral-50/50">
+            {previewDomain}
+          </p>
+        </div>
+      </button>
+      <div className="flex items-start lg:items-center">
+        <button
+          type="button"
+          onClick={() => onDismissPreview(preview.url)}
+          className="flex justify-center items-center rounded-lg hover:bg-neutral-700/50 text-neutral-50 p-4 cancel-btn"
+          title="Remove preview"
+        >
+          <FontAwesomeIcon icon={faTimes} className="text-xl" />
+        </button>
+      </div>
+    </div>
+  );
+};
 
 export const InputLinkPreviewArea: React.FC<InputLinkPreviewAreaProps> = ({
   linkPreviews,
@@ -268,55 +450,30 @@ export const InputLinkPreviewArea: React.FC<InputLinkPreviewAreaProps> = ({
     return null;
   }
 
+  const activePreview = linkPreviews[0];
+
   return (
-    <div className={`border-t border-white/10 bg-black/10 ${className}`}>
-      <div className="p-3">
+    <div className={`flex flex-col ${className}`}>
+      <div className="flex flex-col gap-3">
         {isLoading && (
-          <div className="flex items-center gap-2 text-neutral-50/70 text-sm">
-            <FontAwesomeIcon
-              icon={faSpinner}
-              size="lg"
-              className="text-neutral-50/70 animate-spin"
-            />
+          <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-neutral-50/70">
+            <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            <span>Loading link preview...</span>
           </div>
         )}
 
         {error && !isLoading && (
-          <div className="text-red-400 text-sm">{error}</div>
-        )}
-
-        {linkPreviews.length > 0 && (
-          <div className="space-y-3">
-            <div className="text-xs text-neutral-50/60 font-medium">
-              Link Preview{linkPreviews.length > 1 ? "s" : ""}:
-            </div>
-
-            {linkPreviews.map((preview) => (
-              <div key={preview.url} className="relative group">
-                <LinkPreview
-                  preview={preview}
-                  className="transition-opacity group-hover:opacity-90"
-                />
-
-                <button
-                  onClick={() => onDismissPreview(preview.url)}
-                  className="absolute top-2 right-2 w-6 h-6 bg-black/60 hover:bg-black/80 text-status-item rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                  title="Remove preview"
-                >
-                  <FontAwesomeIcon
-                    icon={faTimes}
-                    className="text-neutral-50 text-xs"
-                  />
-                </button>
-              </div>
-            ))}
-
-            <div className="text-xs text-neutral-50/50">
-              These previews will be included with your message. Click the
-              &times; to remove any you don&apos;t want.
-            </div>
+          <div className="rounded-2xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+            {error}
           </div>
         )}
+
+        {activePreview ? (
+          <InputLinkPreviewCard
+            preview={activePreview}
+            onDismissPreview={onDismissPreview}
+          />
+        ) : null}
       </div>
     </div>
   );

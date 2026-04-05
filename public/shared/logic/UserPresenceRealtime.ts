@@ -7,7 +7,84 @@ import { friendChannel } from "@/lib/events/RealtimeEvents";
 import { useAuth } from "@/lib/auth/ClientAuth";
 import { getRealtimeClient } from "@/public/shared/services/AblyRealtime";
 
-type PresenceStatus = "online" | "offline";
+export type PresenceStatus = "online" | "away" | "offline";
+
+export type PresencePayload = {
+  userId?: string;
+  status: PresenceStatus;
+  updatedAt: string;
+};
+
+export const CURRENT_USER_PRESENCE_STATUS_STORAGE_KEY = "kakiokiPresenceStatus";
+export const CURRENT_USER_PRESENCE_STATUS_EVENT =
+  "kakioki:presence-status-change";
+
+const DEFAULT_PRESENCE_STATUS: PresenceStatus = "online";
+
+export function isPresenceStatus(value: unknown): value is PresenceStatus {
+  return value === "online" || value === "away" || value === "offline";
+}
+
+export function getStoredCurrentUserPresenceStatus(): PresenceStatus {
+  try {
+    if (typeof window === "undefined") {
+      return DEFAULT_PRESENCE_STATUS;
+    }
+
+    const storedStatus = window.localStorage.getItem(
+      CURRENT_USER_PRESENCE_STATUS_STORAGE_KEY,
+    );
+
+    return isPresenceStatus(storedStatus)
+      ? storedStatus
+      : DEFAULT_PRESENCE_STATUS;
+  } catch {
+    return DEFAULT_PRESENCE_STATUS;
+  }
+}
+
+export function setStoredCurrentUserPresenceStatus(
+  status: PresenceStatus,
+): void {
+  try {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    window.localStorage.setItem(
+      CURRENT_USER_PRESENCE_STATUS_STORAGE_KEY,
+      status,
+    );
+    window.dispatchEvent(
+      new CustomEvent(CURRENT_USER_PRESENCE_STATUS_EVENT, {
+        detail: status,
+      }),
+    );
+  } catch {}
+}
+
+export function buildPresencePayload(
+  userId: string | undefined,
+  status: PresenceStatus,
+): PresencePayload {
+  return {
+    userId,
+    status,
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+export function readPresenceStatus(data: unknown): PresenceStatus {
+  if (
+    typeof data === "object" &&
+    data !== null &&
+    isPresenceStatus((data as { status?: unknown }).status)
+  ) {
+    return (data as { status: PresenceStatus }).status;
+  }
+
+  return DEFAULT_PRESENCE_STATUS;
+}
 
 type PresenceResult = {
   status: PresenceStatus;
@@ -34,6 +111,28 @@ const ONLINE_ACTIONS: PresenceMessage["action"][] = [
   "present",
   "update",
 ];
+
+function resolvePresenceStatus(members: PresenceMessage[]): PresenceStatus {
+  if (members.length === 0) {
+    return "offline";
+  }
+
+  let hasAway = false;
+
+  for (const member of members) {
+    const memberStatus = readPresenceStatus(member.data);
+
+    if (memberStatus === "online") {
+      return "online";
+    }
+
+    if (memberStatus === "away") {
+      hasAway = true;
+    }
+  }
+
+  return hasAway ? "away" : "offline";
+}
 
 export function useUserPresence(targetUserId: number | null): PresenceResult {
   const [status, setStatus] = useState<PresenceStatus>("offline");
@@ -62,8 +161,7 @@ export function useUserPresence(targetUserId: number | null): PresenceResult {
         if (!isActive) {
           return;
         }
-        const hasPresence = members.length > 0;
-        setStatus(hasPresence ? "online" : "offline");
+        setStatus(resolvePresenceStatus(members));
         setIsReady(true);
       } catch (error) {
         console.error("Presence state fetch error:", error);
@@ -95,9 +193,12 @@ export function useUserPresence(targetUserId: number | null): PresenceResult {
             return;
           }
           if (ONLINE_ACTIONS.includes(message.action)) {
-            setStatus("online");
-            setIsReady(true);
-            return;
+            const memberStatus = readPresenceStatus(message.data);
+            if (memberStatus === "online") {
+              setStatus("online");
+              setIsReady(true);
+              return;
+            }
           }
           await updateFromMembers();
         };
@@ -149,17 +250,33 @@ export function useUserPresence(targetUserId: number | null): PresenceResult {
 }
 
 export function useCurrentUserPresence(): PresenceResult {
-  const [status, setStatus] = useState<PresenceStatus>("offline");
+  const [status, setStatus] = useState<PresenceStatus>(() =>
+    getStoredCurrentUserPresenceStatus(),
+  );
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
     let isActive = true;
     let cleanup: (() => void) | undefined;
+    let connectionState = "initialized";
 
     const updateStatus = (state: string) => {
       if (!isActive) return;
-      const isOnline = state === "connected" || state === "connecting";
-      setStatus(isOnline ? "online" : "offline");
+      connectionState = state;
+      const isConnected = state === "connected" || state === "connecting";
+      setStatus(isConnected ? getStoredCurrentUserPresenceStatus() : "offline");
+      setIsReady(true);
+    };
+
+    const syncStoredStatus = () => {
+      if (!isActive) {
+        return;
+      }
+
+      const isConnected =
+        connectionState === "connected" || connectionState === "connecting";
+
+      setStatus(isConnected ? getStoredCurrentUserPresenceStatus() : "offline");
       setIsReady(true);
     };
 
@@ -168,20 +285,37 @@ export function useCurrentUserPresence(): PresenceResult {
         const client = await getRealtimeClient();
         if (!isActive) return;
 
-        // Set initial status
         updateStatus(client.connection.state);
 
-        // Listen for state changes
         const onStateChange = (stateChange: { current: string }) => {
           updateStatus(stateChange.current);
         };
 
+        const onStorage = (event: StorageEvent) => {
+          if (
+            event.key &&
+            event.key !== CURRENT_USER_PRESENCE_STATUS_STORAGE_KEY
+          ) {
+            return;
+          }
+
+          syncStoredStatus();
+        };
+
         client.connection.on(onStateChange);
+        window.addEventListener(
+          CURRENT_USER_PRESENCE_STATUS_EVENT,
+          syncStoredStatus,
+        );
+        window.addEventListener("storage", onStorage);
 
         cleanup = () => {
-          if (isActive) {
-            client.connection.off(onStateChange);
-          }
+          client.connection.off(onStateChange);
+          window.removeEventListener(
+            CURRENT_USER_PRESENCE_STATUS_EVENT,
+            syncStoredStatus,
+          );
+          window.removeEventListener("storage", onStorage);
         };
       } catch (error) {
         console.error("Current user presence subscription error:", error);

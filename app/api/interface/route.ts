@@ -13,7 +13,7 @@ function buildYouTubeThumbnail(videoId: string): string {
 }
 
 async function buildYouTubePreview(
-  targetUrl: URL
+  targetUrl: URL,
 ): Promise<LinkPreview | null> {
   const match = targetUrl.href.match(YOUTUBE_REGEX);
   if (!match) {
@@ -58,11 +58,11 @@ async function buildYouTubePreview(
 function extractMeta(
   html: string,
   attribute: "property" | "name",
-  key: string
+  key: string,
 ): string | undefined {
   const pattern = new RegExp(
     `<meta[^>]+${attribute}=["']${key}["'][^>]*content=["']([^"']+)["'][^>]*>`,
-    "i"
+    "i",
   );
   const match = html.match(pattern);
   if (match && match[1]) {
@@ -105,10 +105,11 @@ async function buildWebsitePreview(targetUrl: URL): Promise<LinkPreview> {
       redirect: "follow",
       next: { revalidate: 300 },
     });
-    const domain = getDomain(targetUrl);
+    const finalUrl = new URL(response.url);
+    const domain = getDomain(finalUrl);
     if (!response.ok) {
       return {
-        url: targetUrl.href,
+        url: finalUrl.href,
         type: "website",
         title: domain,
         domain,
@@ -125,12 +126,12 @@ async function buildWebsitePreview(targetUrl: URL): Promise<LinkPreview> {
       extractMeta(html, "name", "description") ??
       extractMeta(html, "name", "twitter:description");
     const image = toAbsoluteUrl(
-      targetUrl,
+      finalUrl,
       extractMeta(html, "property", "og:image") ??
-        extractMeta(html, "name", "twitter:image")
+        extractMeta(html, "name", "twitter:image"),
     );
     return {
-      url: targetUrl.href,
+      url: finalUrl.href,
       type: "website",
       title,
       description,

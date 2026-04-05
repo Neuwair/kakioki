@@ -18,6 +18,7 @@ export interface FriendListUser {
   userId: string;
   username: string;
   avatarUrl?: string;
+  bio?: string;
   publicKey?: string;
 }
 
@@ -44,6 +45,7 @@ function mapUserPayload(payload: FriendUserPayload): FriendListUser {
     userId: payload.user_id,
     username: payload.username,
     avatarUrl: payload.avatar_url ?? undefined,
+    bio: payload.bio ?? undefined,
     publicKey: payload.public_key ?? undefined,
   };
 }
@@ -82,6 +84,7 @@ function toFriendListEntry(entry: FriendSummaryEntry): FriendListEntry {
       userId: user.user_id,
       username: user.username,
       avatarUrl: user.avatar_url ?? undefined,
+      bio: user.bio ?? undefined,
       publicKey: user.public_key ?? undefined,
     },
     request: entry.request,
@@ -290,6 +293,26 @@ export function useFriendRelationships() {
         const otherUserId =
           event.initiatorId === user?.id ? event.targetId : event.initiatorId;
         setFriends((prev) => removeUser(prev, otherUserId));
+      } else if (event.type === "friend_profile_updated") {
+        const updateEntry = (entry: FriendListEntry): FriendListEntry => {
+          if (entry.user.id !== event.user.id) {
+            return entry;
+          }
+
+          return {
+            ...entry,
+            user: {
+              ...entry.user,
+              username: event.user.username,
+              avatarUrl: event.user.avatar_url ?? entry.user.avatarUrl,
+              bio: event.user.bio ?? entry.user.bio,
+            },
+          };
+        };
+
+        setFriends((prev) => prev.map(updateEntry));
+        setIncoming((prev) => prev.map(updateEntry));
+        setOutgoing((prev) => prev.map(updateEntry));
       }
     },
     [handleAcceptedEvent, handleCancelledEvent, handleSentEvent, user?.id],
