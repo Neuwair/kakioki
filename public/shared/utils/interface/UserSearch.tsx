@@ -136,12 +136,14 @@ export const FriendSearchDropdown: React.FC<FriendSearchDropdownProps> = ({
                   onClick={() => onCancel(user.id)}
                   disabled={isCanceling}
                 >
-                  {isCanceling ? (
-                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    <FontAwesomeIcon icon={faTimes} />
-                  )}
-                  {isCanceling ? "Cancelling" : "Cancel"}
+                  <div className="flex items-center gap-2 justify-center">
+                    {isCanceling ? (
+                      <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <FontAwesomeIcon icon={faTimes} />
+                    )}
+                    {isCanceling ? "Cancelling" : "Cancel"}
+                  </div>
                 </button>
               )}
               {user.status === "incoming" && (
@@ -166,12 +168,14 @@ export const FriendSearchDropdown: React.FC<FriendSearchDropdownProps> = ({
                   onClick={() => onAdd(user.id)}
                   disabled={isRequesting}
                 >
-                  {isRequesting ? (
-                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    <FontAwesomeIcon icon={faUserPlus} />
-                  )}
-                  {isRequesting ? "Sending request" : "Add"}
+                  <div className="flex items-center gap-2 justify-center">
+                    {isRequesting ? (
+                      <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <FontAwesomeIcon icon={faUserPlus} />
+                    )}
+                    {isRequesting ? "Sending request" : "Add"}
+                  </div>
                 </button>
               )}
             </div>
@@ -240,7 +244,7 @@ export const FriendSearchHeader: React.FC<{}> = () => {
 
   return (
     <div className="relative transition-all duration-300" ref={containerRef}>
-      <div className="flex gap-2">
+      <div className="flex flex-row flex-wrap gap-2">
         <div className="relative flex-1">
           <input
             type="text"

@@ -1,3 +1,4 @@
+import { KAKIOKI_CONFIG } from "@/lib/config/KakiokiConfig";
 import type {
   MediaPreview,
   MessageMetadata,
@@ -25,11 +26,7 @@ export interface DecryptedMedia {
 }
 
 export type ChatMessageState =
-  | "sending"
-  | "sent"
-  | "delivered"
-  | "read"
-  | "error";
+  (typeof KAKIOKI_CONFIG.messages.chatStates)[number];
 
 export interface ChatMessage {
   id?: number;

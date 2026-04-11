@@ -1,10 +1,13 @@
 "use client";
 
+import type { ChangeEvent, SyntheticEvent } from "react";
 import { useCallback, useRef, useState } from "react";
 import type { Crop, PixelCrop } from "react-image-crop";
-import { useAuth, uploadAvatar } from "@/lib/auth/ClientAuth";
+import { useAuth } from "@/lib/auth/ClientAuth";
+import { KAKIOKI_CONFIG } from "@/lib/config/KakiokiConfig";
 
 const TO_RADIANS = Math.PI / 180;
+const AVATAR_MAX_FILE_SIZE = KAKIOKI_CONFIG.imageProcessing.maxFileSize;
 
 export function UseImageCropperLogic() {
   const imgRef = useRef<HTMLImageElement | null>(null);
@@ -17,7 +20,7 @@ export function UseImageCropperLogic() {
   const initialCropRef = useRef<Crop | undefined>(undefined);
   const MAX_PERCENT = 100;
 
-  function onImageLoad(e: React.SyntheticEvent<HTMLImageElement>) {
+  function onImageLoad(e: SyntheticEvent<HTMLImageElement>) {
     const imgEl = e.currentTarget;
     const imgW = imgEl.naturalWidth || imgEl.width || 1;
     const imgH = imgEl.naturalHeight || imgEl.height || 1;
@@ -264,7 +267,7 @@ export const UseAvatarModalLogic = (
   const { updateAvatar } = useAuth();
 
   const handleFileChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
+    (e: ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (!file) return;
       if (!file.type.startsWith("image/")) {
@@ -332,7 +335,7 @@ export const UseAvatarModalLogic = (
   }, []);
 
   const handleSubmit = useCallback(
-    async (e: React.FormEvent) => {
+    async (e: SyntheticEvent<HTMLFormElement>) => {
       e.preventDefault();
 
       if (!selectedFile && !croppedBlob) {
@@ -349,7 +352,7 @@ export const UseAvatarModalLogic = (
         return;
       }
 
-      if (fileToUpload.size > 5 * 1024 * 1024) {
+      if (fileToUpload.size > AVATAR_MAX_FILE_SIZE) {
         setError("Image is too large. Please select an image under 5MB.");
         return;
       }
@@ -359,9 +362,7 @@ export const UseAvatarModalLogic = (
 
       try {
         console.debug("Uploading file:", fileToUpload.name);
-        const result = userId
-          ? await uploadAvatar(fileToUpload, userId)
-          : await updateAvatar(fileToUpload);
+        const result = await updateAvatar(fileToUpload);
 
         if (result.success) {
           console.debug("Avatar updated successfully");
@@ -391,7 +392,6 @@ export const UseAvatarModalLogic = (
       updateAvatar,
       onClose,
       resetState,
-      userId,
       onUploadSuccess,
     ],
   );

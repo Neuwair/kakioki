@@ -1,8 +1,5 @@
 import sodium from "libsodium-wrappers-sumo";
-
-const PRIVATE_KEY_STORAGE_KEY = "kakiokiPrivateKey";
-const SHARED_KEY_STORAGE_KEY = "kakiokiSharedKeys";
-export const PASSWORD_STORAGE_KEY = "kakiokiPassword";
+import { sessionKey } from "@/public/shared/helpers/TabSessionHelpers";
 
 let ready: Promise<typeof sodium> | null = null;
 
@@ -23,7 +20,7 @@ function loadSharedKeyStorage(): Record<string, string> {
     return {};
   }
   try {
-    const raw = sessionStorage.getItem(SHARED_KEY_STORAGE_KEY);
+    const raw = sessionStorage.getItem(sessionKey("shared_keys"));
     return raw ? (JSON.parse(raw) as Record<string, string>) : {};
   } catch {
     return {};
@@ -34,7 +31,7 @@ function persistSharedKeyStorage(storage: Record<string, string>) {
   if (typeof window === "undefined") {
     return;
   }
-  sessionStorage.setItem(SHARED_KEY_STORAGE_KEY, JSON.stringify(storage));
+  sessionStorage.setItem(sessionKey("shared_keys"), JSON.stringify(storage));
 }
 
 async function decodeEncryptedKey(encoded: string) {
@@ -94,7 +91,7 @@ export async function storePrivateKey(privateKey: Uint8Array) {
       privateKey,
       sodium.base64_variants.URLSAFE_NO_PADDING,
     );
-    sessionStorage.setItem(PRIVATE_KEY_STORAGE_KEY, encoded);
+    sessionStorage.setItem(sessionKey("private_key"), encoded);
   }
 }
 
@@ -103,9 +100,9 @@ export function clearStoredPrivateKey() {
   cachedPublicKeyEncoded = null;
   cachedPublicKeyBytes = null;
   if (typeof window !== "undefined") {
-    sessionStorage.removeItem(PRIVATE_KEY_STORAGE_KEY);
-    sessionStorage.removeItem(SHARED_KEY_STORAGE_KEY);
-    sessionStorage.removeItem(PASSWORD_STORAGE_KEY);
+    sessionStorage.removeItem(sessionKey("private_key"));
+    sessionStorage.removeItem(sessionKey("shared_keys"));
+    sessionStorage.removeItem(sessionKey("password"));
   }
   sharedKeyCache.clear();
 }
@@ -117,7 +114,7 @@ export async function getStoredPrivateKey(): Promise<Uint8Array | null> {
   if (typeof window === "undefined") {
     return null;
   }
-  const encoded = sessionStorage.getItem(PRIVATE_KEY_STORAGE_KEY);
+  const encoded = sessionStorage.getItem(sessionKey("private_key"));
   if (!encoded) {
     return null;
   }
@@ -131,7 +128,7 @@ export async function getStoredPrivateKey(): Promise<Uint8Array | null> {
     return decoded;
   } catch (error) {
     console.error("Failed to restore cached private key from storage:", error);
-    sessionStorage.removeItem(PRIVATE_KEY_STORAGE_KEY);
+    sessionStorage.removeItem(sessionKey("private_key"));
     return null;
   }
   return null;
@@ -167,7 +164,7 @@ export function getStoredPassword(): string | null {
     return null;
   }
   try {
-    return sessionStorage.getItem(PASSWORD_STORAGE_KEY);
+    return sessionStorage.getItem(sessionKey("password"));
   } catch {
     return null;
   }

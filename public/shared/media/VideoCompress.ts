@@ -1,3 +1,5 @@
+import { KAKIOKI_CONFIG } from "@/lib/config/KakiokiConfig";
+
 export type VideoCompressionOptions = {
   maxWidth?: number;
   maxHeight?: number;
@@ -19,16 +21,16 @@ type VideoMetadata = {
 
 type FFmpegInstance = import("@ffmpeg/ffmpeg").FFmpeg;
 
-const SERVER_UPLOAD_MAX_BYTES = 4 * 1024 * 1024;
-const SIZE_MARGIN_BYTES = 96 * 1024;
+const SERVER_UPLOAD_MAX_BYTES = KAKIOKI_CONFIG.videoCompression.maxBytes;
+const SIZE_MARGIN_BYTES = KAKIOKI_CONFIG.videoCompression.sizeMarginBytes;
 const DEFAULT_MAX_BYTES = SERVER_UPLOAD_MAX_BYTES;
-const DEFAULT_MAX_ATTEMPTS = 5;
-const DEFAULT_TARGET_BITRATE = 900_000;
-const DEFAULT_MIN_BITRATE = 180_000;
-const DEFAULT_AUDIO_BITRATE = 56_000;
-const DEFAULT_FPS = 24;
-const DEFAULT_MAX_DIMENSION = 1280;
-const DEFAULT_MIN_DIMENSION = 200;
+const DEFAULT_MAX_ATTEMPTS = KAKIOKI_CONFIG.videoCompression.maxAttempts;
+const DEFAULT_TARGET_BITRATE = KAKIOKI_CONFIG.videoCompression.targetBitrateHz;
+const DEFAULT_MIN_BITRATE = KAKIOKI_CONFIG.videoCompression.minBitrateHz;
+const DEFAULT_AUDIO_BITRATE = KAKIOKI_CONFIG.videoCompression.audioBitrateHz;
+const DEFAULT_FPS = KAKIOKI_CONFIG.videoCompression.fps;
+const DEFAULT_MAX_DIMENSION = KAKIOKI_CONFIG.videoCompression.maxDimension;
+const DEFAULT_MIN_DIMENSION = KAKIOKI_CONFIG.videoCompression.minDimension;
 
 let ffmpegPromise: Promise<FFmpegInstance> | null = null;
 

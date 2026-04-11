@@ -24,9 +24,7 @@ export const SignInForm: React.FC<SignInFormProps> = ({
 
   return (
     <div className="flex flex-col gap-4 max-w-md w-full bg-white/5 backdrop-blur-lg border border-white/20 rounded-4xl shadow-lg p-8">
-      
       <div className="flex flex-col gap-4">
-
         <div className="flex flex-col text-center gap-2 justify-center">
           <h2 className=" font-bold text-neutral-50 cursor-default text-4xl">
             Sign In
@@ -105,6 +103,7 @@ export const SignInForm: React.FC<SignInFormProps> = ({
               Don&apos;t have an account?{" "}
             </p>
             <button
+              type="button"
               onClick={onSwitchToSignUp}
               className="text-lime-200 hover:text-lime-100 underline bg-transparent border-none cursor-default text-responsive text-lg"
             >

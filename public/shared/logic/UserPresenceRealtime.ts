@@ -3,21 +3,30 @@
 import { useEffect, useRef, useState } from "react";
 import type { PresenceMessage } from "ably";
 import type { FriendRealtimeEvent } from "@/lib/events/RealtimeEvents";
-import { friendChannel } from "@/lib/events/RealtimeEvents";
+import {
+  APP_PRESENCE_CHANNEL,
+  friendChannel,
+} from "@/lib/events/RealtimeEvents";
+import { KAKIOKI_CONFIG } from "@/lib/config/KakiokiConfig";
 import { useAuth } from "@/lib/auth/ClientAuth";
 import { getRealtimeClient } from "@/public/shared/services/AblyRealtime";
+import { sessionKey } from "@/public/shared/helpers/TabSessionHelpers";
 
 export type PresenceStatus = "online" | "away" | "offline";
 
 export type PresencePayload = {
-  userId?: string;
   status: PresenceStatus;
-  updatedAt: string;
+  updatedAt: number;
 };
 
-export const CURRENT_USER_PRESENCE_STATUS_STORAGE_KEY = "kakiokiPresenceStatus";
+const PRESENCE_STALE_TTL_MS = KAKIOKI_CONFIG.presence.staleTtlMs;
+
 export const CURRENT_USER_PRESENCE_STATUS_EVENT =
   "kakioki:presence-status-change";
+
+export function getCurrentUserPresenceStatusStorageKey(): string {
+  return sessionKey("presenceStatus");
+}
 
 const DEFAULT_PRESENCE_STATUS: PresenceStatus = "online";
 
@@ -32,7 +41,7 @@ export function getStoredCurrentUserPresenceStatus(): PresenceStatus {
     }
 
     const storedStatus = window.localStorage.getItem(
-      CURRENT_USER_PRESENCE_STATUS_STORAGE_KEY,
+      getCurrentUserPresenceStatusStorageKey(),
     );
 
     return isPresenceStatus(storedStatus)
@@ -52,7 +61,7 @@ export function setStoredCurrentUserPresenceStatus(
     }
 
     window.localStorage.setItem(
-      CURRENT_USER_PRESENCE_STATUS_STORAGE_KEY,
+      getCurrentUserPresenceStatusStorageKey(),
       status,
     );
     window.dispatchEvent(
@@ -63,15 +72,8 @@ export function setStoredCurrentUserPresenceStatus(
   } catch {}
 }
 
-export function buildPresencePayload(
-  userId: string | undefined,
-  status: PresenceStatus,
-): PresencePayload {
-  return {
-    userId,
-    status,
-    updatedAt: new Date().toISOString(),
-  };
+export function buildPresencePayload(status: PresenceStatus): PresencePayload {
+  return { status, updatedAt: Date.now() };
 }
 
 export function readPresenceStatus(data: unknown): PresenceStatus {
@@ -84,6 +86,53 @@ export function readPresenceStatus(data: unknown): PresenceStatus {
   }
 
   return DEFAULT_PRESENCE_STATUS;
+}
+
+const PRESENCE_CLOCK_SKEW_TOLERANCE_MS =
+  KAKIOKI_CONFIG.presence.clockSkewToleranceMs;
+
+function readPresenceUpdatedAt(data: unknown): number {
+  if (typeof data === "object" && data !== null) {
+    const updatedAt = (data as { updatedAt?: unknown }).updatedAt;
+    if (typeof updatedAt !== "number") {
+      return 0;
+    }
+    return Math.min(updatedAt, Date.now() + PRESENCE_CLOCK_SKEW_TOLERANCE_MS);
+  }
+  return 0;
+}
+
+function isStale(data: unknown): boolean {
+  return Date.now() - readPresenceUpdatedAt(data) > PRESENCE_STALE_TTL_MS;
+}
+
+function resolvePresenceStatusFromClientId(
+  members: PresenceMessage[],
+  targetClientId: string,
+): PresenceStatus {
+  const relevant = members.filter(
+    (m) => m.clientId === targetClientId && !isStale(m.data),
+  );
+
+  if (relevant.length === 0) {
+    return "offline";
+  }
+
+  let hasAway = false;
+
+  for (const member of relevant) {
+    const memberStatus = readPresenceStatus(member.data);
+
+    if (memberStatus === "online") {
+      return "online";
+    }
+
+    if (memberStatus === "away") {
+      hasAway = true;
+    }
+  }
+
+  return hasAway ? "away" : "offline";
 }
 
 type PresenceResult = {
@@ -112,60 +161,50 @@ const ONLINE_ACTIONS: PresenceMessage["action"][] = [
   "update",
 ];
 
-function resolvePresenceStatus(members: PresenceMessage[]): PresenceStatus {
-  if (members.length === 0) {
-    return "offline";
-  }
-
-  let hasAway = false;
-
-  for (const member of members) {
-    const memberStatus = readPresenceStatus(member.data);
-
-    if (memberStatus === "online") {
-      return "online";
-    }
-
-    if (memberStatus === "away") {
-      hasAway = true;
-    }
-  }
-
-  return hasAway ? "away" : "offline";
-}
-
 export function useUserPresence(targetUserId: number | null): PresenceResult {
   const [status, setStatus] = useState<PresenceStatus>("offline");
   const [isReady, setIsReady] = useState(false);
+  const [resolvedTargetUserId, setResolvedTargetUserId] = useState<
+    number | null
+  >(null);
+  const latestUpdatedAtRef = useRef<number>(0);
 
   useEffect(() => {
+    if (targetUserId === null) {
+      latestUpdatedAtRef.current = 0;
+      return;
+    }
+
+    const targetClientId = targetUserId.toString();
     let isActive = true;
     let channel: PresenceChannel | null = null;
     let listener: ((message: PresenceMessage) => void) | null = null;
-    let attachPromise: Promise<unknown> | null = null;
+    latestUpdatedAtRef.current = 0;
 
-    const reset = () => {
-      if (!isActive) {
-        return;
-      }
-      setStatus("offline");
-      setIsReady(false);
-    };
-
-    const updateFromMembers = async () => {
+    const applyFromMembers = async () => {
       if (!channel) {
         return;
       }
       try {
-        const members = await channel.presence.get();
+        const all = await channel.presence.get();
         if (!isActive) {
           return;
         }
-        setStatus(resolvePresenceStatus(members));
+        latestUpdatedAtRef.current = all
+          .filter((member) => member.clientId === targetClientId)
+          .reduce(
+            (latestUpdatedAt, member) =>
+              Math.max(latestUpdatedAt, readPresenceUpdatedAt(member.data)),
+            0,
+          );
+        const resolved = resolvePresenceStatusFromClientId(all, targetClientId);
+        setResolvedTargetUserId(targetUserId);
+        setStatus(resolved);
         setIsReady(true);
       } catch (error) {
         console.error("Presence state fetch error:", error);
         if (isActive) {
+          setResolvedTargetUserId(targetUserId);
           setStatus("offline");
           setIsReady(true);
         }
@@ -173,41 +212,56 @@ export function useUserPresence(targetUserId: number | null): PresenceResult {
     };
 
     const subscribe = async () => {
-      if (!targetUserId) {
-        reset();
-        return;
-      }
       try {
         const client = await getRealtimeClient();
         if (!isActive) {
           return;
         }
         channel = client.channels.get(
-          `user:${targetUserId}:presence`,
+          APP_PRESENCE_CHANNEL,
         ) as unknown as PresenceChannel;
-        attachPromise = channel.attach();
-        await attachPromise;
+        await channel.attach();
+        if (!isActive) {
+          return;
+        }
+
+        await applyFromMembers();
+        if (!isActive) {
+          return;
+        }
 
         listener = async (message: PresenceMessage) => {
-          if (!isActive) {
+          if (!isActive || message.clientId !== targetClientId) {
             return;
           }
+
+          const incomingUpdatedAt = readPresenceUpdatedAt(message.data);
+          if (incomingUpdatedAt < latestUpdatedAtRef.current) {
+            return;
+          }
+          latestUpdatedAtRef.current = incomingUpdatedAt;
+
           if (ONLINE_ACTIONS.includes(message.action)) {
             const memberStatus = readPresenceStatus(message.data);
             if (memberStatus === "online") {
+              setResolvedTargetUserId(targetUserId);
               setStatus("online");
               setIsReady(true);
               return;
             }
           }
-          await updateFromMembers();
+
+          await applyFromMembers();
         };
 
         channel.presence.subscribe(listener);
-        await updateFromMembers();
       } catch (error) {
         console.error("User presence subscription error:", error);
-        reset();
+        if (isActive) {
+          setResolvedTargetUserId(targetUserId);
+          setStatus("offline");
+          setIsReady(false);
+        }
       }
     };
 
@@ -222,124 +276,21 @@ export function useUserPresence(targetUserId: number | null): PresenceResult {
           console.error("Presence unsubscribe error:", unsubscribeError);
         }
       }
-      if (channel) {
-        void (async () => {
-          try {
-            if (attachPromise) {
-              await attachPromise;
-            }
-            await channel.detach();
-          } catch (detachError) {
-            const message =
-              detachError instanceof Error
-                ? detachError.message
-                : String(detachError);
-            if (!/superseded by a subsequent detach/i.test(message)) {
-              console.error("Presence channel detach error:", detachError);
-            }
-          }
-        })();
-      }
     };
   }, [targetUserId]);
 
+  const hasResolvedTarget =
+    targetUserId !== null && resolvedTargetUserId === targetUserId;
+
   return {
-    status,
-    isReady,
+    status: hasResolvedTarget ? status : "offline",
+    isReady: hasResolvedTarget ? isReady : false,
   };
 }
 
 export function useCurrentUserPresence(): PresenceResult {
-  const [status, setStatus] = useState<PresenceStatus>(() =>
-    getStoredCurrentUserPresenceStatus(),
-  );
-  const [isReady, setIsReady] = useState(false);
-
-  useEffect(() => {
-    let isActive = true;
-    let cleanup: (() => void) | undefined;
-    let connectionState = "initialized";
-
-    const updateStatus = (state: string) => {
-      if (!isActive) return;
-      connectionState = state;
-      const isConnected = state === "connected" || state === "connecting";
-      setStatus(isConnected ? getStoredCurrentUserPresenceStatus() : "offline");
-      setIsReady(true);
-    };
-
-    const syncStoredStatus = () => {
-      if (!isActive) {
-        return;
-      }
-
-      const isConnected =
-        connectionState === "connected" || connectionState === "connecting";
-
-      setStatus(isConnected ? getStoredCurrentUserPresenceStatus() : "offline");
-      setIsReady(true);
-    };
-
-    const subscribe = async () => {
-      try {
-        const client = await getRealtimeClient();
-        if (!isActive) return;
-
-        updateStatus(client.connection.state);
-
-        const onStateChange = (stateChange: { current: string }) => {
-          updateStatus(stateChange.current);
-        };
-
-        const onStorage = (event: StorageEvent) => {
-          if (
-            event.key &&
-            event.key !== CURRENT_USER_PRESENCE_STATUS_STORAGE_KEY
-          ) {
-            return;
-          }
-
-          syncStoredStatus();
-        };
-
-        client.connection.on(onStateChange);
-        window.addEventListener(
-          CURRENT_USER_PRESENCE_STATUS_EVENT,
-          syncStoredStatus,
-        );
-        window.addEventListener("storage", onStorage);
-
-        cleanup = () => {
-          client.connection.off(onStateChange);
-          window.removeEventListener(
-            CURRENT_USER_PRESENCE_STATUS_EVENT,
-            syncStoredStatus,
-          );
-          window.removeEventListener("storage", onStorage);
-        };
-      } catch (error) {
-        console.error("Current user presence subscription error:", error);
-        if (isActive) {
-          setStatus("offline");
-          setIsReady(true);
-        }
-      }
-    };
-
-    subscribe();
-
-    return () => {
-      isActive = false;
-      if (cleanup) {
-        cleanup();
-      }
-    };
-  }, []);
-
-  return {
-    status,
-    isReady,
-  };
+  const { user } = useAuth();
+  return useUserPresence(user?.id ?? null);
 }
 
 export function useFriendRealtime(

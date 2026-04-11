@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import type { LinkPreview } from "@/lib/media/MediaTypes";
+import { KAKIOKI_CONFIG } from "@/lib/config/KakiokiConfig";
 
-const YOUTUBE_REGEX =
-  /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+const YOUTUBE_REGEX = KAKIOKI_CONFIG.linkify.urlPatterns.youtube;
 
 function getDomain(url: URL): string {
   return url.hostname.replace(/^www\./i, "");

@@ -1,10 +1,19 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { UserRepository } from "@/lib";
 import { KAKIOKI_CONFIG } from "@/lib/config/KakiokiConfig";
+import { requireAuth } from "@/lib/auth/ServerAuth";
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  const authResult = await requireAuth(request);
+  if (authResult instanceof Response) {
+    return authResult;
+  }
+
+  const { user: authUser } = authResult;
+
   try {
-    const { userId } = await request.json();
+    const body = await request.json();
+    const { userId } = body;
 
     if (!userId) {
       return NextResponse.json(
@@ -13,12 +22,16 @@ export async function POST(request: Request) {
       );
     }
 
-    const userRepository = new UserRepository();
     const userIdNumber = parseInt(userId, 10);
     if (isNaN(userIdNumber) || userIdNumber <= 0) {
       return NextResponse.json({ error: "Invalid user ID" }, { status: 400 });
     }
 
+    if (authUser.id !== userIdNumber) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const userRepository = new UserRepository();
     const user = await userRepository.findById(userIdNumber);
 
     if (!user) {

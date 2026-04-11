@@ -169,6 +169,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
         <div className="flex gap-4 justify-start flex-wrap">
           <p className="text-neutral-50 text-2xl">Already have an account? </p>
           <button
+            type="button"
             onClick={onSwitchToSignIn}
             className="text-lime-200 hover:text-lime-100 underline bg-transparent border-none cursor-pointer text-responsive text-lg"
           >

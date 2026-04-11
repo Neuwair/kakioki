@@ -1,9 +1,12 @@
 import { UserRepository, sql } from "@/lib";
+import { KAKIOKI_CONFIG } from "@/lib/config/KakiokiConfig";
 import type { DbUser } from "@/lib/media/MediaTypes";
 import { publishAccountDeletionEvent } from "@/lib/events/RealtimeEvents";
 
-const DELETION_DELAY_MS = 1000 * 60 * 60 * 48;
-const DEFAULT_BATCH_SIZE = 100;
+const DELETION_DELAY_MS =
+  KAKIOKI_CONFIG.account.autoDeleteDays *
+  KAKIOKI_CONFIG.account.millisecondsPerDay;
+const DEFAULT_BATCH_SIZE = KAKIOKI_CONFIG.account.deletionBatchSize;
 let queueTableEnsured = false;
 
 function resolveCreatedAt(user: DbUser): number {

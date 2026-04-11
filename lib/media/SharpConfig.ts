@@ -1,6 +1,7 @@
 import sharp from "sharp";
 import os from "os";
 import { Readable } from "stream";
+import { KAKIOKI_CONFIG } from "@/lib/config/KakiokiConfig";
 import {
   ImageProcessingOptions,
   ProcessedImage,
@@ -17,6 +18,10 @@ import {
   isValidImageType,
   getImageExtension,
 } from "./MediaTypes";
+import { uploadBufferToExternalStorage } from "@/lib/server/MediaStorage";
+
+const IMAGE_PROCESSING_CONFIG = KAKIOKI_CONFIG.imageProcessing;
+const MEDIA_ROUTE_PROCESSING_CONFIG = KAKIOKI_CONFIG.mediaRouteProcessing;
 
 try {
   const cpus = os.cpus()?.length || 1;
@@ -37,7 +42,11 @@ export class SharpConfig {
     fileName: string,
     options: MediaProcessingOptions = {},
   ): Promise<ProcessedMediaResult> {
-    const { maxWidth = 1280, maxHeight = 1280, quality = 80 } = options;
+    const {
+      maxWidth = MEDIA_ROUTE_PROCESSING_CONFIG.maxWidth,
+      maxHeight = MEDIA_ROUTE_PROCESSING_CONFIG.maxHeight,
+      quality = MEDIA_ROUTE_PROCESSING_CONFIG.quality,
+    } = options;
 
     if (mediaType === "image") {
       return this.processMediaImage(buffer, fileName, {
@@ -83,11 +92,11 @@ export class SharpConfig {
     }
 
     const {
-      maxWidth = 1920,
-      maxHeight = 1080,
-      quality = 80,
-      format = "webp",
-      fit = "inside",
+      maxWidth = IMAGE_PROCESSING_CONFIG.maxWidth,
+      maxHeight = IMAGE_PROCESSING_CONFIG.maxHeight,
+      quality = IMAGE_PROCESSING_CONFIG.quality,
+      format = IMAGE_PROCESSING_CONFIG.defaultFormat,
+      fit = IMAGE_PROCESSING_CONFIG.defaultFit,
       withoutEnlargement = true,
       rotate = true,
     } = options;
@@ -143,9 +152,9 @@ export class SharpConfig {
 
   static async createThumbnail(
     inputBuffer: Buffer,
-    size: number = 150,
+    size: number = IMAGE_PROCESSING_CONFIG.thumbnailSize,
     outFormat: ImageFormat = "jpeg",
-    quality: number = 80,
+    quality: number = IMAGE_PROCESSING_CONFIG.quality,
   ): Promise<ProcessedImage> {
     if (!inputBuffer || inputBuffer.length === 0) {
       throw new Error("Invalid image buffer: buffer is empty");
@@ -232,11 +241,11 @@ export class SharpConfig {
     options: ImageProcessingOptions = {},
   ): Promise<ProcessedImage> {
     const {
-      maxWidth = 1920,
-      maxHeight = 1080,
-      quality = 80,
-      format = "webp",
-      fit = "inside",
+      maxWidth = IMAGE_PROCESSING_CONFIG.maxWidth,
+      maxHeight = IMAGE_PROCESSING_CONFIG.maxHeight,
+      quality = IMAGE_PROCESSING_CONFIG.quality,
+      format = IMAGE_PROCESSING_CONFIG.defaultFormat,
+      fit = IMAGE_PROCESSING_CONFIG.defaultFit,
       withoutEnlargement = true,
       rotate = true,
     } = options;
@@ -307,63 +316,15 @@ export class SharpConfig {
       format: processed.format,
     });
 
-    const storageUrl = process.env.STORAGE_UPLOAD_URL;
     let publicUrl: string | null = null;
 
-    if (storageUrl) {
-      const uploadWithRetries = async (body: BodyInit) => {
-        const maxAttempts = 4;
-        let attempt = 0;
-        let lastErr: unknown = null;
-        while (attempt < maxAttempts) {
-          try {
-            const res = await fetch(storageUrl, {
-              method: "POST",
-              headers: { "Content-Type": "application/octet-stream" },
-              body,
-            });
-            if (!res.ok) {
-              lastErr = new Error(`Upload failed, status=${res.status}`);
-              if (res.status >= 500 && res.status < 600) {
-                throw lastErr;
-              }
-              return null;
-            }
-            const json = await res.json().catch(() => null);
-            return json || null;
-          } catch (err) {
-            lastErr = err;
-            attempt++;
-            const backoff = 200 * Math.pow(2, attempt);
-            await new Promise((resolve) => setTimeout(resolve, backoff));
-          }
-        }
-        console.error("Upload failed after retries", lastErr);
-        return null;
-      };
-
-      try {
-        const uploadBody = Buffer.from(processed.buffer);
-        const json = await uploadWithRetries(uploadBody as unknown as BodyInit);
-        const maybeUrl = json?.url;
-        if (typeof maybeUrl === "string") {
-          if (
-            maybeUrl.startsWith("http://") ||
-            maybeUrl.startsWith("https://") ||
-            maybeUrl.startsWith("data:")
-          ) {
-            publicUrl = maybeUrl;
-          } else {
-            console.warn("Storage returned non-http/data URL, ignoring", {
-              url: maybeUrl,
-            });
-          }
-        }
-      } catch (err) {
-        console.error("Error uploading to storage:", err);
-      }
-    } else {
-      publicUrl = `data:image/${processed.format};base64,${processed.buffer.toString("base64")}`;
+    try {
+      publicUrl = await uploadBufferToExternalStorage(processed.buffer, {
+        contentType: "application/octet-stream",
+        fileName: data.name,
+      });
+    } catch (err) {
+      console.error("Error uploading to storage:", err);
     }
 
     try {
@@ -375,7 +336,7 @@ export class SharpConfig {
         update: (id: number, data: Record<string, unknown>) => Promise<unknown>;
       };
       const repoMod = req("@/lib") as RepoModule;
-      if (data.userId && repoMod && "UserRepository" in repoMod) {
+      if (data.userId && publicUrl && repoMod && "UserRepository" in repoMod) {
         const UserRepository = repoMod.UserRepository as RepoCtor;
         const userRepo = new UserRepository();
         await userRepo.update(Number(data.userId), { avatar_url: publicUrl });

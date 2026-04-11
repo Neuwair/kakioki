@@ -277,8 +277,9 @@ export function useFriendRelationships() {
       });
       setIncoming((prev) => removeUser(prev, friendUserId));
       setOutgoing((prev) => removeUser(prev, friendUserId));
+      void fetchSummary();
     },
-    [user],
+    [fetchSummary, user],
   );
 
   const realtimeHandler = useCallback(
@@ -357,6 +358,7 @@ export function useFriendRelationships() {
             setIncoming((prev) => removeUser(prev, fromUserId));
           }
         }
+        await fetchSummary();
       } catch (err) {
         console.error("Accept friend request error:", err);
       } finally {
@@ -367,7 +369,7 @@ export function useFriendRelationships() {
         });
       }
     },
-    [acceptingIds, incoming, user],
+    [acceptingIds, fetchSummary, incoming, user],
   );
 
   const cancelOutgoing = useCallback(

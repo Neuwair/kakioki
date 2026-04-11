@@ -15,6 +15,7 @@ export default function HomePage() {
     isLoading,
     handleSignIn,
     handleSignUp,
+    handleAvatarComplete,
     newUserId,
   } = UseHomePageLogic();
 
@@ -42,22 +43,18 @@ export default function HomePage() {
         return (
           <AvatarForm
             userId={newUserId}
-            onSkip={() => setCurrentView("signin")}
-            onUploadSuccess={() => setCurrentView("signin")}
+            onSkip={handleAvatarComplete}
+            onUploadSuccess={handleAvatarComplete}
           />
         );
       default:
         return (
           <div className="max-w-md w-full bg-white/5 backdrop-blur-lg border border-white/20 rounded-4xl shadow-xl p-8 cursor-default">
             <div className="text-center">
-              <h1
-                className="font-bold text-neutral-50 mb-2 text-4xl"
-              >
+              <h1 className="font-bold text-neutral-50 mb-2 text-4xl">
                 Kakioki
               </h1>
-              <p
-                className=" text-neutral-50 mb-8 text-2xl"
-              >
+              <p className=" text-neutral-50 mb-8 text-2xl">
                 Simple, light, fast, and secure.
               </p>
               <div className="flex flex-col gap-4">
@@ -76,7 +73,9 @@ export default function HomePage() {
               </div>
               <div className="text-neutral-50/70 text-center cursor-default mt-8">
                 <div className="flex flex-row align-middle justify-center">
-                  <div className="text-lg">Created by Neuwair | Illustrator and Programmer</div>
+                  <div className="text-lg">
+                    Created by Neuwair | Illustrator and Programmer
+                  </div>
                 </div>
 
                 <div className="text-lg flex flex-row flex-wrap items-center justify-center gap-4">
@@ -121,14 +120,14 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-5 w-full h-screen chat-container backdrop-blur-lg overflow-hidden flex-col chat-background">
-      {error && (
-        <div className="absolute top-20 left-1/2 transform -translate-x-1/2 p-3 bg-red-500/80 backdrop-blur-sm text-neutral-50 rounded-lg max-w-md w-full z-50">
+    <div className="min-h-screen flex items-center justify-center p-5 w-full h-screen chat-container overflow-hidden flex-col chat-background">
+      {showAlert && <AlertDialog onClose={() => setShowAlert(false)} />}
+      {renderContent()}
+      {error && (currentView === "signin" || currentView === "signup") && (
+        <div className="mt-4 max-w-md w-full bg-red-500/10 text-red-50 backdrop-blur-lg border border-red-400 rounded-4xl p-3 text-center">
           {error}
         </div>
       )}
-      {showAlert && <AlertDialog onClose={() => setShowAlert(false)} />}
-      {renderContent()}
       {currentView !== "home" && currentView !== "avatar" && (
         <button
           onClick={() => setCurrentView("home")}
