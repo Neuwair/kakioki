@@ -1,12 +1,14 @@
 "use client";
 
+import type { SyntheticEvent } from "react";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/ClientAuth";
+import { sessionKey } from "@/public/shared/helpers/TabSessionHelpers";
 
 export function getAuthToken(): string | null {
   if (typeof window === "undefined") return null;
-  return sessionStorage.getItem("kakiokiToken");
+  return sessionStorage.getItem(sessionKey("token"));
 }
 
 export function getAuthHeaders(): { [key: string]: string } {
@@ -28,14 +30,14 @@ export function UseHomePageLogic() {
   const [currentView, setCurrentView] = useState<ViewMode>("home");
   const [error, setError] = useState<string | null>(null);
   const [newUserId, setNewUserId] = useState<number | null>(null);
-  const { isAuthenticated, login, signup, isLoading } = useAuth();
+  const { isAuthenticated, login, signup, clearSession, isLoading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && currentView !== "avatar") {
       router.push("/chat");
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, currentView, router]);
 
   const handleSignIn = async (email: string, password: string) => {
     setError(null);
@@ -74,6 +76,11 @@ export function UseHomePageLogic() {
     }
   };
 
+  const handleAvatarComplete = useCallback(() => {
+    clearSession();
+    setCurrentView("signin");
+  }, [clearSession]);
+
   return {
     currentView,
     setCurrentView,
@@ -82,6 +89,7 @@ export function UseHomePageLogic() {
     isLoading,
     handleSignIn,
     handleSignUp,
+    handleAvatarComplete,
     newUserId,
   } as const;
 }
@@ -93,7 +101,7 @@ export const UseSignInForm = (
   const [password, setPassword] = useState("");
 
   const handleSubmit = useCallback(
-    (e: React.FormEvent) => {
+    (e: SyntheticEvent<HTMLFormElement>) => {
       e.preventDefault();
       if (email && password) onSubmit(email, password);
     },
@@ -118,7 +126,7 @@ export const UseSignUpForm = (
   const [confirmPassword, setConfirmPassword] = useState("");
 
   const handleSubmit = useCallback(
-    (e: React.FormEvent) => {
+    (e: SyntheticEvent<HTMLFormElement>) => {
       e.preventDefault();
       if (email && username && password && password === confirmPassword) {
         onSubmit(email, username, password);

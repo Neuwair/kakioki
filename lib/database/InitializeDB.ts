@@ -1,5 +1,6 @@
 import { neon } from "@neondatabase/serverless";
 import { randomBytes } from "crypto";
+import { KAKIOKI_CONFIG } from "@/lib/config/KakiokiConfig";
 
 if (!process.env.DATABASE_URL) {
   throw new Error("DATABASE_URL environment variable is not set");
@@ -57,10 +58,11 @@ export async function testConnection() {
 }
 
 export function generateUserId(): string {
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  const bytes = randomBytes(8);
+  const chars = KAKIOKI_CONFIG.account.userIdChars;
+  const idLength = KAKIOKI_CONFIG.account.userIdLength;
+  const bytes = randomBytes(idLength);
   let result = "";
-  for (let i = 0; i < 8; i++) {
+  for (let i = 0; i < idLength; i++) {
     result += chars[bytes[i] % chars.length];
   }
   return result;

@@ -2,6 +2,36 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth/ServerAuth";
 import { MediaType } from "@/lib/media/MediaTypes";
 import { SharpConfig } from "@/lib/media/SharpConfig";
+import {
+  KAKIOKI_CONFIG,
+  getMediaUploadLimitLabel,
+  getMediaUploadMaxBytes,
+} from "@/lib/config/KakiokiConfig";
+import { MediaRepository } from "@/lib/repository/MediaRepository";
+
+const MEDIA_ROUTE_PROCESSING_CONFIG = KAKIOKI_CONFIG.mediaRouteProcessing;
+
+function buildStoredFileName(
+  fileName: string,
+  format: string | undefined,
+): string {
+  const baseName = fileName.replace(/\.[^/.]+$/, "") || "upload";
+  const extension = (
+    format ||
+    fileName.split(".").pop() ||
+    "bin"
+  ).toLowerCase();
+  return `${baseName}.${extension}`;
+}
+
+function buildThumbnailFileName(
+  fileName: string,
+  format: string | undefined,
+): string {
+  const baseName = fileName.replace(/\.[^/.]+$/, "") || "upload";
+  const extension = (format || "jpg").toLowerCase();
+  return `${baseName}-thumbnail.${extension}`;
+}
 
 export async function POST(request: NextRequest) {
   const authResult = await requireAuth(request);
@@ -24,9 +54,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "File is required" }, { status: 400 });
     }
 
-    if (file.size > 4 * 1024 * 1024) {
+    const maxUploadBytes = getMediaUploadMaxBytes(mediaType);
+
+    if (file.size > maxUploadBytes) {
       return NextResponse.json(
-        { error: "File size exceeds the 4MB limit" },
+        {
+          error: `File size exceeds the ${getMediaUploadLimitLabel(mediaType)} ${mediaType} limit`,
+        },
         { status: 400 },
       );
     }
@@ -58,9 +92,9 @@ export async function POST(request: NextRequest) {
         mediaType,
         file.name,
         {
-          maxWidth: 1280,
-          maxHeight: 1280,
-          quality: 80,
+          maxWidth: MEDIA_ROUTE_PROCESSING_CONFIG.maxWidth,
+          maxHeight: MEDIA_ROUTE_PROCESSING_CONFIG.maxHeight,
+          quality: MEDIA_ROUTE_PROCESSING_CONFIG.quality,
         },
       );
 
@@ -70,20 +104,21 @@ export async function POST(request: NextRequest) {
       finalHeight = processedMedia.height;
     }
 
-    const ABLY_MAX_BYTES = 65536;
+    const ablyMaxBytes = KAKIOKI_CONFIG.transport.maxAblyPayloadBytes;
     if (
       mediaType === "image" &&
-      finalBuffer.length > ABLY_MAX_BYTES &&
+      finalBuffer.length > ablyMaxBytes &&
       finalFormat !== "gif"
     ) {
       try {
-        let quality = 80;
-        let maxW = finalWidth || 1280;
-        let maxH = finalHeight || 1280;
+        let quality: number = MEDIA_ROUTE_PROCESSING_CONFIG.quality;
+        let maxW: number = finalWidth || MEDIA_ROUTE_PROCESSING_CONFIG.maxWidth;
+        let maxH: number =
+          finalHeight || MEDIA_ROUTE_PROCESSING_CONFIG.maxHeight;
 
         for (
           let attempt = 0;
-          attempt < 6 && finalBuffer.length > ABLY_MAX_BYTES;
+          attempt < 6 && finalBuffer.length > ablyMaxBytes;
           attempt++
         ) {
           quality = Math.max(30, Math.floor(quality * 0.75));
@@ -114,21 +149,37 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const base64 = finalBuffer.toString("base64");
     const mimeType =
       mediaType === "image"
         ? `image/${finalFormat}`
-        : mediaType === "video"
-          ? `video/${finalFormat}`
-          : file.type || `application/octet-stream`;
+        : file.type || `application/octet-stream`;
 
-    let thumbnail;
+    const mediaRepo = new MediaRepository();
+    const mainAsset = await mediaRepo.create({
+      owner_id: authResult.user.id,
+      is_public: false,
+      content_type: mimeType,
+      file_name: buildStoredFileName(file.name, finalFormat),
+      data: finalBuffer,
+    });
+
+    const mediaUrl = `/api/media/asset/${mainAsset.id}`;
+
+    let thumbnail: string | null = null;
     try {
       if (mediaType === "image") {
-        const thumb = await SharpConfig.createThumbnail(finalBuffer, 150);
-        thumbnail = `data:image/${thumb.format};base64,${thumb.buffer.toString(
-          "base64",
-        )}`;
+        const thumb = await SharpConfig.createThumbnail(
+          finalBuffer,
+          KAKIOKI_CONFIG.imageProcessing.thumbnailSize,
+        );
+        const thumbAsset = await mediaRepo.create({
+          owner_id: authResult.user.id,
+          is_public: false,
+          content_type: thumb.mime || `image/${thumb.format}`,
+          file_name: buildThumbnailFileName(file.name, thumb.format),
+          data: thumb.buffer,
+        });
+        thumbnail = `/api/media/asset/${thumbAsset.id}`;
       }
     } catch (err) {
       console.error("Failed to create thumbnail:", err);
@@ -144,9 +195,9 @@ export async function POST(request: NextRequest) {
         height: finalHeight,
         size: finalBuffer.length,
         encrypted: false,
-        data: `data:${mimeType};base64,${base64}`,
+        url: mediaUrl,
         name: file.name,
-        thumbnail,
+        thumbnail: thumbnail ?? null,
       },
     });
   } catch (error) {

@@ -1,3 +1,4 @@
+import { KAKIOKI_CONFIG } from "@/lib/config/KakiokiConfig";
 import type { MessageMetadata } from "@/lib/media/MediaTypes";
 import type {
   ChatMessage,
@@ -55,17 +56,18 @@ export function mergeMessage(
 
 export function applyStatusToMessage(message: ChatMessage): ChatMessageState {
   const delivery = message.status.delivery;
+  const deliveryToState = KAKIOKI_CONFIG.messages.deliveryToState;
   if (delivery === "read") {
-    return "read";
+    return deliveryToState.read;
   }
   if (delivery === "delivered") {
-    return "delivered";
+    return deliveryToState.delivered;
   }
   if (delivery === "sending") {
-    return "sending";
+    return deliveryToState.sending;
   }
   if (delivery === "failed") {
-    return "error";
+    return deliveryToState.failed;
   }
-  return "sent";
+  return deliveryToState.default;
 }

@@ -1,4 +1,9 @@
 import type { MediaPreview, ProcessedMedia } from "@/lib/media/MediaTypes";
+import {
+  KAKIOKI_CONFIG,
+  getMediaUploadLimitLabel,
+  getMediaUploadMaxBytes,
+} from "@/lib/config/KakiokiConfig";
 import { resizeWithWorkerFallback } from "@/public/shared/media/SharpResize";
 import { compressVideoFile } from "@/public/shared/media/VideoCompress";
 import { getAuthToken } from "@/public/shared/helpers/AuthHelpers";
@@ -9,6 +14,7 @@ type UploadResult = {
   data?: string;
   error?: string;
   file?: {
+    url?: string;
     data?: string;
     type?: string;
     size?: number;
@@ -16,7 +22,16 @@ type UploadResult = {
   };
 };
 
-export const SERVER_MAX_BYTES = 4 * 1024 * 1024;
+const MEDIA_PREVIEW_CONFIG = KAKIOKI_CONFIG.mediaPreview;
+const MEDIA_PREVIEW_DIMENSIONS = {
+  maxWidth: MEDIA_PREVIEW_CONFIG.maxWidth,
+  maxHeight: MEDIA_PREVIEW_CONFIG.maxHeight,
+};
+const MEDIA_PREVIEW_IMAGE_OPTIONS = {
+  ...MEDIA_PREVIEW_DIMENSIONS,
+  quality: MEDIA_PREVIEW_CONFIG.quality,
+};
+const SKIPPED_MEDIA_INCREMENT = MEDIA_PREVIEW_CONFIG.skippedCountIncrement;
 
 export type UploadedMediaItem = {
   url: string;
@@ -30,34 +45,49 @@ export type UploadedMediaItem = {
   name?: string;
 };
 
+const getMaxBytesForType = (
+  type: UploadedMediaItem["type"],
+  maxBytes?: number,
+): number => {
+  return maxBytes ?? getMediaUploadMaxBytes(type);
+};
+
+const getLimitExceededMessage = (
+  type: UploadedMediaItem["type"],
+  suffix = "",
+): string => {
+  const label = type === "file" ? "File" : type === "image" ? "Image" : "Video";
+  return `${label} exceeds the ${getMediaUploadLimitLabel(type)} limit${suffix}`;
+};
+
 export async function processMediaPreviews(
   mediaPreviews: MediaPreview[],
-  maxBytes = SERVER_MAX_BYTES,
+  maxBytes?: number,
 ): Promise<{ processed: ProcessedMedia[]; skipped: number }> {
   const processed: ProcessedMedia[] = [];
   let skipped = 0;
 
   for (const preview of mediaPreviews) {
     let fileToUpload = preview.file;
+    const maxBytesForType = getMaxBytesForType(preview.type, maxBytes);
 
-    if (preview.type === "image" && fileToUpload.size >= maxBytes) {
-      fileToUpload = await resizeWithWorkerFallback(fileToUpload, maxBytes, {
-        maxWidth: 1280,
-        maxHeight: 1280,
-        quality: 0.8,
-      });
+    if (preview.type === "image" && fileToUpload.size >= maxBytesForType) {
+      fileToUpload = await resizeWithWorkerFallback(
+        fileToUpload,
+        maxBytesForType,
+        MEDIA_PREVIEW_IMAGE_OPTIONS,
+      );
     }
 
     if (preview.type === "video") {
       fileToUpload = await compressVideoFile(fileToUpload, {
-        maxBytes,
-        maxWidth: 1280,
-        maxHeight: 1280,
+        maxBytes: maxBytesForType,
+        ...MEDIA_PREVIEW_DIMENSIONS,
       });
     }
 
-    if (fileToUpload.size > maxBytes) {
-      skipped += 1;
+    if (fileToUpload.size > maxBytesForType) {
+      skipped += SKIPPED_MEDIA_INCREMENT;
       continue;
     }
 
@@ -79,11 +109,11 @@ export async function uploadProcessedMedia(
 
     const result = (await uploadFile(formData)) as UploadResult;
 
-    if (result && result.file && result.file.data) {
+    if (result && result.file && (result.file.url || result.file.data)) {
       const fileObj = result.file;
       mediaItems.push({
-        url: fileObj.data || "",
-        type: (fileObj.type as "image" | "video") || "image",
+        url: fileObj.url || fileObj.data || "",
+        type: (fileObj.type as "image" | "video" | "file") || p.type,
         size: fileObj.size,
         encrypted: false,
         format: fileObj.format,
@@ -127,7 +157,7 @@ export async function uploadFile(formData: FormData): Promise<UploadResult> {
 
 export async function prepareUploadAndSendMedia(
   mediaPreviews: MediaPreview[],
-  maxBytes = SERVER_MAX_BYTES,
+  maxBytes?: number,
 ): Promise<{ uploaded: UploadedMediaItem[]; failedCount: number }> {
   if (!mediaPreviews || mediaPreviews.length === 0) {
     return { uploaded: [], failedCount: 0 };
@@ -200,15 +230,16 @@ export const handleMediaSelectInput = async (
         : isVideo
           ? ("video" as const)
           : ("file" as const);
+      const maxBytesForType = getMaxBytesForType(type);
 
       let finalFile: File = file;
       if (type === "image") {
         try {
-          finalFile = await resizeWithWorkerFallback(file, SERVER_MAX_BYTES, {
-            maxWidth: 1280,
-            maxHeight: 1280,
-            quality: 0.8,
-          });
+          finalFile = await resizeWithWorkerFallback(
+            file,
+            maxBytesForType,
+            MEDIA_PREVIEW_IMAGE_OPTIONS,
+          );
         } catch (err) {
           console.warn(
             "Worker resize failed, falling back to original file",
@@ -219,9 +250,8 @@ export const handleMediaSelectInput = async (
       } else if (type === "video") {
         try {
           const compressed = await compressVideoFile(file, {
-            maxBytes: SERVER_MAX_BYTES,
-            maxWidth: 1280,
-            maxHeight: 1280,
+            maxBytes: maxBytesForType,
+            ...MEDIA_PREVIEW_DIMENSIONS,
           });
           finalFile = compressed;
         } catch (err) {
@@ -230,8 +260,8 @@ export const handleMediaSelectInput = async (
         }
       }
 
-      if (finalFile.size > SERVER_MAX_BYTES) {
-        alert("Media file exceeds the 4MB limit even after compression");
+      if (finalFile.size > maxBytesForType) {
+        alert(getLimitExceededMessage(type, " even after processing"));
         continue;
       }
 
@@ -277,15 +307,16 @@ export const handleMediaSelectFiles = async (
         : isVideo
           ? ("video" as const)
           : ("file" as const);
+      const maxBytesForType = getMaxBytesForType(type);
 
       let finalFile: File = file;
       if (type === "image") {
         try {
-          finalFile = await resizeWithWorkerFallback(file, SERVER_MAX_BYTES, {
-            maxWidth: 1280,
-            maxHeight: 1280,
-            quality: 0.8,
-          });
+          finalFile = await resizeWithWorkerFallback(
+            file,
+            maxBytesForType,
+            MEDIA_PREVIEW_IMAGE_OPTIONS,
+          );
         } catch (err) {
           console.warn(
             "Worker resize failed, falling back to original file",
@@ -293,12 +324,11 @@ export const handleMediaSelectFiles = async (
           );
           finalFile = file;
         }
-      } else {
+      } else if (type === "video") {
         try {
           finalFile = await compressVideoFile(file, {
-            maxBytes: SERVER_MAX_BYTES,
-            maxWidth: 1280,
-            maxHeight: 1280,
+            maxBytes: maxBytesForType,
+            ...MEDIA_PREVIEW_DIMENSIONS,
           });
         } catch (err) {
           console.warn("Video compression failed, using original video", err);
@@ -306,8 +336,8 @@ export const handleMediaSelectFiles = async (
         }
       }
 
-      if (finalFile.size > SERVER_MAX_BYTES) {
-        alert("Media file exceeds the 4MB limit even after compression");
+      if (finalFile.size > maxBytesForType) {
+        alert(getLimitExceededMessage(type, " even after processing"));
         continue;
       }
 
@@ -358,13 +388,15 @@ export const handleSendWithMedia = async (
     const { processed, skipped } = await processMediaPreviews(previews);
     if (processed.length === 0) {
       if (skipped > 0) {
-        alert("Media files were skipped because they exceeded the 4MB limit");
+        alert(
+          "Media files were skipped because they exceeded their size limits",
+        );
       }
       return;
     }
     if (skipped > 0) {
       alert(
-        "Some media files were skipped because they exceeded the 4MB limit",
+        "Some media files were skipped because they exceeded their size limits",
       );
     }
     const uploadedMedia = await uploadProcessedMedia(processed);
@@ -381,16 +413,8 @@ export const handleSendWithMedia = async (
   }
 };
 
+const DOCUMENT_MIME_TYPES = new Set(KAKIOKI_CONFIG.upload.documentMimeTypes);
+
 const isDocumentType = (mimeType: string): boolean => {
-  const documentTypes = [
-    "application/pdf",
-    "text/plain",
-    "application/msword",
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    "audio/mpeg",
-    "audio/mp3",
-    "audio/wav",
-    "audio/ogg",
-  ];
-  return documentTypes.includes(mimeType) || mimeType.startsWith("text/");
+  return DOCUMENT_MIME_TYPES.has(mimeType) || mimeType.startsWith("text/");
 };

@@ -286,6 +286,18 @@ export class UserRepository {
     }
   }
 
+  async updateLastSeen(id: number): Promise<void> {
+    try {
+      await sql`
+        UPDATE users
+        SET last_seen_at = CURRENT_TIMESTAMP
+        WHERE id = ${id}
+      `;
+    } catch (error) {
+      throw new DatabaseError("Failed to update last_seen_at", error as Error);
+    }
+  }
+
   async searchUsers(
     query: string,
     excludeUserId?: number,

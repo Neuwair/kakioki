@@ -1,3 +1,5 @@
+import { KAKIOKI_CONFIG } from "@/lib/config/KakiokiConfig";
+
 export type ApiMessageResponse = {
   id: number | string;
   sender_id: number;
@@ -29,6 +31,7 @@ export interface DbUser {
   secret_key_encrypted?: string;
   is_verified?: boolean;
   verification_token?: string;
+  last_seen_at?: string | null;
   created_at?: string;
   updated_at?: string;
 }
@@ -221,9 +224,12 @@ export interface ProcessedImage {
   orientation?: number | undefined;
 }
 
-export const DEFAULT_MAX_BYTES = 10 * 1024 * 1024;
-export const MIN_ACCEPTED_BYTES = 64;
-export const MAX_DIMENSION = 10000;
+const IMAGE_PROCESSING_CONFIG = KAKIOKI_CONFIG.imageProcessing;
+const FILE_SIZE_FORMATTING_CONFIG = KAKIOKI_CONFIG.fileSizeFormatting;
+
+export const DEFAULT_MAX_BYTES = IMAGE_PROCESSING_CONFIG.maxFileSize;
+export const MIN_ACCEPTED_BYTES = IMAGE_PROCESSING_CONFIG.minAcceptedBytes;
+export const MAX_DIMENSION = IMAGE_PROCESSING_CONFIG.maxDimension;
 
 export function clampQuality(q: number): number {
   if (!Number.isFinite(q)) return 80;
@@ -231,45 +237,28 @@ export function clampQuality(q: number): number {
 }
 
 export function formatToMime(format: string | undefined): string {
-  switch ((format || "").toLowerCase()) {
-    case "jpeg":
-    case "jpg":
-      return "image/jpeg";
-    case "png":
-      return "image/png";
-    case "webp":
-      return "image/webp";
-    default:
-      return "application/octet-stream";
-  }
+  return (
+    IMAGE_PROCESSING_CONFIG.formatToMime[(format || "").toLowerCase()] ||
+    "application/octet-stream"
+  );
 }
 
 export function formatFileSize(bytes: number): string {
   if (bytes === 0) return "0 Bytes";
-  const k = 1024;
-  const sizes = ["Bytes", "KB", "MB", "GB"];
+  const k = FILE_SIZE_FORMATTING_CONFIG.base;
+  const sizes = FILE_SIZE_FORMATTING_CONFIG.units;
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
 }
 
 export function isValidImageType(mimeType: string): boolean {
-  const validTypes = [
-    "image/jpeg",
-    "image/jpg",
-    "image/png",
-    "image/webp",
-    "image/gif",
-  ];
-  return validTypes.includes(mimeType.toLowerCase());
+  return (IMAGE_PROCESSING_CONFIG.allowedTypes as readonly string[]).includes(
+    mimeType.toLowerCase(),
+  );
 }
 
 export function getImageExtension(mimeType: string): string {
-  const extensions: Record<string, string> = {
-    "image/jpeg": "jpg",
-    "image/jpg": "jpg",
-    "image/png": "png",
-    "image/webp": "webp",
-    "image/gif": "gif",
-  };
-  return extensions[mimeType.toLowerCase()] || "jpg";
+  return (
+    IMAGE_PROCESSING_CONFIG.mimeToExtension[mimeType.toLowerCase()] || "jpg"
+  );
 }

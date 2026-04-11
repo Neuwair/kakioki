@@ -1,5 +1,6 @@
 import { Rest } from "ably";
 import { Buffer } from "node:buffer";
+import { KAKIOKI_CONFIG } from "@/lib/config/KakiokiConfig";
 import {
   FriendRealtimeEvent,
   FriendUserPayload,
@@ -14,7 +15,7 @@ import {
   userChatNotificationChannel,
 } from "@/lib/events/RealtimeEvents";
 
-const MAX_ABLY_PAYLOAD_BYTES = 63_000;
+const MAX_ABLY_PAYLOAD_BYTES = KAKIOKI_CONFIG.transport.maxAblyPayloadBytes;
 
 function approximatePayloadSize(data: unknown): number {
   try {
@@ -80,6 +81,30 @@ export function getAblyRest(): Rest {
     restClient = new Rest({ key: getApiKey() });
   }
   return restClient;
+}
+
+type AblyCapabilityOp =
+  | "subscribe"
+  | "publish"
+  | "presence"
+  | "history"
+  | "stats"
+  | "channel-metadata"
+  | "push-subscribe"
+  | "push-admin";
+
+export function buildAblyCapability(userId: number): {
+  [key: string]: AblyCapabilityOp[];
+} {
+  return {
+    [`user:chat:${userId}`]: ["subscribe"],
+    [`user:${userId}:friends`]: ["subscribe"],
+    [`user:lifecycle:${userId}`]: ["subscribe"],
+    "app:presence": ["subscribe", "presence", "publish"],
+    "chat:thread:*": ["subscribe"],
+    "chat:status:*": ["subscribe"],
+    "chat:control:*": ["subscribe"],
+  };
 }
 
 export async function publishFriendEvent(

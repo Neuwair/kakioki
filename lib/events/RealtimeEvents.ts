@@ -1,4 +1,7 @@
 import { getAblyRest } from "@/lib/server/AblyServer";
+
+export const APP_PRESENCE_CHANNEL = "app:presence";
+
 import type {
   FriendRequestRecord,
   MessageMetadata,

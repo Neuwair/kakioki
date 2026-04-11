@@ -5,27 +5,35 @@ import React, {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
 } from "react";
-import { useRouter } from "next/navigation";
 import {
   userLifecycleChannel,
+  APP_PRESENCE_CHANNEL,
   type AccountLifecycleEvent,
 } from "@/lib/events/RealtimeEvents";
+import { KAKIOKI_CONFIG } from "@/lib/config/KakiokiConfig";
 import type { User } from "@/lib/media/MediaTypes";
 import {
   cachePublicKey,
   clearStoredPrivateKey,
   ensurePrivateKey,
-  PASSWORD_STORAGE_KEY,
 } from "@/public/shared/helpers/LibsodiumHelpers";
 import {
   buildPresencePayload,
   CURRENT_USER_PRESENCE_STATUS_EVENT,
-  CURRENT_USER_PRESENCE_STATUS_STORAGE_KEY,
+  getCurrentUserPresenceStatusStorageKey,
   getStoredCurrentUserPresenceStatus,
+  type PresenceStatus,
 } from "@/public/shared/logic/UserPresenceRealtime";
-import { getRealtimeClient } from "@/public/shared/services/AblyRealtime";
+import {
+  closeRealtimeClient,
+  getRealtimeClient,
+  isRealtimeClientClosing,
+  reauthorizeRealtimeClient,
+} from "@/public/shared/services/AblyRealtime";
+import { getTabSessionId, sessionKey } from "@/public/shared/helpers/TabSessionHelpers";
 
 interface AuthContextType {
   user: User | null;
@@ -42,13 +50,22 @@ interface AuthContextType {
   ) => Promise<{ success: boolean; userId?: number; error?: string }>;
   updateAvatar: (file: File) => Promise<{ success: boolean; error?: string }>;
   refreshCurrentUser: () => Promise<void>;
+  clearSession: () => void;
   logout: () => void;
 }
+
+type ChannelStateChange = { reason?: { code?: number } | null };
 
 type LifecycleChannel = {
   subscribe: (listener: (message: { data: unknown }) => void) => void;
   unsubscribe: (listener: (message: { data: unknown }) => void) => void;
+  on: (event: string, listener: (change: ChannelStateChange) => void) => void;
+  off: (listener: (change: ChannelStateChange) => void) => void;
 };
+
+type AuthBroadcastMessage =
+  | { type: "token_updated"; tabSessionId: string; token: string }
+  | { type: "logout"; tabSessionId: string };
 
 type RunAuthCheckParams = {
   controller: AbortController;
@@ -65,7 +82,7 @@ function setAuthCookie(token: string) {
   if (typeof document === "undefined") {
     return;
   }
-  const maxAge = 60 * 60 * 24 * 7;
+  const maxAge = KAKIOKI_CONFIG.auth.cookieMaxAgeSeconds;
   const secure =
     typeof window !== "undefined" && window.location.protocol === "https:"
       ? "; secure"
@@ -211,9 +228,9 @@ async function runAuthCheck({
   setUser,
 }: RunAuthCheckParams) {
   try {
-    const storedUser = sessionStorage.getItem("kakiokiUser");
-    const storedToken = sessionStorage.getItem("kakiokiToken");
-    const storedPassword = sessionStorage.getItem(PASSWORD_STORAGE_KEY);
+    const storedUser = sessionStorage.getItem(sessionKey("user"));
+    const storedToken = sessionStorage.getItem(sessionKey("token"));
+    const storedPassword = sessionStorage.getItem(sessionKey("password"));
 
     if (storedUser && storedToken) {
       const parsedUser = JSON.parse(storedUser) as User;
@@ -234,7 +251,7 @@ async function runAuthCheck({
           }
           if (result.success && result.user) {
             setUser(result.user);
-            sessionStorage.setItem("kakiokiUser", JSON.stringify(result.user));
+            sessionStorage.setItem(sessionKey("user"), JSON.stringify(result.user));
             if (result.user.publicKey) {
               await cachePublicKey(result.user.publicKey);
             }
@@ -288,17 +305,84 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const router = useRouter();
+  const isMountedRef = useRef(false);
+  const isLoggingOutRef = useRef(false);
+  const hasLoggedOutRef = useRef(false);
+  const presenceCleanupRef = useRef<(() => Promise<void>) | null>(null);
+  const broadcastChannelRef = useRef<BroadcastChannel | null>(null);
 
-  const logout = useCallback(async () => {
+  const clearSession = useCallback(() => {
     setUser(null);
-    sessionStorage.removeItem("kakiokiUser");
-    sessionStorage.removeItem("kakiokiToken");
-    sessionStorage.removeItem(PASSWORD_STORAGE_KEY);
+    sessionStorage.removeItem(sessionKey("user"));
+    sessionStorage.removeItem(sessionKey("token"));
+    sessionStorage.removeItem(sessionKey("password"));
     clearStoredPrivateKey();
     clearAuthCookie();
-    router.push("/");
-  }, [router]);
+  }, []);
+
+  const logout = useCallback(async () => {
+    if (isLoggingOutRef.current) return;
+    isLoggingOutRef.current = true;
+    hasLoggedOutRef.current = true;
+
+    broadcastChannelRef.current?.close();
+    broadcastChannelRef.current = null;
+
+    try {
+      const presenceLeave = presenceCleanupRef.current;
+      presenceCleanupRef.current = null;
+      if (presenceLeave) {
+        await presenceLeave();
+      }
+      closeRealtimeClient();
+    } catch {}
+
+    if (typeof window !== "undefined") {
+      const bc = new BroadcastChannel("kakioki:auth");
+      bc.postMessage({
+        type: "logout",
+        tabSessionId: getTabSessionId(),
+      } satisfies AuthBroadcastMessage);
+      bc.close();
+    }
+
+    clearSession();
+
+    if (typeof window !== "undefined") {
+      window.location.replace("/");
+    }
+  }, [clearSession]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const bc = new BroadcastChannel("kakioki:auth");
+    broadcastChannelRef.current = bc;
+    const handleMessage = (event: MessageEvent<AuthBroadcastMessage>) => {
+      if (hasLoggedOutRef.current) return;
+      if (event.data.tabSessionId !== getTabSessionId()) return;
+      switch (event.data.type) {
+        case "token_updated":
+          break;
+        case "logout":
+          break;
+      }
+    };
+    bc.addEventListener("message", handleMessage);
+    return () => {
+      bc.removeEventListener("message", handleMessage);
+      bc.close();
+      if (broadcastChannelRef.current === bc) {
+        broadcastChannelRef.current = null;
+      }
+    };
+  }, [logout]);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -324,9 +408,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
       if (result.user && result.token) {
         setUser(result.user);
-        sessionStorage.setItem("kakiokiUser", JSON.stringify(result.user));
-        sessionStorage.setItem("kakiokiToken", result.token);
-        sessionStorage.setItem(PASSWORD_STORAGE_KEY, password);
+        sessionStorage.setItem(sessionKey("user"), JSON.stringify(result.user));
+        sessionStorage.setItem(sessionKey("token"), result.token);
+        sessionStorage.setItem(sessionKey("password"), password);
         setAuthCookie(result.token);
         if (result.user.publicKey) {
           await cachePublicKey(result.user.publicKey);
@@ -338,6 +422,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
             console.error("Failed to unlock private key:", keyError);
           }
         }
+        const loginBc = new BroadcastChannel("kakioki:auth");
+        loginBc.postMessage({
+          type: "token_updated",
+          tabSessionId: getTabSessionId(),
+          token: result.token,
+        } satisfies AuthBroadcastMessage);
+        loginBc.close();
       }
 
       return { success: true };
@@ -357,6 +448,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         return { success: false, error: result.error || "Registration failed" };
       }
 
+      if (result.user && result.token) {
+        sessionStorage.setItem(sessionKey("user"), JSON.stringify(result.user));
+        sessionStorage.setItem(sessionKey("token"), result.token);
+        sessionStorage.setItem(sessionKey("password"), password);
+        setAuthCookie(result.token);
+        setUser(result.user);
+        if (result.user.publicKey) {
+          await cachePublicKey(result.user.publicKey);
+        }
+        if (result.user.secretKeyEncrypted) {
+          try {
+            await ensurePrivateKey(password, result.user.secretKeyEncrypted);
+          } catch (keyError) {
+            console.error(
+              "Failed to unlock private key after signup:",
+              keyError,
+            );
+          }
+        }
+        const signupBc = new BroadcastChannel("kakioki:auth");
+        signupBc.postMessage({
+          type: "token_updated",
+          tabSessionId: getTabSessionId(),
+          token: result.token,
+        } satisfies AuthBroadcastMessage);
+        signupBc.close();
+      }
+
       return { success: true, userId: result.user?.id };
     } catch (error) {
       console.error("Registration error:", error);
@@ -374,16 +493,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     let isActive = true;
     let channel: LifecycleChannel | null = null;
     let listener: ((message: { data: unknown }) => void) | null = null;
+    let channelStateListener: ((change: ChannelStateChange) => void) | null =
+      null;
 
-    const subscribe = async () => {
+    const subscribe = async (isRetry = false) => {
       try {
         const client = await getRealtimeClient();
         if (!isActive) {
           return;
         }
+        const lifecycleChannelName = userLifecycleChannel(user.id);
         channel = client.channels.get(
-          userLifecycleChannel(user.id),
-        ) as LifecycleChannel;
+          lifecycleChannelName,
+        ) as unknown as LifecycleChannel;
+
+        channelStateListener = async (change: ChannelStateChange) => {
+          if (change.reason?.code === 40160 && !isRetry && isActive) {
+            if (channel && channelStateListener) {
+              channel.off(channelStateListener);
+            }
+            channelStateListener = null;
+            await reauthorizeRealtimeClient();
+            if (isActive) void subscribe(true);
+          }
+        };
+        channel.on(
+          "failed",
+          channelStateListener as (change: ChannelStateChange) => void,
+        );
+
         listener = (message) => {
           const payload = message.data as AccountLifecycleEvent;
           if (payload?.type === "account_deleted") {
@@ -413,6 +551,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           );
         }
       }
+      if (channel && channelStateListener) {
+        try {
+          channel.off(channelStateListener);
+        } catch {}
+      }
     };
   }, [user?.id, logout]);
 
@@ -421,30 +564,120 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       return;
     }
 
+    const LAST_SEEN_INTERVAL_MS = KAKIOKI_CONFIG.presence.lastSeenIntervalMs;
+    let isActive = true;
+    let intervalId: ReturnType<typeof setInterval> | null = null;
+    let lastPersistedAt = 0;
+
+    const persistLastSeen = () => {
+      if (!isActive) {
+        return;
+      }
+      if (Date.now() - lastPersistedAt < LAST_SEEN_INTERVAL_MS) {
+        return;
+      }
+      const token = sessionStorage.getItem(sessionKey("token"));
+      if (!token) {
+        return;
+      }
+      lastPersistedAt = Date.now();
+      void fetch("/api/auth/presence", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      }).catch((error) => {
+        if (hasLoggedOutRef.current) return;
+        console.error("Failed to persist last_seen_at:", error);
+      });
+    };
+
+    const subscribeDisconnect = async () => {
+      try {
+        const client = await getRealtimeClient();
+        if (!isActive) {
+          return;
+        }
+        const onStateChange = (stateChange: { current: string }) => {
+          if (
+            stateChange.current === "disconnected" ||
+            stateChange.current === "closed"
+          ) {
+            persistLastSeen();
+          }
+        };
+        client.connection.on(onStateChange);
+        intervalId = setInterval(persistLastSeen, LAST_SEEN_INTERVAL_MS);
+        return () => {
+          client.connection.off(onStateChange);
+        };
+      } catch {
+        return undefined;
+      }
+    };
+
+    const cleanupRef: { current: (() => void) | undefined } = {
+      current: undefined,
+    };
+
+    subscribeDisconnect().then((cleanup) => {
+      if (isActive) {
+        cleanupRef.current = cleanup;
+      }
+    });
+
+    return () => {
+      isActive = false;
+      if (intervalId !== null) {
+        clearInterval(intervalId);
+      }
+      if (cleanupRef.current) {
+        cleanupRef.current();
+      }
+    };
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (!user?.id) {
+      return;
+    }
+
+    const IDLE_TIMEOUT_MS = KAKIOKI_CONFIG.presence.idleTimeoutMs;
+    const DEBOUNCE_MS = KAKIOKI_CONFIG.presence.debounceMs;
+    const MIN_STATE_DURATION_MS = KAKIOKI_CONFIG.presence.minStateDurationMs;
+
     let isActive = true;
     let channel: ReturnType<
       Awaited<ReturnType<typeof getRealtimeClient>>["channels"]["get"]
     > | null = null;
     let hasEntered = false;
+    let isAutoIdled = false;
+    let lastTransitionAt = 0;
+    let idleTimer: ReturnType<typeof setTimeout> | null = null;
+    let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+    const lastSentStatusRef = { current: null as PresenceStatus | null };
 
-    const updatePresenceStatus = async () => {
-      if (!channel) {
+    const sendPresenceStatus = async (status: PresenceStatus) => {
+      if (!isActive || !channel) {
         return;
       }
 
-      const payload = buildPresencePayload(
-        user.userId,
-        getStoredCurrentUserPresenceStatus(),
-      );
+      if (lastSentStatusRef.current === status) {
+        return;
+      }
+
+      const payload = buildPresencePayload(status);
 
       try {
         if (!hasEntered) {
           await channel.presence.enter(payload);
           hasEntered = true;
+          lastSentStatusRef.current = status;
+          lastTransitionAt = Date.now();
           return;
         }
 
         await channel.presence.update(payload);
+        lastSentStatusRef.current = status;
+        lastTransitionAt = Date.now();
       } catch (error) {
         const message =
           error instanceof Error ? error.message : String(error ?? "");
@@ -452,6 +685,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         if (/not entered|not present/i.test(message)) {
           await channel.presence.enter(payload);
           hasEntered = true;
+          lastSentStatusRef.current = status;
+          lastTransitionAt = Date.now();
           return;
         }
 
@@ -461,24 +696,59 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       }
     };
 
-    const maintainPresence = async () => {
-      try {
-        const client = await getRealtimeClient();
+    const updatePresenceStatus = (effectiveStatus?: PresenceStatus) => {
+      if (debounceTimer !== null) {
+        clearTimeout(debounceTimer);
+      }
+      const status = effectiveStatus ?? getStoredCurrentUserPresenceStatus();
+      debounceTimer = setTimeout(() => {
+        debounceTimer = null;
+        void sendPresenceStatus(status);
+      }, DEBOUNCE_MS);
+    };
+
+    const clearIdleTimer = () => {
+      if (idleTimer !== null) {
+        clearTimeout(idleTimer);
+        idleTimer = null;
+      }
+    };
+
+    const scheduleIdleCheck = () => {
+      clearIdleTimer();
+      idleTimer = setTimeout(() => {
         if (!isActive) {
           return;
         }
-        channel = client.channels.get(`user:${user.id}:presence`);
-        await channel.attach();
-        if (!isActive) {
+        if (Date.now() - lastTransitionAt < MIN_STATE_DURATION_MS) {
+          scheduleIdleCheck();
           return;
         }
-        await updatePresenceStatus();
-      } catch (error) {
-        const msg =
-          error instanceof Error ? error.message : String(error ?? "");
-        if (!/connection closed|connection failed/i.test(msg)) {
-          console.error("User presence enter error:", error);
+        const manualStatus = getStoredCurrentUserPresenceStatus();
+        if (manualStatus === "online") {
+          isAutoIdled = true;
+          updatePresenceStatus("away");
         }
+      }, IDLE_TIMEOUT_MS);
+    };
+
+    const onActivity = () => {
+      if (!isActive) {
+        return;
+      }
+      if (
+        isAutoIdled &&
+        Date.now() - lastTransitionAt >= MIN_STATE_DURATION_MS
+      ) {
+        isAutoIdled = false;
+        updatePresenceStatus();
+      }
+      scheduleIdleCheck();
+    };
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        onActivity();
       }
     };
 
@@ -486,16 +756,57 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       if (!isActive) {
         return;
       }
-
-      void updatePresenceStatus();
+      isAutoIdled = false;
+      updatePresenceStatus();
     };
 
     const handleStorage = (event: StorageEvent) => {
-      if (event.key && event.key !== CURRENT_USER_PRESENCE_STATUS_STORAGE_KEY) {
+      if (event.key && event.key !== getCurrentUserPresenceStatusStorageKey()) {
         return;
       }
-
       handleStoredStatusChange();
+    };
+
+    const maintainPresence = async () => {
+      try {
+        const client = await getRealtimeClient();
+        if (!isActive) {
+          return;
+        }
+        channel = client.channels.get(APP_PRESENCE_CHANNEL);
+        await channel.attach();
+        if (!isActive) {
+          return;
+        }
+        presenceCleanupRef.current = async () => {
+          if (!hasEntered || isRealtimeClientClosing()) return;
+          try {
+            await channel?.presence.leave();
+            hasEntered = false;
+          } catch (err) {
+            const msg = err instanceof Error ? err.message : String(err ?? "");
+            if (
+              !/connection closed|connection failed|client is closing/i.test(
+                msg,
+              )
+            ) {
+              console.error("Presence leave error:", err);
+            }
+          }
+        };
+        void sendPresenceStatus(getStoredCurrentUserPresenceStatus());
+        if (isActive) {
+          scheduleIdleCheck();
+        }
+      } catch (error) {
+        const msg =
+          error instanceof Error ? error.message : String(error ?? "");
+        if (
+          !/connection closed|connection failed|client is closing/i.test(msg)
+        ) {
+          console.error("User presence enter error:", error);
+        }
+      }
     };
 
     window.addEventListener(
@@ -503,51 +814,68 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       handleStoredStatusChange,
     );
     window.addEventListener("storage", handleStorage);
+    document.addEventListener("mousemove", onActivity, { passive: true });
+    document.addEventListener("keydown", onActivity, { passive: true });
+    document.addEventListener("click", onActivity, { passive: true });
+    document.addEventListener("touchstart", onActivity, { passive: true });
+    document.addEventListener("visibilitychange", onVisibilityChange);
 
     void maintainPresence();
 
     return () => {
       isActive = false;
+      presenceCleanupRef.current = null;
+      clearIdleTimer();
+      if (debounceTimer !== null) {
+        clearTimeout(debounceTimer);
+      }
       window.removeEventListener(
         CURRENT_USER_PRESENCE_STATUS_EVENT,
         handleStoredStatusChange,
       );
       window.removeEventListener("storage", handleStorage);
-      if (channel) {
-        const cleanupPresence = async () => {
-          if (hasEntered) {
-            try {
-              await channel?.presence.leave();
-            } catch (leaveError) {
+      document.removeEventListener("mousemove", onActivity);
+      document.removeEventListener("keydown", onActivity);
+      document.removeEventListener("click", onActivity);
+      document.removeEventListener("touchstart", onActivity);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+      if (channel && hasEntered && !isRealtimeClientClosing()) {
+        void (async () => {
+          try {
+            await channel?.presence.leave();
+          } catch (leaveError) {
+            const msg =
+              leaveError instanceof Error
+                ? leaveError.message
+                : String(leaveError ?? "");
+            if (
+              !/connection closed|connection failed|client is closing/i.test(
+                msg,
+              )
+            ) {
               console.error("User presence leave error:", leaveError);
             }
           }
-          try {
-            await channel?.detach();
-          } catch (detachError) {
-            console.error("User presence detach error:", detachError);
-          }
-        };
-        void cleanupPresence();
+        })();
       }
     };
-  }, [user?.id, user?.userId]);
+  }, [user?.id]);
 
   const refreshCurrentUser = useCallback(async () => {
     if (!user?.id) {
       return;
     }
 
-    const token = sessionStorage.getItem("kakiokiToken");
+    const token = sessionStorage.getItem(sessionKey("token"));
     if (!token) {
       return;
     }
 
     try {
       const result = await refreshUser(user.id, token);
-      if (result.success && result.user) {
+      if (result.success && result.user && isMountedRef.current) {
         setUser(result.user);
-        sessionStorage.setItem("kakiokiUser", JSON.stringify(result.user));
+        sessionStorage.setItem(sessionKey("user"), JSON.stringify(result.user));
         if (result.user.publicKey) {
           await cachePublicKey(result.user.publicKey);
         }
@@ -571,10 +899,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         };
       }
 
-      const updatedUser = { ...user, avatarUrl: result.avatarUrl };
-      setUser(updatedUser);
-      sessionStorage.setItem("kakiokiUser", JSON.stringify(updatedUser));
-      console.log("User avatar updated successfully");
+      if (isMountedRef.current) {
+        const updatedUser = { ...user, avatarUrl: result.avatarUrl };
+        setUser(updatedUser);
+        sessionStorage.setItem(sessionKey("user"), JSON.stringify(updatedUser));
+      }
 
       return { success: true };
     } catch (error) {
@@ -594,6 +923,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         signup,
         updateAvatar,
         refreshCurrentUser,
+        clearSession,
         logout,
       },
     },

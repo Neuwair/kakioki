@@ -1,7 +1,13 @@
 import { SharpConfig } from "@/lib/media/SharpConfig";
 import { NextResponse } from "next/server";
 import { UserRepository } from "@/lib";
+import { MediaRepository } from "@/lib/repository/MediaRepository";
 import sharp from "sharp";
+
+function buildAvatarFileName(userId: string, format: string | undefined): string {
+  const extension = (format || "webp").toLowerCase();
+  return `avatar-${userId}.${extension}`;
+}
 
 export async function POST(request: Request) {
   try {
@@ -104,16 +110,24 @@ export async function POST(request: Request) {
         size: processed.size,
       });
 
-      const base64 = processed.buffer.toString("base64");
-      const avatarUrl = `data:${processed.mime};base64,${base64}`;
-      console.log("Base64 URL created, length:", avatarUrl.length);
-
       const userRepository = new UserRepository();
       const userIdNumber = parseInt(userId, 10);
 
       if (isNaN(userIdNumber) || userIdNumber <= 0) {
         return NextResponse.json({ error: "Invalid user ID" }, { status: 400 });
       }
+
+      const mediaRepo = new MediaRepository();
+      const mediaAsset = await mediaRepo.create({
+        owner_id: userIdNumber,
+        is_public: true,
+        content_type: processed.mime || `image/${processed.format}`,
+        file_name: buildAvatarFileName(userId, processed.format),
+        data: processed.buffer,
+      });
+
+      const avatarUrl = `/api/media/asset/${mediaAsset.id}`;
+      console.log("Avatar stored successfully", { avatarUrl });
 
       console.log("Updating user in database, ID:", userIdNumber);
       const updatedUser = await userRepository.update(userIdNumber, {

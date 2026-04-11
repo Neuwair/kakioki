@@ -3,6 +3,7 @@
 import React, { useState, useCallback, useRef, useEffect } from "react";
 import { find } from "linkifyjs";
 import Linkify from "linkify-react";
+import { KAKIOKI_CONFIG } from "@/lib/config/KakiokiConfig";
 import type {
   MediaPreview,
   LinkPreview,
@@ -11,6 +12,7 @@ import type {
 } from "@/lib/media/MediaTypes";
 
 type LiteYouTubeElement = HTMLElement & { activate?: () => unknown };
+const LINKIFY_CONFIG = KAKIOKI_CONFIG.linkify;
 
 async function sendMessageHandler(
   _params: unknown,
@@ -59,16 +61,12 @@ function formatApiMessageToClientMessage(
 
 function normalizeMessageType(t: unknown): "text" | "image" | "video" | "file" {
   const s = typeof t === "string" ? t : "text";
-  if (s === "image" || s === "video" || s === "file")
+  if ((LINKIFY_CONFIG.supportedMessageTypes as readonly string[]).includes(s))
     return s as "image" | "video" | "file";
   return "text";
 }
 
-export const URL_PATTERNS = {
-  youtube:
-    /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/,
-  general: /(https?:\/\/[^\s]+)/g,
-};
+export const URL_PATTERNS = LINKIFY_CONFIG.urlPatterns;
 
 export function extractYouTubeId(url: string): string | null {
   const match = url.match(URL_PATTERNS.youtube);
@@ -115,14 +113,7 @@ export function getYouTubeThumbnail(
   videoId: string,
   quality: "default" | "medium" | "high" | "maxres" = "high",
 ): string {
-  const key =
-    quality === "default"
-      ? "default"
-      : quality === "medium"
-        ? "mqdefault"
-        : quality === "high"
-          ? "hqdefault"
-          : "maxresdefault";
+  const key = LINKIFY_CONFIG.youtubeThumbnailKeys[quality];
   return `https://img.youtube.com/vi/${videoId}/${key}.jpg`;
 }
 
@@ -136,7 +127,7 @@ export async function fetchPreviewForUrl(
   url: string,
 ): Promise<LinkPreview | null> {
   try {
-    const response = await fetch("/api/interface", {
+    const response = await fetch(LINKIFY_CONFIG.previewEndpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ url }),
@@ -171,8 +162,8 @@ const linkifyOptions = {
   rel: "noopener noreferrer",
   className: "text-blue-300 hover:text-blue-200 underline break-all",
   format: (value: string, type: string) => {
-    if (type === "url" && value.length > 50) {
-      return value.substring(0, 47) + "...";
+    if (type === "url" && value.length > LINKIFY_CONFIG.defaultMaxUrlLength) {
+      return value.substring(0, LINKIFY_CONFIG.defaultMaxUrlLength - 3) + "...";
     }
     return value;
   },
@@ -201,7 +192,7 @@ interface TextWithLinksProps {
 export const TextWithLinks: React.FC<TextWithLinksProps> = ({
   text,
   className = "",
-  maxUrlLength = 25,
+  maxUrlLength = LINKIFY_CONFIG.textWithLinksMaxUrlLength,
 }) => {
   const customOptions = {
     ...linkifyOptions,

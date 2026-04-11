@@ -52,7 +52,10 @@ export async function PUT(request: Request) {
         );
       }
 
-      if (!isValidEmail || normalizedEmail.length > 255) {
+      if (
+        !isValidEmail ||
+        normalizedEmail.length > KAKIOKI_CONFIG.account.normalizedEmailLength
+      ) {
         return NextResponse.json(
           { error: "This @email address is invalid." },
           { status: 400 },

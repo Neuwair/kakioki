@@ -32,10 +32,10 @@ export const AvatarForm: React.FC<AvatarFormProps> = ({
   return (
     <>
       {!showUploadModal && (
-        <div className="max-w-md w-full bg-black/20 backdrop-blur-lg border border-white/20 rounded-lg shadow-lg p-8 cursor-default">
-          <div className="text-center mb-6">
+        <div className="flex flex-col gap-4 max-w-md w-full bg-white/5 backdrop-blur-lg border border-white/20 rounded-4xl shadow-lg p-8">
+          <div className="flex flex-col gap-2 text-center">
             <h2
-              className="font-bold text-neutral-50 mb-2"
+              className="font-bold text-neutral-50"
               style={{ fontSize: "clamp(2vh, 1vw, 10rem)" }}
             >
               Welcome to Kakioki!
@@ -48,7 +48,7 @@ export const AvatarForm: React.FC<AvatarFormProps> = ({
             </p>
           </div>
 
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-2">
             <button
               onClick={handleUploadClick}
               className="w-full bg-lime-700 hover:bg-lime-800 text-neutral-50 py-3 px-4 rounded-lg transition-colors duration-200 border-none cursor-pointer text-responsive save-btn text-2xl"

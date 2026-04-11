@@ -3,7 +3,7 @@ CREATE EXTENSION IF NOT EXISTS pg_trgm;
 
 CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
-    user_id VARCHAR(20) UNIQUE NOT NULL,
+    user_id VARCHAR(8) UNIQUE NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
     username VARCHAR(10) NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
@@ -14,13 +14,64 @@ CREATE TABLE IF NOT EXISTS users (
     is_verified BOOLEAN DEFAULT FALSE,
     verification_token VARCHAR(255),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT users_user_id_length_check CHECK (char_length(user_id) = 8),
+    CONSTRAINT users_username_length_check CHECK (char_length(username) <= 10),
+    CONSTRAINT users_bio_length_check CHECK (char_length(bio) <= 500)
 );
+
+ALTER TABLE users
+    ALTER COLUMN user_id TYPE VARCHAR(8),
+    ALTER COLUMN email TYPE VARCHAR(255),
+    ALTER COLUMN username TYPE VARCHAR(10),
+    ALTER COLUMN bio SET DEFAULT 'Using Kakioki, enjoying my time on Earth.';
+
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_constraint
+        WHERE conname = 'users_user_id_length_check'
+    ) THEN
+        ALTER TABLE users
+            ADD CONSTRAINT users_user_id_length_check CHECK (char_length(user_id) = 8);
+    END IF;
+END
+$$;
+
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_constraint
+        WHERE conname = 'users_username_length_check'
+    ) THEN
+        ALTER TABLE users
+            ADD CONSTRAINT users_username_length_check CHECK (char_length(username) <= 10);
+    END IF;
+END
+$$;
+
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_constraint
+        WHERE conname = 'users_bio_length_check'
+    ) THEN
+        ALTER TABLE users
+            ADD CONSTRAINT users_bio_length_check CHECK (char_length(bio) <= 500);
+    END IF;
+END
+$$;
 
 CREATE INDEX IF NOT EXISTS idx_users_user_id ON users(user_id);
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_users_created_at ON users(created_at);
 CREATE INDEX IF NOT EXISTS idx_users_username_trgm ON users USING gin (username gin_trgm_ops);
+
+ALTER TABLE users ADD COLUMN IF NOT EXISTS last_seen_at TIMESTAMP WITH TIME ZONE;
+CREATE INDEX IF NOT EXISTS idx_users_last_seen_at ON users(last_seen_at);
 
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
@@ -137,3 +188,16 @@ BEGIN
     RETURN queued_count;
 END;
 $$ LANGUAGE plpgsql;
+
+CREATE TABLE IF NOT EXISTS media_assets (
+    id BIGSERIAL PRIMARY KEY,
+    owner_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    is_public BOOLEAN NOT NULL DEFAULT FALSE,
+    content_type TEXT NOT NULL,
+    file_name TEXT,
+    data BYTEA NOT NULL,
+    byte_size INTEGER NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_media_assets_owner_id ON media_assets(owner_id);

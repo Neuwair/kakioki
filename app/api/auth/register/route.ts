@@ -39,9 +39,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Email is too long" }, { status: 400 });
     }
 
-    if (password.length < 8) {
+    if (password.length < KAKIOKI_CONFIG.account.minPasswordLength) {
       return NextResponse.json(
-        { error: "Password must be at least 8 characters long" },
+        {
+          error: `Password must be at least ${KAKIOKI_CONFIG.account.minPasswordLength} characters`,
+        },
         { status: 400 },
       );
     }

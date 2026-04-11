@@ -1,6 +1,8 @@
 import Ably from "ably";
 import { startTransition } from "react";
 import { getAuthHeaders } from "@/public/shared/helpers/AuthHelpers";
+import { KAKIOKI_CONFIG } from "@/lib/config/KakiokiConfig";
+import { getTabSessionId, sessionKey } from "@/public/shared/helpers/TabSessionHelpers";
 import {
   chatMessageChannel,
   chatStatusChannel,
@@ -38,6 +40,8 @@ type RealtimeClient = InstanceType<typeof Ably.Realtime>;
 
 let realtimeClient: RealtimeClient | null = null;
 let creatingClientPromise: Promise<RealtimeClient> | null = null;
+let isRealtimeClosing = false;
+let clientTabSession: string | null = null;
 
 if (typeof window !== "undefined") {
   window.addEventListener("unhandledrejection", (event) => {
@@ -55,32 +59,80 @@ if (typeof window !== "undefined") {
 function resetRealtimeSingletons() {
   realtimeClient = null;
   creatingClientPromise = null;
+  isRealtimeClosing = false;
+  clientTabSession = null;
 }
 
 async function createRealtimeClient(): Promise<RealtimeClient> {
+  if (isRealtimeClosing) {
+    throw new Error("Realtime client is closing");
+  }
+
+  const currentTabSession =
+    typeof window !== "undefined" ? getTabSessionId() : "";
+
   if (realtimeClient) {
     const state = realtimeClient.connection.state;
-    if (state === "closed" || state === "failed") {
+    if (
+      state === "closed" ||
+      state === "failed" ||
+      clientTabSession !== currentTabSession
+    ) {
       resetRealtimeSingletons();
     } else {
       return realtimeClient;
     }
   }
 
+  if (
+    typeof window !== "undefined" &&
+    !sessionStorage.getItem(sessionKey("token"))
+  ) {
+    throw new Error("Realtime client requires authentication");
+  }
+
   if (!creatingClientPromise) {
     creatingClientPromise = (async () => {
       const client = new Ably.Realtime({
-        authUrl: "/api/security",
-        authMethod: "POST",
-        authHeaders: {
-          ...getAuthHeaders(),
-          "Content-Type": "application/json",
+        authCallback: (
+          _tokenParams: Ably.TokenParams,
+          callback: (
+            error: Ably.ErrorInfo | string | null,
+            tokenRequestOrDetails:
+              | Ably.TokenRequest
+              | Ably.TokenDetails
+              | string
+              | null,
+          ) => void,
+        ) => {
+          fetch("/api/security", {
+            method: "POST",
+            headers: getAuthHeaders(),
+          })
+            .then((res) => {
+              if (!res.ok) {
+                callback(`Ably auth failed: ${res.status}`, null);
+                return;
+              }
+              return res.json();
+            })
+            .then((tokenRequest) => {
+              if (tokenRequest) {
+                callback(null, tokenRequest as Ably.TokenRequest);
+              }
+            })
+            .catch((err: unknown) => {
+              callback(
+                err instanceof Error ? err.message : String(err ?? ""),
+                null,
+              );
+            });
         },
-        authParams: {},
         closeOnUnload: false,
       });
       client.connection.once("closed", resetRealtimeSingletons);
       client.connection.once("failed", resetRealtimeSingletons);
+      clientTabSession = currentTabSession;
       realtimeClient = client;
       return client;
     })();
@@ -91,6 +143,45 @@ async function createRealtimeClient(): Promise<RealtimeClient> {
 
 export async function getRealtimeClient(): Promise<RealtimeClient> {
   return createRealtimeClient();
+}
+
+export function closeRealtimeClient(): void {
+  if (isRealtimeClosing) return;
+  isRealtimeClosing = true;
+  creatingClientPromise = null;
+  if (realtimeClient) {
+    try {
+      realtimeClient.close();
+    } catch {
+      resetRealtimeSingletons();
+    }
+  } else {
+    resetRealtimeSingletons();
+  }
+}
+
+export function isRealtimeClientClosing(): boolean {
+  return isRealtimeClosing;
+}
+
+export async function reauthorizeRealtimeClient(): Promise<void> {
+  if (!realtimeClient) return;
+  const state = realtimeClient.connection.state;
+  if (state === "closed" || state === "failed") return;
+  await realtimeClient.auth.authorize();
+  if (realtimeClient.connection.state !== "connected") {
+    await new Promise<void>((resolve) => {
+      const TIMEOUT_MS = KAKIOKI_CONFIG.transport.realtimeReauthTimeoutMs;
+      let settled = false;
+      const finish = () => {
+        if (settled) return;
+        settled = true;
+        resolve();
+      };
+      realtimeClient!.connection.once("connected", finish);
+      setTimeout(finish, TIMEOUT_MS);
+    });
+  }
 }
 
 interface ChatRealtimeParams {

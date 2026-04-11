@@ -1,3 +1,5 @@
+import { KAKIOKI_CONFIG } from "@/lib/config/KakiokiConfig";
+
 export interface ResizeOptions {
   maxWidth?: number;
   maxHeight?: number;
@@ -11,6 +13,7 @@ type Pending = {
 let worker: Worker | null = null;
 const pending = new Map<number, Pending>();
 let idCounter = 1;
+const IMAGE_RESIZE_CONFIG = KAKIOKI_CONFIG.imageResize;
 
 function ensureWorker() {
   if (
@@ -50,7 +53,11 @@ export async function resizeImageInWorker(
   }
 
   const id = idCounter++;
-  const { maxWidth = 1280, maxHeight = 1280, quality = 0.8 } = opts;
+  const {
+    maxWidth = IMAGE_RESIZE_CONFIG.default.maxWidth,
+    maxHeight = IMAGE_RESIZE_CONFIG.default.maxHeight,
+    quality = IMAGE_RESIZE_CONFIG.default.quality,
+  } = opts;
 
   const arrayBuffer = await file.arrayBuffer();
 
@@ -86,7 +93,11 @@ export async function mainThreadResize(
   opts: ResizeOptions = {},
 ): Promise<File> {
   if (file.type === "image/gif" || typeof window === "undefined") return file;
-  const { maxWidth = 1280, maxHeight = 1280, quality = 0.8 } = opts;
+  const {
+    maxWidth = IMAGE_RESIZE_CONFIG.default.maxWidth,
+    maxHeight = IMAGE_RESIZE_CONFIG.default.maxHeight,
+    quality = IMAGE_RESIZE_CONFIG.default.quality,
+  } = opts;
 
   try {
     const imageBitmap = await createImageBitmap(file);
@@ -132,9 +143,9 @@ export async function resizeWithWorkerFallback(
     const resized = await resizeImageInWorker(file, opts);
     if (resized.size <= maxBytes) return resized;
     const smaller = await resizeImageInWorker(file, {
-      maxWidth: 800,
-      maxHeight: 800,
-      quality: 0.7,
+      maxWidth: IMAGE_RESIZE_CONFIG.fallback.maxWidth,
+      maxHeight: IMAGE_RESIZE_CONFIG.fallback.maxHeight,
+      quality: IMAGE_RESIZE_CONFIG.fallback.quality,
     });
     if (smaller.size <= maxBytes) return smaller;
     return smaller;
@@ -148,6 +159,10 @@ export default resizeImageInWorker;
 export function clampSizesForProfileImages(
   opts?: ResizeOptions,
 ): ResizeOptions & { maxWidth: number; maxHeight: number } {
-  const defaults = { maxWidth: 400, maxHeight: 400, quality: 0.9 };
+  const defaults = {
+    maxWidth: IMAGE_RESIZE_CONFIG.profile.maxWidth,
+    maxHeight: IMAGE_RESIZE_CONFIG.profile.maxHeight,
+    quality: IMAGE_RESIZE_CONFIG.profile.quality,
+  };
   return { ...defaults, ...(opts || {}) };
 }

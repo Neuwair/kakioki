@@ -268,6 +268,17 @@ export const ChatInterface: React.FC = () => {
     [retryMessage],
   );
 
+  const handleNewMessageBadgeClick = useCallback(() => {
+    const container = messagesContainerRef.current;
+    if (container) {
+      container.scrollTo({
+        top: container.scrollHeight,
+        behavior: "smooth",
+      });
+    }
+    clearUnseenBadge();
+  }, [clearUnseenBadge]);
+
   const handleToggleBlock = useCallback(async () => {
     if (!selectedFriend) {
       return;
@@ -417,6 +428,9 @@ export const ChatInterface: React.FC = () => {
     return null;
   }, [blockState.blockedByFriend, blockState.blockedBySelf, selectedFriend]);
 
+  const shouldShowNewMessageBadge = badgeVisible && unseenCount > 0;
+  const badgeDisplayCount = unseenCount;
+
   const previewImageUrls = useMemo(
     () =>
       messages.flatMap((message) =>
@@ -514,9 +528,7 @@ export const ChatInterface: React.FC = () => {
               </button>
               <button
                 type="button"
-                onClick={() =>
-                  setIsUserPreviewVisible((previous) => !previous)
-                }
+                onClick={() => setIsUserPreviewVisible((previous) => !previous)}
                 title="Toggle input bounce"
                 className="p-2 rounded-lg flex items-center justify-center cursor-pointer view-btn transition-colors bg-white/5 text-neutral-50 hover:bg-lime-800"
               >
@@ -575,11 +587,8 @@ export const ChatInterface: React.FC = () => {
             </div>
 
             <div className="flex flex-row flex-wrap gap-2.5 justify-center">
-              <button>
-                Eye
-              </button>
+              <button>Eye</button>
             </div>
-
           </div>
         ) : null}
 
@@ -605,7 +614,7 @@ export const ChatInterface: React.FC = () => {
 
         <div
           ref={messagesContainerRef}
-          className={`chat-messages flex-1 p-4 space-y-4 overflow-y-auto scrollbar-hide bg-transparent ${
+          className={`chat-messages relative flex-1 p-4 space-y-4 overflow-y-auto scrollbar-hide bg-transparent ${
             !selectedFriend ? "flex items-center justify-center" : ""
           }`}
         >
@@ -678,6 +687,22 @@ export const ChatInterface: React.FC = () => {
               />
             ))
           )}
+          {shouldShowNewMessageBadge ? (
+            <div className="sticky bottom-0 left-0 right-0 z-20 flex justify-center rounded-lg">
+              <button
+                type="button"
+                onClick={handleNewMessageBadgeClick}
+                className="relative isolate flex  justify-center p-4 animate-pulse bg-lime-700/50 hover:bg-lime-500/50 text-neutral-50 rounded-lg save-btn backdrop-blur-lg"
+                style={{
+                  backdropFilter: "blur(1rem)",
+                  WebkitBackdropFilter: "blur(1rem)",
+                }}
+              >
+                {badgeDisplayCount} new message
+                {badgeDisplayCount > 1 ? "s" : ""}
+              </button>
+            </div>
+          ) : null}
         </div>
 
         <div
@@ -711,24 +736,6 @@ export const ChatInterface: React.FC = () => {
                 linkPreviewError={linkPreviewError}
                 onDismissPreview={dismissLinkPreview}
               />
-              {badgeVisible && unseenCount > 0 ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    const container = messagesContainerRef.current;
-                    if (container) {
-                      container.scrollTo({
-                        top: container.scrollHeight,
-                        behavior: "smooth",
-                      });
-                    }
-                    clearUnseenBadge();
-                  }}
-                  className="absolute left-1/2 -translate-x-1/2 -top-8 bg-lime-700 text-neutral-50 px-4 py-2 rounded-lg text-sm font-semibold shadow-lg view-btn"
-                >
-                  {unseenCount} new message{unseenCount > 1 ? "s" : ""}
-                </button>
-              ) : null}
               {sendError ? (
                 <div className="mt-2 text-sm text-red-200/80 text-center">
                   {sendError}

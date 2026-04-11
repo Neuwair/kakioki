@@ -6,7 +6,6 @@ import {
   faUser,
   faTimes,
   faCheck,
-  faSpinner,
   faSignOutAlt,
 } from "@fortawesome/free-solid-svg-icons";
 import { KAKIOKI_CONFIG } from "@/lib/config/KakiokiConfig";
@@ -14,6 +13,7 @@ import { SafeImage } from "@/public/shared/utils/chat/MessageMedia";
 import { getAuthHeaders } from "@/public/shared/helpers/AuthHelpers";
 import {
   useFriendRealtime,
+  type PresenceStatus,
   useUserPresence,
 } from "@/public/shared/logic/UserPresenceRealtime";
 import type { FriendListEntry } from "@/public/shared/hooks/FriendRelationships";
@@ -50,13 +50,74 @@ function resolveBio(bio: string | null | undefined): string {
     : KAKIOKI_CONFIG.account.defaultBio;
 }
 
+function getPresencePresentation(status: PresenceStatus) {
+  const isOnline = status === "online";
+  const isAway = status === "away";
+
+  return {
+    label: isOnline ? "Online" : isAway ? "Away" : "Offline",
+    labelColor: isOnline
+      ? "text-emerald-200"
+      : isAway
+        ? "text-amber-200"
+        : "text-rose-200",
+    dotColor: isOnline
+      ? "bg-emerald-400"
+      : isAway
+        ? "bg-amber-400"
+        : "bg-rose-400",
+    haloColor: isOnline
+      ? "bg-emerald-400/60"
+      : isAway
+        ? "bg-amber-400/50"
+        : "bg-rose-400/50",
+    dotAnimation: isOnline ? "animate-pulse" : "",
+    haloAnimation: isOnline
+      ? "motion-safe:animate-[ping_1.8s_ease-in-out_infinite]"
+      : "",
+  };
+}
+
+const PresenceDot: React.FC<{ status: PresenceStatus }> = ({ status }) => {
+  const presentation = getPresencePresentation(status);
+
+  return (
+    <span className="relative flex h-2.5 w-2.5 shrink-0">
+      <span
+        className={`absolute inline-flex h-full w-full rounded-full ${presentation.haloColor} ${presentation.haloAnimation}`}
+      ></span>
+      <span
+        className={`relative inline-flex h-2.5 w-2.5 rounded-full ${presentation.dotColor} ${presentation.dotAnimation}`}
+      ></span>
+    </span>
+  );
+};
+
+const UserPresenceStatus: React.FC<{
+  userId: number | null;
+  className?: string;
+  textClassName?: string;
+}> = ({ userId, className = "", textClassName = "text-sm" }) => {
+  const presence = useUserPresence(userId);
+  const resolvedStatus = presence.isReady ? presence.status : "offline";
+  const presentation = getPresencePresentation(resolvedStatus);
+
+  return (
+    <div
+      className={`flex items-center gap-2 ${presentation.labelColor} ${textClassName} ${className}`.trim()}
+    >
+      <PresenceDot status={resolvedStatus} />
+      {presentation.label}
+    </div>
+  );
+};
+
 export const ChatUserHeader: React.FC<{
   selectedFriend?: SelectedFriendPreview | null;
   showPreview?: boolean;
   onClose?: () => void;
   actions?: React.ReactNode;
 }> = ({ selectedFriend, showPreview = false, onClose, actions = null }) => {
-  const presence = useUserPresence(selectedFriend?.id ?? null);
   const [friendProfile, setFriendProfile] = useState<FriendProfile | null>(
     null,
   );
@@ -155,56 +216,9 @@ export const ChatUserHeader: React.FC<{
     resolvedFriendProfile?.bio ?? selectedFriend.bio,
   );
 
-  const statusContent = (() => {
-    if (!presence.isReady) {
-      return (
-        <div className="mt-1 flex items-center gap-2 text-xs text-neutral-100/80">
-          <span className="relative flex h-2.5 w-2.5">
-            <span className="absolute inline-flex h-full w-full rounded-full bg-amber-600 "></span>
-          </span>
-          Checking status…
-        </div>
-      );
-    }
-
-    const isOnline = presence.status === "online";
-    const isAway = presence.status === "away";
-    const label = isOnline ? "Online" : isAway ? "Away" : "Offline";
-    const labelColor = isOnline
-      ? "text-emerald-200"
-      : isAway
-        ? "text-amber-200"
-        : "text-rose-200";
-    const dotColor = isOnline
-      ? "bg-emerald-400"
-      : isAway
-        ? "bg-amber-400"
-        : "bg-rose-400";
-    const haloColor = isOnline
-      ? "bg-emerald-400/60"
-      : isAway
-        ? "bg-amber-400/50"
-        : "bg-rose-400/50";
-    const dotAnimation = isOnline ? "animate-pulse" : "";
-
-    return (
-      <div className={`mt-1 flex items-center gap-2 text-sm ${labelColor}`}>
-        <span className="relative flex h-2.5 w-2.5">
-          <span
-            className={`absolute inline-flex h-full w-full rounded-full ${haloColor} ${isOnline ? "motion-safe:animate-[ping_1.8s_ease-in-out_infinite]" : ""}`}
-          ></span>
-          <span
-            className={`relative inline-flex h-2.5 w-2.5 rounded-full ${dotColor} ${dotAnimation}`}
-          ></span>
-        </span>
-        {label}
-      </div>
-    );
-  })();
-
   return (
     <div className="bg-white/5 flex-col flex sticky top-0 z-20 user-header shadow-[0_9px_12px_-4px_rgba(0,0,0,0.20)]">
-      <div className="p-3 flex flex-row flex-wrap items-center gap-2">
+      <div className="p-3 flex b flex-row flex-wrap items-center gap-2">
         <div className="w-12 h-12 rounded-full bg-white/5 border border-white/20 overflow-hidden flex items-center justify-center">
           {(() => {
             const avatar =
@@ -237,7 +251,7 @@ export const ChatUserHeader: React.FC<{
           <h3 className=" text-lg text-neutral-50">
             {selectedFriend.username}
           </h3>
-          {statusContent}
+          <UserPresenceStatus userId={selectedFriend.id} />
         </div>
         <div className="flex items-center gap-2">
           {actions}
@@ -299,13 +313,26 @@ export const ChatUserHeader: React.FC<{
 export const UserInfoHeader: React.FC<{}> = () => {
   const { logout, user } = useAuth();
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const openAvatarModal = useCallback(() => setIsAvatarModalOpen(true), []);
   const closeAvatarModal = useCallback(() => setIsAvatarModalOpen(false), []);
+  const handleLogout = useCallback(async () => {
+    if (isLoggingOut) {
+      return;
+    }
+
+    setIsLoggingOut(true);
+    try {
+      await logout();
+    } catch {
+      setIsLoggingOut(false);
+    }
+  }, [isLoggingOut, logout]);
 
   return (
     <>
-      <div className="flex items-center justify-between">
+      <div className="flex flex-row flex-wrap items-center justify-between">
         <div>
           <h2 className="text-xl font-bold text-neutral-50 cursor-default">
             Kakioki
@@ -317,11 +344,14 @@ export const UserInfoHeader: React.FC<{}> = () => {
               {user ? user.username : "Your Username"}
             </h3>
             <button
-              onClick={logout}
-              className="text-xs text-neutral-50/60 hover:text-neutral-50 border-none cursor-pointer flex items-center gap-1 mt-1 no-theme"
+              onClick={handleLogout}
+              disabled={isLoggingOut}
+              className="flex text-xs text-neutral-50/60  hover:text-neutral-50 cursor-pointer items-center gap-1 no-theme"
             >
-              <FontAwesomeIcon icon={faSignOutAlt} size="xs" />
-              Logout
+              <div className="flex flex-row justify-center items-center align-middle gap-1">
+                <FontAwesomeIcon icon={faSignOutAlt} size="sm" />
+                {isLoggingOut ? "Logging out..." : "Logout"}
+              </div>
             </button>
           </div>
           <div className="flex flex-col flex-wrap justify-center">
@@ -361,40 +391,53 @@ export const UserInfoHeader: React.FC<{}> = () => {
 };
 
 export const FriendItem: React.FC<{
-  friend: { username: string; avatar_url?: string | null; avatarUrl?: string };
+  friend: {
+    id: number;
+    username: string;
+    avatar_url?: string | null;
+    avatarUrl?: string;
+  };
   onClick?: () => void;
 }> = ({ friend, onClick }) => {
+  const resolvedStatusUserId = friend.id ?? null;
   const avatar = friend.avatar_url ?? friend.avatarUrl ?? undefined;
   return (
     <div
-      className="relative shrink-0 w-20 h-20 mx-2 cursor-pointer group bouncy-hover"
+      className="flex flex-col justify-center relative shrink-0 w-20 h-30 cursor-pointer group bouncy-hover"
       onClick={onClick}
       title={friend.username}
       tabIndex={0}
     >
-      <div className="flex flex-col items-center">
-        <div className="w-16 h-16 rounded-full bg-white/5 border border-white/20 flex items-center justify-center overflow-hidden transition-transform duration-200 group-hover:transform group-hover:scale-110">
-          {avatar ? (
-            <div className="relative w-full h-full">
-              <SafeImage
-                src={avatar}
-                alt={`${friend.username}'s avatar`}
-                fill
-                sizes="64px"
-                className="object-cover"
+      <div className="flex flex-col gap-2">
+        <div className="flex justify-center">
+          <div className="w-16 h-16 rounded-full bg-white/5 border border-white/20 flex items-center justify-center overflow-hidden transition-transform duration-200 group-hover:transform group-hover:scale-110">
+            {avatar ? (
+              <div className="relative w-full h-full">
+                <SafeImage
+                  src={avatar}
+                  alt={`${friend.username}'s avatar`}
+                  fill
+                  sizes="64px"
+                  className="object-cover"
+                />
+              </div>
+            ) : (
+              <FontAwesomeIcon
+                icon={faUser}
+                size="lg"
+                className="text-neutral-50/70"
               />
-            </div>
-          ) : (
-            <FontAwesomeIcon
-              icon={faUser}
-              size="lg"
-              className="text-neutral-50/70"
-            />
-          )}
+            )}
+          </div>
         </div>
-        <span className="text-sm text-neutral-50 mt-1 truncate w-full text-center">
+        <span className="text-sm text-neutral-50 truncate w-full text-center flex justify-center">
           {friend.username}
         </span>
+        <UserPresenceStatus
+          userId={resolvedStatusUserId}
+          className="flex justify-center"
+          textClassName="text-xs"
+        />
       </div>
     </div>
   );
@@ -516,6 +559,7 @@ export const FriendListHeader: React.FC<FriendListHeaderProps> = ({
               <FriendItem
                 key={entry.user.id}
                 friend={{
+                  id: entry.user.id,
                   username: entry.user.username,
                   avatarUrl: entry.user.avatarUrl,
                 }}
@@ -588,16 +632,14 @@ export const FriendRequestsHeader: React.FC<FriendRequestsHeaderProps> = ({
                       onClick={() => onAccept(entry.user.id)}
                       disabled={isAccepting}
                     >
-                      {isAccepting ? (
-                        <FontAwesomeIcon
-                          icon={faSpinner}
-                          size="lg"
-                          className="text-neutral-50/70 animate-spin"
-                        />
-                      ) : (
-                        <FontAwesomeIcon icon={faCheck} />
-                      )}
-                      {isAccepting ? "Accepting" : "Accept"}
+                      <div className="flex items-center gap-2 justify-center">
+                        {isAccepting ? (
+                          <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <FontAwesomeIcon icon={faCheck} />
+                        )}
+                        {isAccepting ? "Accepting" : "Accept"}
+                      </div>
                     </button>
                     <button
                       type="button"
@@ -605,16 +647,14 @@ export const FriendRequestsHeader: React.FC<FriendRequestsHeaderProps> = ({
                       onClick={() => onDecline(entry.user.id)}
                       disabled={isDeclining}
                     >
-                      {isDeclining ? (
-                        <FontAwesomeIcon
-                          icon={faSpinner}
-                          size="lg"
-                          className="text-neutral-50/70 animate-spin"
-                        />
-                      ) : (
-                        <FontAwesomeIcon icon={faTimes} />
-                      )}
-                      {isDeclining ? "Removing" : "Decline"}
+                      <div className="flex items-center gap-2 justify-center">
+                        {isDeclining ? (
+                          <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <FontAwesomeIcon icon={faTimes} />
+                        )}
+                        {isDeclining ? "Removing" : "Decline"}
+                      </div>
                     </button>
                   </div>
                 </div>
@@ -640,16 +680,14 @@ export const FriendRequestsHeader: React.FC<FriendRequestsHeaderProps> = ({
                     onClick={() => onCancel(entry.user.id)}
                     disabled={isCanceling}
                   >
-                    {isCanceling ? (
-                      <FontAwesomeIcon
-                        icon={faSpinner}
-                        size="lg"
-                        className="text-neutral-50/70 animate-spin"
-                      />
-                    ) : (
-                      <FontAwesomeIcon icon={faTimes} />
-                    )}
-                    {isCanceling ? "Cancelling" : "Cancel"}
+                    <div className="flex items-center gap-2 justify-center">
+                      {isCanceling ? (
+                        <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <FontAwesomeIcon icon={faTimes} />
+                      )}
+                      {isCanceling ? "Cancelling" : "Cancel"}
+                    </div>
                   </button>
                 </div>
               );

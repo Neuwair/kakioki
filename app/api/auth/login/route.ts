@@ -25,8 +25,8 @@ export async function POST(request: Request) {
       );
     }
 
-    if (normalizedEmail.length > 255) {
-      return NextResponse.json({ error: "Email is too long" }, { status: 400 });
+    if (normalizedEmail.length > KAKIOKI_CONFIG.account.normalizedEmailLength) {
+      return NextResponse.json({  error: "Email is too long" }, { status: 400 });
     }
 
     try {
