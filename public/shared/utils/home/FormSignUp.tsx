@@ -32,23 +32,33 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const passwordsMismatch =
+    Boolean(password) &&
+    Boolean(confirmPassword) &&
+    password !== confirmPassword;
+  const titleId = "signup-title";
+  const descriptionId = "signup-description";
+  const mismatchId = "signup-password-mismatch";
 
   return (
-    <div className="flex flex-col gap-4 max-w-md w-full bg-white/5 backdrop-blur-lg border border-white/20 rounded-4xl shadow-lg p-8">
+    <div
+      role="region"
+      aria-labelledby={titleId}
+      className="max-w-md w-full flex flex-col gap-4 bg-white/5 backdrop-blur-lg border border-white/20 rounded-lg shadow-lg p-8"
+    >
       <div className="flex flex-col text-center gap-2 justify-center">
-        <h2 className="font-bold text-neutral-50 cursor-default text-4xl b">
+        <h2 id={titleId} className="font-bold text-neutral-50 text-sm sm:text-2xl lg:text-4xl">
           Create Account
         </h2>
-        <p className=" text-neutral-50 cursor-default text-2xl">
+        <p id={descriptionId} className="text-neutral-50 text-xs sm:text-sm lg:text-2xl">
           Your world, your messages
         </p>
       </div>
-
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <form aria-labelledby={titleId} aria-describedby={descriptionId} aria-busy={isLoading} onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div className="flex flex-col gap-2">
           <label
             htmlFor="email"
-            className="block text-responsive text-neutral-50 text-2xl"
+            className="block text-neutral-50 text-xs sm:text-lg lg:text-2xl"
           >
             Email
           </label>
@@ -60,15 +70,15 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
             required
             autoComplete="email"
             maxLength={255}
-            className="w-full px-3 py-2 border border-gray-300 bg-black/20 rounded-lg focus:outline-none focus:ring focus:ring-lime-500 text-gray-300 text-2xl"
+            aria-required="true"
+            className="w-full px-3 py-2 border border-gray-300 bg-black/20 rounded-lg focus:outline-none focus:ring focus:ring-lime-500 text-gray-300 text-xs sm:text-sm lg:text-2xl"
             placeholder="Enter your email"
           />
         </div>
-
         <div className="flex flex-col gap-2">
           <label
             htmlFor="username"
-            className="block text-responsive text-neutral-50 text-2xl"
+            className="block text-neutral-50 text-xs sm:text-lg lg:text-2xl"
           >
             Username
           </label>
@@ -80,7 +90,8 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
             required
             autoComplete="username"
             maxLength={KAKIOKI_CONFIG.account.maxUsernameLength}
-            className="w-full px-3 py-2 border border-gray-300 bg-black/20 rounded-lg focus:outline-none focus:ring focus:ring-lime-500 text-gray-300 text-2xl"
+            aria-required="true"
+            className="w-full px-3 py-2 border border-gray-300 bg-black/20 rounded-lg focus:outline-none focus:ring focus:ring-lime-500 text-gray-300 text-xs sm:text-sm lg:text-2xl"
             placeholder="Choose a username"
           />
         </div>
@@ -88,7 +99,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
         <div className="flex flex-col gap-2">
           <label
             htmlFor="password"
-            className="block text-responsive text-neutral-50 text-2xl"
+            className="block text-neutral-50 text-xs sm:text-lg lg:text-2xl"
           >
             Password
           </label>
@@ -100,13 +111,14 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
               onChange={(e) => setPassword(e.target.value)}
               required
               autoComplete="new-password"
-              className="w-full px-3 pr-10 py-2 border border-gray-300 bg-black/20 rounded-lg focus:outline-none focus:ring focus:ring-lime-500 text-gray-300 text-2xl"
+              aria-required="true"
+              className="w-full px-3 pr-10 py-2 border border-gray-300 bg-black/20 rounded-lg focus:outline-none focus:ring focus:ring-lime-500 text-gray-300 text-xs sm:text-sm lg:text-2xl"
               placeholder="Create a password"
             />
             <button
               type="button"
               onClick={() => setShowPassword((v) => !v)}
-              className="absolute inset-y-0 right-2 flex items-center px-1 text-lg text-neutral-50"
+              className="absolute inset-y-0 right-2 flex items-center px-1 text-xs sm:text-sm text-neutral-50"
               aria-label={showPassword ? "Hide password" : "Show password"}
             >
               <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} />
@@ -117,7 +129,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
         <div className="flex flex-col gap-2">
           <label
             htmlFor="confirmPassword"
-            className="block text-responsive text-neutral-50 text-2xl"
+            className="block text-neutral-50 text-xs sm:text-lg lg:text-2xl"
           >
             Confirm Password
           </label>
@@ -129,13 +141,16 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
               autoComplete="new-password"
-              className="w-full px-3 pr-10 py-2 border border-gray-300 bg-black/20 rounded-lg focus:outline-none focus:ring focus:ring-lime-500 text-gray-300 text-2xl"
+              aria-required="true"
+              aria-invalid={passwordsMismatch}
+              aria-describedby={passwordsMismatch ? mismatchId : undefined}
+              className="w-full px-3 pr-10 py-2 border border-gray-300 bg-black/20 rounded-lg focus:outline-none focus:ring focus:ring-lime-500 text-gray-300 text-xs sm:text-sm lg:text-2xl"
               placeholder="Confirm your password"
             />
             <button
               type="button"
               onClick={() => setShowConfirmPassword((v) => !v)}
-              className="absolute inset-y-0 right-2 flex items-center px-1 text-lg text-neutral-50 "
+              className="absolute inset-y-0 right-2 flex items-center px-1 text-xs sm:text-sm text-neutral-50 "
               aria-label={
                 showConfirmPassword
                   ? "Hide confirm password"
@@ -147,19 +162,22 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
               />
             </button>
           </div>
-          {password && confirmPassword && password !== confirmPassword && (
-            <p className="text-red-200 mt-1 text-2xl">Passwords do not match</p>
+          {passwordsMismatch && (
+            <p id={mismatchId} role="alert" aria-live="assertive" className="text-red-200 mt-1 text-sm sm:text-lg">
+              Passwords do not match
+            </p>
           )}
         </div>
 
         <button
           type="submit"
           disabled={isLoading || !isFormValid}
-          className="w-full bg-lime-700 hover:bg-lime-800 text-neutral-50 py-3 px-4 rounded-lg transition-colors duration-200 border-none cursor-pointer text-responsive signup-btn text-2xl disabled:cursor-not-allowed"
+          aria-busy={isLoading}
+          className="w-full bg-lime-700 hover:bg-lime-800 text-neutral-50 py-3 px-4 rounded-lg transition-colors duration-200 border-none cursor-pointer signup-btn text-xs sm:text-sm disabled:cursor-not-allowed"
         >
           {isLoading ? (
             <span className="flex items-center justify-center gap-2">
-              <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              <span aria-hidden="true" className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin text-sm sm:text-lg" />
               Creating Account...
             </span>
           ) : (
@@ -167,11 +185,14 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
           )}
         </button>
         <div className="flex gap-4 justify-start flex-wrap">
-          <p className="text-neutral-50 text-2xl">Already have an account? </p>
+          <p className="text-neutral-50 text-sm sm:text-lg">
+            Already have an account?{" "}
+          </p>
+
           <button
             type="button"
             onClick={onSwitchToSignIn}
-            className="text-lime-200 hover:text-lime-100 underline bg-transparent border-none cursor-pointer text-responsive text-lg"
+            className="text-lime-200 hover:text-lime-100 underline bg-transparent border-none cursor-pointer text-xs sm:text-sm"
           >
             Sign In
           </button>

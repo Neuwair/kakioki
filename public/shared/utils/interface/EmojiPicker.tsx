@@ -95,6 +95,10 @@ export const EmojiPicker: React.FC<EmojiPickerProps> = ({
   const content = (
     <div
       ref={pickerRef}
+      role="dialog"
+      aria-modal="false"
+      aria-label="Emoji picker"
+      tabIndex={-1}
       className="kakioki-emoji-picker fixed z-1000 transform-gpu transition-opacity duration-200 ease-in-out"
       style={{
         left: `${position.left}px`,

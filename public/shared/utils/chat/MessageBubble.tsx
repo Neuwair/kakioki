@@ -93,6 +93,16 @@ const MessageBubbleComponent: React.FC<MessageBubbleProps> = ({
   const linkPreviews = message.metadata?.previews ?? [];
   const showRetry = isOwn && message.state === "error" && onRetry;
   const statusColor = "text-neutral-300";
+  const statusText =
+    message.state === "error"
+      ? "Failed to send"
+      : message.state === "sending"
+        ? "Sending"
+        : message.state === "read"
+          ? "Read"
+          : message.state === "delivered"
+            ? "Delivered"
+            : "Sent";
 
   const handleFileDownload = (url: string, filename?: string) => {
     const link = document.createElement("a");
@@ -161,7 +171,8 @@ const MessageBubbleComponent: React.FC<MessageBubbleProps> = ({
                         <button
                           type="button"
                           onClick={() => onMediaPreview?.(item.source)}
-                          className="relative block h-full w-full overflow-hidden transition-transform duration-200 hover:scale-[1.02]"
+                          aria-label={`Open image ${item.name || "preview"}`}
+                          className="relative block h-full w-full overflow-hidden transition-transform duration-200 hover:scale-[1.02] text-xs sm:text-sm"
                         >
                           <Image
                             src={item.source}
@@ -204,8 +215,7 @@ const MessageBubbleComponent: React.FC<MessageBubbleProps> = ({
                             <div className="shrink-0 flex justify-center items-center">
                               <FontAwesomeIcon
                                 icon={faFile}
-                                size="lg"
-                                className="text-neutral-400"
+                                className="text-neutral-400 text-lg sm:text-sm"
                               />
                             </div>
                             <div className="flex-1 min-w-0">
@@ -224,10 +234,11 @@ const MessageBubbleComponent: React.FC<MessageBubbleProps> = ({
                             onClick={() =>
                               handleFileDownload(item.source, item.name)
                             }
-                            className=" rounded-lg text-neutral-50 flex items-center justify-center p-5"
+                            aria-label={`Download ${item.name || "file"}`}
+                            className=" rounded-lg text-neutral-50 flex items-center justify-center p-5 text-xs sm:text-sm"
                             title="Download file"
                           >
-                            <FontAwesomeIcon icon={faDownload} size="4x" />
+                            <FontAwesomeIcon icon={faDownload} className="text-lg sm:text-sm"/>
                           </button>
                         </div>
                       </div>
@@ -242,8 +253,8 @@ const MessageBubbleComponent: React.FC<MessageBubbleProps> = ({
             maxUrlLength={35}
             className={
               message.plaintext
-                ? "text-neutral-50 relative z-10 cursor-default whitespace-pre-wrap text-item"
-                : "italic text-neutral-50 relative z-10 cursor-default whitespace-pre-wrap"
+                ? "text-neutral-50 relative z-10 cursor-default whitespace-pre-wrap text-item text-xs sm:text-sm lg:text-lg"
+                : "italic text-neutral-50 relative z-10 cursor-default whitespace-pre-wrap text-xs sm:text-sm lg:text-lg"
             }
           />
           {linkPreviews.length > 0 ? (
@@ -258,26 +269,35 @@ const MessageBubbleComponent: React.FC<MessageBubbleProps> = ({
             </div>
           ) : null}
           <div
-            className={`flex items-center justify-between text-xs ${statusColor} relative z-10 text-status-item`}
+            className={`flex gap-2 items-center justify-between text-xs sm:text-sm lg:text-lg ${statusColor} relative z-10 text-status-item`}
           >
-            <span className="cursor-default mr-1">{formattedTime}</span>
-            <span className="flex items-center gap-2">
-              {statusIcon ? (
-                <FontAwesomeIcon icon={statusIcon} size="sm" />
-              ) : null}
+            <span className="cursor-default text-xs sm:text-sm lg:text-lg">
+              {formattedTime}
+            </span>
+            <span
+              aria-label={statusText}
+              className="flex items-center gap-2"
+            >
+              {statusIcon ? <FontAwesomeIcon aria-hidden="true" icon={statusIcon} /> : null}
+              <span className="sr-only">{statusText}</span>
               {showRetry ? (
                 <button
                   type="button"
                   onClick={() => onRetry?.(message.clientMessageId)}
-                  className="px-2 py-1 rounded bg-red-500/20 text-red-100 hover:bg-red-500/30 transition"
+                  aria-label="Retry sending message"
+                  className="px-2 py-1 rounded bg-red-500/20 text-red-100 hover:bg-red-500/30 transition text-xs sm:text-sm"
                 >
-                  <FontAwesomeIcon icon={faRotateRight} size="sm" />
+                  <FontAwesomeIcon aria-hidden="true" icon={faRotateRight} className="text-lg sm:text-sm"/>
                 </button>
               ) : null}
             </span>
           </div>
           {message.error ? (
-            <div className="text-xs text-red-400/90 relative z-10">
+            <div
+              role="alert"
+              aria-live="assertive"
+              className="text-xs sm:text-sm lg:text-2xl text-red-400/90 relative z-10"
+            >
               {message.error}
             </div>
           ) : null}

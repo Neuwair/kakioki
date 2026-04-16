@@ -32,17 +32,20 @@ export const AvatarForm: React.FC<AvatarFormProps> = ({
   return (
     <>
       {!showUploadModal && (
-        <div className="flex flex-col gap-4 max-w-md w-full bg-white/5 backdrop-blur-lg border border-white/20 rounded-4xl shadow-lg p-8">
+        <div
+          role="region"
+          aria-labelledby="avatar-form-title"
+          className="max-w-md w-full flex flex-col gap-4 bg-white/5 backdrop-blur-lg border border-white/20 rounded-lg shadow-lg p-8"
+        >
           <div className="flex flex-col gap-2 text-center">
             <h2
-              className="font-bold text-neutral-50"
-              style={{ fontSize: "clamp(2vh, 1vw, 10rem)" }}
+              id="avatar-form-title"
+              className="font-bold text-neutral-50 text-sm sm:text-2xl lg:text-4xl"
             >
               Welcome to Kakioki!
             </h2>
             <p
-              className="text-neutral-50"
-              style={{ fontSize: "clamp(2vh, 1vw, 10rem)" }}
+              className="text-neutral-50 text-xs sm:text-sm lg:text-2xl"
             >
               Would you like to upload an avatar?
             </p>
@@ -50,14 +53,18 @@ export const AvatarForm: React.FC<AvatarFormProps> = ({
 
           <div className="flex flex-col gap-2">
             <button
+              type="button"
               onClick={handleUploadClick}
-              className="w-full bg-lime-700 hover:bg-lime-800 text-neutral-50 py-3 px-4 rounded-lg transition-colors duration-200 border-none cursor-pointer text-responsive save-btn text-2xl"
+              aria-label="Upload avatar"
+              className="w-full bg-lime-700 hover:bg-lime-800 text-neutral-50 py-3 px-4 rounded-lg transition-colors duration-200 border-none cursor-pointer text-responsive save-btn text-xs sm:text-sm"
             >
               Upload Avatar
             </button>
             <button
+              type="button"
               onClick={onSkip}
-              className="w-full bg-gray-300 hover:bg-gray-200 text-gray-800 hover:text-gray-900 py-3 px-4 rounded-lg transition-colors duration-233 border-none cursor-pointer text-responsive interface-btn text-2xl"
+              aria-label="Skip avatar upload"
+              className="w-full bg-gray-300 hover:bg-gray-200 text-gray-800 hover:text-gray-900 py-3 px-4 rounded-lg transition-colors duration-233 border-none cursor-pointer text-responsive interface-btn text-xs sm:text-sm"
             >
               Skip
             </button>

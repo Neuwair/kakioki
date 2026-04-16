@@ -415,10 +415,15 @@ export const InlineVideoPlayer: React.FC<InlineVideoPlayerProps> = ({
   }, [className, isFullscreen]);
 
   const shouldForceCompact = Boolean(forceCompactControls) && !isFullscreen;
+  const videoLabel = poster
+    ? "Inline video player with poster image"
+    : "Inline video player";
 
   return (
     <div
       ref={containerRef}
+      role="group"
+      aria-label={videoLabel}
       tabIndex={0}
       autoFocus
       className={containerClasses}
@@ -433,6 +438,7 @@ export const InlineVideoPlayer: React.FC<InlineVideoPlayerProps> = ({
           poster={poster}
           loop={loop}
           playsInline
+          aria-label={videoLabel}
           className="h-full w-full object-contain"
           controls={false}
           onClick={() => {
@@ -453,9 +459,9 @@ export const InlineVideoPlayer: React.FC<InlineVideoPlayerProps> = ({
                   handleTogglePlay();
                 }}
                 aria-label={isPlaying ? "Pause" : "Play"}
-                className="flex size-10 shrink-0 items-center justify-center rounded-full bg-white/20 transition hover:bg-white/30"
+                className="flex size-10 shrink-0 items-center justify-center rounded-full bg-white/20 transition hover:bg-white/30 text-xs sm:text-sm"
               >
-                <FontAwesomeIcon icon={isPlaying ? faPause : faPlay} />
+                <FontAwesomeIcon aria-hidden="true" icon={isPlaying ? faPause : faPlay} />
               </button>
               <button
                 type="button"
@@ -466,9 +472,9 @@ export const InlineVideoPlayer: React.FC<InlineVideoPlayerProps> = ({
                 aria-label={
                   isFullscreen ? "Exit fullscreen" : "Enter fullscreen"
                 }
-                className="flex size-10 shrink-0 items-center justify-center rounded-full bg-white/20 transition hover:bg-white/30"
+                className="flex size-10 shrink-0 items-center justify-center rounded-full bg-white/20 transition hover:bg-white/30 text-xs sm:text-sm"
               >
-                <FontAwesomeIcon icon={isFullscreen ? faCompress : faExpand} />
+                <FontAwesomeIcon aria-hidden="true" icon={isFullscreen ? faCompress : faExpand} />
               </button>
             </div>
           ) : (
@@ -481,9 +487,9 @@ export const InlineVideoPlayer: React.FC<InlineVideoPlayerProps> = ({
                     handleTogglePlay();
                   }}
                   aria-label={isPlaying ? "Pause" : "Play"}
-                  className="flex size-8 shrink-0 items-center justify-center rounded-full bg-white/20 transition hover:bg-white/30"
+                  className="flex size-8 shrink-0 items-center justify-center rounded-full bg-white/20 transition hover:bg-white/30 text-xs sm:text-sm"
                 >
-                  <FontAwesomeIcon icon={isPlaying ? faPause : faPlay} />
+                  <FontAwesomeIcon aria-hidden="true" icon={isPlaying ? faPause : faPlay} />
                 </button>
                 <button
                   type="button"
@@ -494,9 +500,10 @@ export const InlineVideoPlayer: React.FC<InlineVideoPlayerProps> = ({
                   aria-label={
                     isFullscreen ? "Exit fullscreen" : "Enter fullscreen"
                   }
-                  className="flex size-8 shrink-0 items-center justify-center rounded-full bg-white/10 transition hover:bg-white/20"
+                  className="flex size-8 shrink-0 items-center justify-center rounded-full bg-white/20 transition hover:bg-white/30 text-xs sm:text-sm"
                 >
                   <FontAwesomeIcon
+                    aria-hidden="true"
                     icon={isFullscreen ? faCompress : faExpand}
                   />
                 </button>
@@ -509,9 +516,9 @@ export const InlineVideoPlayer: React.FC<InlineVideoPlayerProps> = ({
                     handleTogglePlay();
                   }}
                   aria-label={isPlaying ? "Pause" : "Play"}
-                  className="flex size-8 shrink-0 items-center justify-center rounded-full bg-white/20 transition hover:bg-white/30"
+                  className="flex size-8 shrink-0 items-center justify-center rounded-full bg-white/20 transition hover:bg-white/30 text-xs sm:text-sm"
                 >
-                  <FontAwesomeIcon icon={isPlaying ? faPause : faPlay} />
+                  <FontAwesomeIcon aria-hidden="true" icon={isPlaying ? faPause : faPlay} />
                 </button>
                 <button
                   type="button"
@@ -520,9 +527,9 @@ export const InlineVideoPlayer: React.FC<InlineVideoPlayerProps> = ({
                     focusPlayer();
                   }}
                   aria-label="Rewind 10 seconds"
-                  className="flex size-8 shrink-0 items-center justify-center rounded-full bg-white/20 transition hover:bg-white/30"
+                  className="flex size-8 shrink-0 items-center justify-center rounded-full bg-white/20 transition hover:bg-white/30 text-xs sm:text-sm"
                 >
-                  <FontAwesomeIcon icon={faRotateLeft} />
+                  <FontAwesomeIcon aria-hidden="true" icon={faRotateLeft} />
                 </button>
                 <button
                   type="button"
@@ -531,9 +538,10 @@ export const InlineVideoPlayer: React.FC<InlineVideoPlayerProps> = ({
                     focusPlayer();
                   }}
                   aria-label={isMuted || volumeValue === 0 ? "Unmute" : "Mute"}
-                  className="flex size-8 shrink-0 items-center justify-center rounded-full bg-white/20 transition hover:bg-white/30"
+                  className="flex size-8 shrink-0 items-center justify-center rounded-full bg-white/20 transition hover:bg-white/30 text-xs sm:text-sm"
                 >
                   <FontAwesomeIcon
+                    aria-hidden="true"
                     icon={
                       isMuted || volumeValue === 0
                         ? faVolumeXmark
@@ -549,6 +557,7 @@ export const InlineVideoPlayer: React.FC<InlineVideoPlayerProps> = ({
                     value={volumeValue}
                     onChange={handleVolumeChange}
                     aria-label="Volume"
+                    aria-valuetext={`${volumeValue} percent`}
                     className="h-1 w-full max-w-50 cursor-pointer appearance-none rounded-full bg-white/20 p-1"
                   />
                   <span className="whitespace-nowrap text-[0.65rem] font-medium text-neutral-50 sm:text-xs">
@@ -564,9 +573,10 @@ export const InlineVideoPlayer: React.FC<InlineVideoPlayerProps> = ({
                   aria-label={
                     isFullscreen ? "Exit fullscreen" : "Enter fullscreen"
                   }
-                  className="flex size-8 shrink-0 items-center justify-center rounded-full bg-white/20 transition hover:bg-white/30"
+                  className="flex size-8 shrink-0 items-center justify-center rounded-full bg-white/20 transition hover:bg-white/30 text-xs sm:text-sm"
                 >
                   <FontAwesomeIcon
+                    aria-hidden="true"
                     icon={isFullscreen ? faCompress : faExpand}
                   />
                 </button>
@@ -584,6 +594,7 @@ export const InlineVideoPlayer: React.FC<InlineVideoPlayerProps> = ({
               onPointerDown={handleProgressPointerDown}
               onPointerUp={handleProgressPointerUp}
               aria-label="Seek"
+              aria-valuetext={timeLabel}
               className="pointer-events-auto h-1 w-50 cursor-pointer appearance-none rounded-full bg-transparent backdrop-blur-xs max-[480px]:hidden p-1"
             />
           ) : null}

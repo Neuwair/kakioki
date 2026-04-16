@@ -76,11 +76,13 @@ export const ThemeToggle: React.FC = () => {
   return (
     <button
       type="button"
-      className="p-2 rounded-lg hover:bg-neutral-700/50 text-neutral-50 border border-white/20 bg-white/5 flex items-center justify-center cursor-pointer interface-btn"
+      className="w-10 h-10 p-2 rounded-lg hover:bg-neutral-700/50 text-neutral-50 border border-white/20 bg-white/5 flex items-center justify-center cursor-pointer interface-btn"
       onClick={toggle}
       aria-pressed={isDark}
+      aria-label={isDark ? "Switch to light theme" : "Switch to dark theme"}
+      title={isDark ? "Switch to light theme" : "Switch to dark theme"}
     >
-      <FontAwesomeIcon icon={isDark ? faMoon : faSun} size="lg" />
+      <FontAwesomeIcon aria-hidden="true" icon={isDark ? faMoon : faSun} />
     </button>
   );
 };

@@ -6,9 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint",
-    "db:migrate": "tsx Extra/migrate.ts",
-    "db:setup": "npm run db:migrate"
+    "lint": "eslint"
   },
   "dependencies": {
     "@emoji-mart/data": "^1.2.1",

@@ -126,6 +126,7 @@ export const YouTubePreview: React.FC<YouTubePreviewProps> = ({
   } = UseYouTubePreviewLogic(preview);
 
   const previewTitle = preview.title || "YouTube Video";
+  const openInNewTabLabel = `${previewTitle}, opens in a new tab`;
 
   if (showEmbed && preview.youtubeId) {
     return (
@@ -138,6 +139,8 @@ export const YouTubePreview: React.FC<YouTubePreviewProps> = ({
             ref={liteElementRef}
             className="block h-full w-full"
             videoid={preview.youtubeId}
+            playlabel={`Play ${previewTitle}`}
+            aria-label={previewTitle}
             data-title={previewTitle}
             params="modestbranding=1&rel=0"
             nocookie
@@ -148,8 +151,16 @@ export const YouTubePreview: React.FC<YouTubePreviewProps> = ({
             }
           />
           {isLoading && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-              <span className="w-8 h-8 rounded-full border-2 border-white border-t-transparent animate-spin" />
+            <div
+              role="status"
+              aria-live="polite"
+              className="absolute inset-0 flex items-center justify-center bg-black/50"
+            >
+              <span
+                aria-hidden="true"
+                className="w-8 h-8 rounded-full border-2 border-white border-t-transparent animate-spin"
+              />
+              <span className="sr-only">Loading video</span>
             </div>
           )}
         </div>
@@ -159,16 +170,21 @@ export const YouTubePreview: React.FC<YouTubePreviewProps> = ({
               <h4 className="text-sm font-medium text-neutral-50 truncate">
                 {preview.title || "YouTube Video"}
               </h4>
-              <p className="text-xs text-neutral-50 truncate">
+              <p className="text-xs sm:text-sm text-neutral-50 truncate">
                 {preview.domain}
               </p>
             </div>
             <button
+              type="button"
               onClick={handleOpenInNewTab}
-              className="ml-2 p-2 text-neutral-50/60 hover:text-neutral-50 transition-colors text-status-item"
+              aria-label={openInNewTabLabel}
+              className="ml-2 p-2 text-neutral-50/60 hover:text-neutral-50 transition-colors text-status-item text-xs sm:text-sm"
               title="Open in new tab"
             >
-              <FontAwesomeIcon icon={faExternalLinkAlt} size="sm" />
+              <FontAwesomeIcon
+                icon={faExternalLinkAlt}
+                className="text-lg sm:text-sm"
+              />
             </button>
           </div>
         </div>
@@ -178,9 +194,19 @@ export const YouTubePreview: React.FC<YouTubePreviewProps> = ({
 
   return (
     <div
+      role="button"
+      tabIndex={0}
+      aria-label={`Play ${previewTitle}`}
       className={`max-w-full rounded-lg overflow-hidden bg-black/20 backdrop-blur-sm border border-white/10 hover:border-white/20 transition-all cursor-pointer ${className}`}
+      onClick={handlePlayClick}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          handlePlayClick();
+        }
+      }}
     >
-      <div className="relative aspect-video group" onClick={handlePlayClick}>
+      <div className="relative aspect-video group">
         {preview.image && (
           <>
             <SafeImage
@@ -194,7 +220,7 @@ export const YouTubePreview: React.FC<YouTubePreviewProps> = ({
               <div className="bg-white/20 hover:bg-white/30 backdrop-blur-md rounded-full p-4 shadow-lg transition-all border border-white/20 hover:border-white/30 flex items-center justify-center">
                 <FontAwesomeIcon
                   icon={faPlay}
-                  className="text-neutral-50 text-xl drop-shadow-md"
+                  className="text-neutral-50 drop-shadow-md text-lg sm:text-sm"
                 />
               </div>
             </div>
@@ -205,7 +231,7 @@ export const YouTubePreview: React.FC<YouTubePreviewProps> = ({
       <div className="p-3">
         <div className="flex items-center justify-between">
           <div className="flex-1 min-w-0">
-            <h4 className="text-sm font-medium text-neutral-50 truncate mb-1 text-status-item">
+            <h4 className="text-xs sm:text-sm font-medium text-neutral-50 truncate mb-1 text-status-item">
               {preview.title || "YouTube Video"}
             </h4>
             {preview.description && (
@@ -218,14 +244,19 @@ export const YouTubePreview: React.FC<YouTubePreviewProps> = ({
             </p>
           </div>
           <button
+            type="button"
             onClick={(e) => {
               e.stopPropagation();
               handleOpenInNewTab();
             }}
-            className="ml-2 p-2 text-neutral-50/60 hover:text-neutral-50 transition-colors"
+            aria-label={openInNewTabLabel}
+            className="ml-2 p-2 text-neutral-50/60 hover:text-neutral-50 transition-colors text-xs sm:text-sm"
             title="Open in new tab"
           >
-            <FontAwesomeIcon icon={faExternalLinkAlt} size="sm" />
+            <FontAwesomeIcon
+              icon={faExternalLinkAlt}
+              className="text-lg sm:text-sm"
+            />
           </button>
         </div>
       </div>
@@ -248,6 +279,7 @@ const SpotifyPreview: React.FC<SpotifyPreviewProps> = ({
 }) => {
   const { handleClick } = UseWebsiteLinkPreviewLogic(preview);
   const embedUrl = getSpotifyEmbedUrl(preview.url);
+  const previewTitle = preview.title || "Spotify";
 
   if (!embedUrl) {
     return <WebsiteLinkPreview preview={preview} className={className} />;
@@ -268,20 +300,24 @@ const SpotifyPreview: React.FC<SpotifyPreviewProps> = ({
       </div>
       <div className="flex items-center justify-between px-3 pb-3">
         <div className="min-w-0 flex-1">
-          <h4 className="truncate text-sm font-medium text-neutral-50">
+          <h4 className="truncate text-xs sm:text-sm font-medium text-neutral-50">
             {preview.title || "Spotify"}
           </h4>
-          <p className="truncate text-xs text-neutral-50/60">
+          <p className="truncate text-xs sm:text-sm text-neutral-50/60">
             {preview.domain || "spotify.com"}
           </p>
         </div>
         <button
           type="button"
           onClick={handleClick}
-          className="ml-2 p-2 text-neutral-50/60 transition-colors hover:text-neutral-50"
+          aria-label={`Open ${previewTitle} in Spotify`}
+          className="ml-2 p-2 text-neutral-50/60 transition-colors hover:text-neutral-50 text-xs sm:text-sm"
           title="Open in Spotify"
         >
-          <FontAwesomeIcon icon={faExternalLinkAlt} size="sm" />
+          <FontAwesomeIcon
+            icon={faExternalLinkAlt}
+            className="text-lg sm:text-sm"
+          />
         </button>
       </div>
     </div>
@@ -293,11 +329,21 @@ export const WebsiteLinkPreview: React.FC<WebsiteLinkPreviewProps> = ({
   className = "",
 }) => {
   const { handleClick } = UseWebsiteLinkPreviewLogic(preview);
+  const previewTitle = preview.title || preview.url;
 
   return (
     <div
+      role="button"
+      tabIndex={0}
+      aria-label={`Open link preview for ${previewTitle}`}
       className={`max-w-full rounded-lg overflow-hidden bg-black/20 backdrop-blur-sm border border-white/10 hover:border-white/20 transition-all cursor-pointer ${className}`}
       onClick={handleClick}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          handleClick();
+        }
+      }}
     >
       {preview.image && (
         <div className="relative h-40 overflow-hidden">
@@ -322,26 +368,28 @@ export const WebsiteLinkPreview: React.FC<WebsiteLinkPreviewProps> = ({
             <div className="flex items-center gap-2 mb-1">
               <FontAwesomeIcon
                 icon={faGlobe}
-                className="text-neutral-50/60 text-xs shrink-0"
+                className="text-neutral-50/60 text-lg sm:text-sm shrink-0"
               />
-              <span className="text-xs text-neutral-50/60 truncate">
+              <span className="text-xs sm:text-sm text-neutral-50/60 truncate">
                 {preview.domain}
               </span>
             </div>
             <h4 className="text-sm font-medium text-neutral-50 truncate mb-1">
-              {preview.title || preview.url}
+              {previewTitle}
             </h4>
             {preview.description && (
-              <p className="text-xs text-neutral-50/70 line-clamp-2 mb-2">
+              <p className="text-xs sm:text-sm text-neutral-50/70 line-clamp-2 mb-2">
                 {preview.description}
               </p>
             )}
-            <p className="text-xs text-neutral-50/50 truncate">{preview.url}</p>
+            <p className="text-xs sm:text-sm text-neutral-50/50 truncate">
+              {preview.url}
+            </p>
           </div>
           <div className="ml-2 shrink-0">
             <FontAwesomeIcon
               icon={faExternalLinkAlt}
-              className="text-neutral-50/60 hover:text-neutral-50 transition-colors text-sm"
+              className="text-neutral-50/60 hover:text-neutral-50 transition-colors text-lg sm:text-sm"
             />
           </div>
         </div>
@@ -376,10 +424,11 @@ const InputLinkPreviewCard: React.FC<InputLinkPreviewCardProps> = ({
           <button
             type="button"
             onClick={() => onDismissPreview(preview.url)}
-            className="flex justify-center items-center rounded-lg hover:bg-neutral-700/50 text-neutral-50 p-4 cancel-btn"
+            aria-label={`Remove preview for ${preview.title || preview.url}`}
+            className="flex justify-center items-center rounded-lg hover:bg-neutral-700/50 text-neutral-50 p-4 cancel-btn text-xs sm:text-sm"
             title="Remove preview"
           >
-            <FontAwesomeIcon icon={faTimes} className="text-xl" />
+            <FontAwesomeIcon icon={faTimes} className="text-lg sm:text-sm" />
           </button>
         </div>
       </div>
@@ -391,11 +440,12 @@ const InputLinkPreviewCard: React.FC<InputLinkPreviewCardProps> = ({
   const previewDomain = preview.domain || "Link preview";
 
   return (
-    <div className="flex flex-row justify-start overflow-hidden p-4 gap-4 bg-white/5">
+    <div className="flex flex-row flex-wrap justify-start overflow-hidden p-4 gap-4 bg-white/5">
       <button
         type="button"
         onClick={handleClick}
-        className="flex flex-row text-left justify-center items-center align-middle rounded-lg gap-4"
+        aria-label={`Open preview for ${previewTitle}`}
+        className="flex flex-row text-left justify-center items-center align-middle rounded-lg gap-4 text-xs sm:text-sm"
         title="Open preview"
       >
         <div className="relative flex w-35 h-35 rounded-lg bg-white/50">
@@ -411,28 +461,30 @@ const InputLinkPreviewCard: React.FC<InputLinkPreviewCardProps> = ({
             <div className="flex h-full w-full items-center justify-center bg-white/5 text-neutral-50/50">
               <FontAwesomeIcon
                 icon={preview.type === "youtube" ? faPlay : faGlobe}
-                size="lg"
+                className="text-lg sm:text-sm"
               />
             </div>
           )}
         </div>
         <div className="flex flex-col flex-1 gap-2 p-4 rounded-lg bg-white/5 h-full justify-center align-middle">
-          <h4 className="line-clamp-2 text-lg font-semibold leading-tight text-neutral-50">
+          <h4 className="line-clamp-2 text-xs sm:text-sm font-semibold leading-tight text-neutral-50">
             {previewTitle}
           </h4>
-          <p className="line-clamp-2 text-lg font-semibold leading-none text-neutral-50/50">
+          <p className="line-clamp-2 text-xs sm:text-sm font-semibold leading-none text-neutral-50/50">
             {previewDomain}
           </p>
         </div>
       </button>
-      <div className="flex items-start lg:items-center">
+
+      <div className="flex items-start w-full sm:w-auto justify-end sm:ml-auto">
         <button
           type="button"
           onClick={() => onDismissPreview(preview.url)}
-          className="flex justify-center items-center rounded-lg hover:bg-neutral-700/50 text-neutral-50 p-4 cancel-btn"
+          aria-label={`Remove preview for ${previewTitle}`}
+          className="w-10 h-10 flex justify-center items-center rounded-lg hover:bg-neutral-700/50 text-neutral-50 p-4 cancel-btn text-xs sm:text-sm"
           title="Remove preview"
         >
-          <FontAwesomeIcon icon={faTimes} className="text-xl" />
+          <FontAwesomeIcon icon={faTimes} className="text-lg sm:text-sm" />
         </button>
       </div>
     </div>
@@ -456,14 +508,25 @@ export const InputLinkPreviewArea: React.FC<InputLinkPreviewAreaProps> = ({
     <div className={`flex flex-col ${className}`}>
       <div className="flex flex-col gap-3">
         {isLoading && (
-          <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-neutral-50/70">
-            <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+          <div
+            role="status"
+            aria-live="polite"
+            className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-neutral-50/70"
+          >
+            <span
+              aria-hidden="true"
+              className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"
+            />
             <span>Loading link preview...</span>
           </div>
         )}
 
         {error && !isLoading && (
-          <div className="rounded-2xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+          <div
+            role="alert"
+            aria-live="assertive"
+            className="rounded-2xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-sm text-red-300"
+          >
             {error}
           </div>
         )}

@@ -1,21 +1,27 @@
+.chat-background {
+  background: rgba(53, 53, 53, 0.6);
+}
+
 .chat-container {
+  max-height: 100vh;
   height: 100vh;
-  width: 100vw;
+  width: 100%;
   display: flex;
   flex-direction: column;
-  max-height: 100vh;
+  box-sizing: border-box;
 }
 
 .chat-input-area {
   position: sticky;
-  bottom: 0;
-  background: rgba(255, 255, 255, 0.1);
+  margin-top: auto;
   backdrop-filter: blur(16px);
   border-top: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.1);
   z-index: 10;
-  margin-top: auto;
+  bottom: 0;
 }
 
-.chat-background {
-    background: rgba(53, 53, 53, 0.6);
+.accessibility-setting:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgb(245 245 245 / 1);
 }

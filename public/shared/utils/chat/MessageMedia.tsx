@@ -17,14 +17,23 @@ export const SafeImage: React.FC<SafeImageProps> = ({
   ...props
 }) => {
   const [hasError, setHasError] = useState(false);
+  const shouldBypassOptimization =
+    typeof props.src === "string" &&
+    (props.src.startsWith("data:") ||
+      props.src.startsWith("blob:") ||
+      props.src.startsWith("/api/media/asset/"));
 
   if (hasError && fallbackIcon) {
     return (
-      <div className="w-full h-full flex items-center justify-center">
+      <div
+        role="img"
+        aria-label={alt || "Image unavailable"}
+        className="w-full h-full flex items-center justify-center"
+      >
         <FontAwesomeIcon
           icon={faUser}
-          size="lg"
-          className="text-neutral-50/70"
+          aria-hidden="true"
+          className="text-neutral-50/70 text-lg sm:text-sm"
         />
       </div>
     );
@@ -33,12 +42,14 @@ export const SafeImage: React.FC<SafeImageProps> = ({
   if (hasError) {
     return (
       <div className="w-full h-full flex items-center justify-center bg-gray-200 rounded">
-        <span className="text-xs text-gray-500">Image unavailable</span>
+        <span className="text-xs sm:text-sm lg:text-2xl text-gray-500">
+          Image unavailable
+        </span>
       </div>
     );
   }
 
-  if (typeof props.src === "string" && props.src.startsWith("data:")) {
+  if (shouldBypassOptimization) {
     return (
       <Image
         {...props}
@@ -122,12 +133,14 @@ export const MediaPreviewGrid: React.FC<MediaPreviewGridProps> = ({
                     sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 25vw"
                   />
                   <button
+                    type="button"
                     onClick={() => onRemovePreview(index)}
-                    className="absolute top-1 left-1 z-20 p-1 bg-black/70 hover:bg-red-500/90 rounded-lg transition-all duration-200 hover:scale-100 cursor-pointer opacity-80 group-hover:opacity-100 btnRemoveMedia"
+                    aria-label={`Remove image preview ${index + 1}`}
+                    className="w-10 h-10 absolute top-1 right-1 z-20 p-1 bg-black/70 hover:bg-red-500/90 rounded-lg transition-all duration-200 hover:scale-100 cursor-pointer opacity-80 group-hover:opacity-100 btnRemoveMedia text-xs sm:text-sm"
                   >
                     <FontAwesomeIcon
                       icon={faTimes}
-                      className="text-neutral-50 w-3 h-3"
+                      className="text-neutral-50 text-lg sm:text-sm"
                     />
                   </button>
                 </>
@@ -135,18 +148,21 @@ export const MediaPreviewGrid: React.FC<MediaPreviewGridProps> = ({
                 <>
                   <video
                     src={preview.previewUrl}
+                    aria-label={`Video preview ${index + 1}`}
                     className="absolute inset-0 h-full w-full object-cover"
                     muted
                     loop
                     autoPlay
                   />
                   <button
+                    type="button"
                     onClick={() => onRemovePreview(index)}
-                    className="absolute top-1 left-1 z-20 p-1 bg-black/70 hover:bg-red-500/90 rounded-full transition-all duration-200 hover:scale-100 cursor-pointer opacity-80 group-hover:opacity-100 btnRemoveMedia"
+                    aria-label={`Remove video preview ${index + 1}`}
+                    className="absolute top-1 left-1 z-20 p-1 bg-black/70 hover:bg-red-500/90 rounded-full transition-all duration-200 hover:scale-100 cursor-pointer opacity-80 group-hover:opacity-100 btnRemoveMedia text-xs sm:text-sm"
                   >
                     <FontAwesomeIcon
                       icon={faTimes}
-                      className="text-neutral-50 w-3 h-3"
+                      className="text-neutral-50 text-lg sm:text-sm"
                     />
                   </button>
                 </>
@@ -255,6 +271,10 @@ export const ImageModal: React.FC<ImageModalProps> = ({
 
     previousFocusRef.current = document.activeElement as HTMLElement | null;
 
+    // Prevent background scrolling while modal is open
+    const previousBodyOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
     const focusableSelectors =
       'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
 
@@ -324,6 +344,7 @@ export const ImageModal: React.FC<ImageModalProps> = ({
 
     return () => {
       window.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = previousBodyOverflow;
       if (previousFocusRef.current) {
         previousFocusRef.current.focus();
       }
@@ -339,7 +360,7 @@ export const ImageModal: React.FC<ImageModalProps> = ({
       role="dialog"
       aria-modal="true"
       aria-label="Image preview"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-lg"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-lg "
     >
       <div
         ref={modalRef}
@@ -347,10 +368,10 @@ export const ImageModal: React.FC<ImageModalProps> = ({
       >
         <div className="w-full flex justify-end mb-5">
           <button
-            role="button"
+            type="button"
             aria-label="Close image preview"
             onClick={onClose}
-            className="p-5 bg-black/70  hover:bg-red-500/90 rounded-lg transition-all duration-200 hover:scale-110 cursor-pointer btnRemoveMedia"
+            className="p-5 bg-black/70  hover:bg-red-500/90 rounded-lg transition-all duration-200 hover:scale-110 cursor-pointer btnRemoveMedia text-xs sm:text-sm"
           >
             <FontAwesomeIcon
               icon={faTimes}
@@ -363,13 +384,14 @@ export const ImageModal: React.FC<ImageModalProps> = ({
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
         >
-          <Image
+          <SafeImage
             src={imageUrl}
             alt="Full size"
             fill
             className="object-contain "
             sizes="(max-width: 768px) 90vw, (max-width: 1200px) 80vw, 70vw"
-            priority
+            preload
+            fallbackIcon={false}
           />
         </div>
       </div>
