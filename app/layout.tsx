@@ -7,7 +7,7 @@ import { ThemeInitializer } from "@/public/shared/utils/theme/ThemeToggle";
 
 export const metadata: Metadata = {
   title: "Kakioki - Simple Messaging",
-  description: "A lightweight MSN messenger-style messaging app",
+  description: "A lightweight end-to-end encrypted messaging app",
 };
 
 export default function RootLayout({
@@ -17,7 +17,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning data-scroll-behavior="smooth">
-      <body className="antialiased text-gray-900">
+      <body className="antialiased">
         <ThemeInitializer />
         <AuthProvider>{children}</AuthProvider>
         <Analytics />

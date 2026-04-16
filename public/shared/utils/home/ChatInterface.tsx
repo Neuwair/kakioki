@@ -478,8 +478,11 @@ export const ChatInterface: React.FC = () => {
                 type="button"
                 onClick={handleToggleBlock}
                 disabled={isUpdatingBlock}
+                aria-label={
+                  blockState.blockedBySelf ? "Unblock user" : "Block user"
+                }
                 title={blockState.blockedBySelf ? "Unblock user" : "Block user"}
-                className={`p-2 rounded-lg flex items-center justify-center cursor-pointer block-btn transition-colors ${
+                className={`w-10 h-10 p-2 rounded-lg flex items-center justify-center cursor-pointer block-btn transition-colors ${
                   isUpdatingBlock ? "opacity-60 cursor-not-allowed" : ""
                 } ${
                   blockState.blockedBySelf
@@ -488,11 +491,22 @@ export const ChatInterface: React.FC = () => {
                 }`}
               >
                 {isUpdatingBlock ? (
-                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span
+                    aria-hidden="true"
+                    className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"
+                  />
                 ) : blockState.blockedBySelf ? (
-                  <FontAwesomeIcon icon={faUserSlash} size="lg" />
+                  <FontAwesomeIcon
+                    aria-hidden="true"
+                    icon={faUserSlash}
+                    className="text-lg sm:text-sm"
+                  />
                 ) : (
-                  <FontAwesomeIcon icon={faBan} size="lg" />
+                  <FontAwesomeIcon
+                    aria-hidden="true"
+                    icon={faBan}
+                    className="text-lg sm:text-sm"
+                  />
                 )}
               </button>
 
@@ -500,39 +514,58 @@ export const ChatInterface: React.FC = () => {
                 type="button"
                 onClick={handleRemoveFriend}
                 disabled={isRemovingFriend}
+                aria-label="Remove friend"
                 title="Remove friend"
-                className={`p-2 rounded-lg flex items-center justify-center cursor-pointer remove-friend-btn transition-colors bg-white/5 text-neutral-50 hover:bg-red-800 ${
+                className={`w-10 h-10 p-2 rounded-lg flex items-center justify-center cursor-pointer remove-friend-btn transition-colors bg-white/5 text-neutral-50 hover:bg-red-800 ${
                   isRemovingFriend ? "opacity-60 cursor-not-allowed" : ""
                 }`}
               >
                 {isRemovingFriend ? (
-                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span
+                    aria-hidden="true"
+                    className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"
+                  />
                 ) : (
-                  <FontAwesomeIcon icon={faUserMinus} size="lg" />
+                  <FontAwesomeIcon
+                    aria-hidden="true"
+                    icon={faUserMinus}
+                    className="text-lg sm:text-sm"
+                  />
                 )}
               </button>
               <button
                 type="button"
                 onClick={handleNukeMessages}
                 disabled={isNukingMessages}
+                aria-label="Delete all conversation messages"
                 title="Nuke Messages"
-                className={`p-2 rounded-lg flex items-center justify-center cursor-pointer nuke-btn transition-colors bg-white/5 text-neutral-50 hover:bg-amber-800 ${
+                className={`w-10 h-10 p-2 rounded-lg flex items-center justify-center cursor-pointer nuke-btn transition-colors bg-white/5 text-neutral-50 hover:bg-amber-800 ${
                   isNukingMessages ? "opacity-60 cursor-not-allowed" : ""
                 }`}
               >
                 {isNukingMessages ? (
-                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span
+                    aria-hidden="true"
+                    className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"
+                  />
                 ) : (
-                  <FontAwesomeIcon icon={faRadiation} size="lg" />
+                  <FontAwesomeIcon
+                    aria-hidden="true"
+                    icon={faRadiation}
+                    className="text-lg sm:text-sm"
+                  />
                 )}
               </button>
               <button
                 type="button"
                 onClick={() => setIsUserPreviewVisible((previous) => !previous)}
+                aria-label={
+                  isUserPreviewVisible ? "Hide user preview" : "Show user preview"
+                }
                 title="Toggle input bounce"
-                className="p-2 rounded-lg flex items-center justify-center cursor-pointer view-btn transition-colors bg-white/5 text-neutral-50 hover:bg-lime-800"
+                className="w-10 h-10 p-2 rounded-lg flex items-center justify-center cursor-pointer view-btn transition-colors bg-white/5 text-neutral-50 hover:bg-lime-800"
               >
-                <FontAwesomeIcon icon={faEye} size="lg" />
+                <FontAwesomeIcon aria-hidden="true" icon={faEye} className="text-lg sm:text-sm" />
               </button>
             </>
           ) : null;
@@ -560,11 +593,17 @@ export const ChatInterface: React.FC = () => {
 
         {isNukeDialogOpen ? (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90">
-            <div className="flex flex-col flex-wrap bg-white/5 backdrop-blur-lg rounded-lg p-6 w-[90%] max-w-md border border-white/20 shadow-xl">
-              <h2 className="text-xl text-center font-bold mb-5 text-neutral-50">
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="nuke-dialog-title"
+              aria-describedby="nuke-dialog-description"
+              className="flex flex-col flex-wrap bg-white/5 backdrop-blur-lg rounded-lg p-6 w-[90%] max-w-md border border-white/20 shadow-xl"
+            >
+              <h2 id="nuke-dialog-title" className="text-sm sm:text-2xl lg:text-4xl text-center font-bold mb-5 text-neutral-50">
                 Confirm nuke messages
               </h2>
-              <p className="text-sm text-neutral-50 mb-5 font-light">
+              <p id="nuke-dialog-description" className="text-xs sm:text-sm lg:text-2xl text-neutral-50 mb-5 font-light">
                 This will permanently delete the entire conversation history for
                 both users. This cannot be undone.
               </p>
@@ -572,14 +611,14 @@ export const ChatInterface: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsNukeDialogOpen(false)}
-                  className="px-4 py-2 rounded-lg no-theme bg-transparent hover:bg-amber-50/10 text-neutral-50 cancel-btn cursor-pointer"
+                  className="px-4 py-2 rounded-lg no-theme bg-transparent hover:bg-amber-50/10 text-neutral-50 cancel-btn cursor-pointer text-xs sm:text-sm"
                 >
                   Cancel
                 </button>
                 <button
                   type="button"
                   onClick={executeNukeMessages}
-                  className="px-4 py-2 rounded-lg no-theme bg-amber-700/50 hover:bg-amber-800 text-neutral-50 nuke-btn cursor-pointer"
+                  className="px-4 py-2 rounded-lg no-theme bg-amber-700/50 hover:bg-amber-800 text-neutral-50 nuke-btn cursor-pointer text-xs sm:text-sm"
                 >
                   Nuke
                 </button>
@@ -587,18 +626,24 @@ export const ChatInterface: React.FC = () => {
             </div>
 
             <div className="flex flex-row flex-wrap gap-2.5 justify-center">
-              <button>Eye</button>
+              <button className="text-xs sm:text-sm">Eye</button>
             </div>
           </div>
         ) : null}
 
         {blockBanner ? (
-          <div className="px-4 py-2 bg-red-500/20 text-red-100 text-center text-sm animate-alert-bounce-in">
+          <div
+            role="status"
+            aria-live="polite"
+            className="px-4 py-2 bg-red-500/20 text-red-100 text-center text-sm animate-alert-bounce-in"
+          >
             {blockBanner}
           </div>
         ) : null}
         {chatAlert ? (
           <div
+            role="alert"
+            aria-live="assertive"
             className={
               "px-4 py-2 bg-red-500/10 text-red-200 text-center text-sm " +
               (chatAlertAnimation === "bounce-in"
@@ -614,20 +659,33 @@ export const ChatInterface: React.FC = () => {
 
         <div
           ref={messagesContainerRef}
+          role={selectedFriend ? "log" : undefined}
+          aria-live={selectedFriend ? "polite" : undefined}
+          aria-relevant={selectedFriend ? "additions text" : undefined}
+          aria-label={
+            selectedFriend
+              ? `Messages with ${selectedFriend.user.username}`
+              : "Chat area"
+          }
           className={`chat-messages relative flex-1 p-4 space-y-4 overflow-y-auto scrollbar-hide bg-transparent ${
             !selectedFriend ? "flex items-center justify-center" : ""
           }`}
         >
           {!selectedFriend ? (
             <div className="text-neutral-50/70 text-center cursor-default flex flex-col flex-wrap gap-2">
-              <div className="text-lg">Created by Neuwair</div>
-              <div className="text-lg">Illustrator and Programmer</div>
-              <div className="flex flex-row items-center justify-center gap-4 text-lg">
+              <div className="text-xs sm:text-sm lg:text-2xl">
+                Created by Neuwair
+              </div>
+              <div className="text-xs sm:text-sm lg:text-2xl">
+                Illustrator and Programmer
+              </div>
+              <div className="flex flex-row items-center justify-center gap-4 text-xs sm:text-sm lg:text-2xl">
                 <a
                   href="https://x.com/neuwair"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-indigo-300 hover:underline bouncy-hover"
+                  aria-label="Twitter, opens in a new tab"
+                  className="text-lime-300 hover:underline bouncy-hover"
                 >
                   Twitter
                 </a>
@@ -635,7 +693,8 @@ export const ChatInterface: React.FC = () => {
                   href="https://www.pixiv.net/en/users/102019144"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-indigo-300 hover:underline bouncy-hover"
+                  aria-label="Pixiv, opens in a new tab"
+                  className="text-lime-300 hover:underline bouncy-hover"
                 >
                   Pixiv
                 </a>
@@ -643,7 +702,8 @@ export const ChatInterface: React.FC = () => {
                   href="https://www.youtube.com/@Neuwair"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-indigo-300 hover:underline bouncy-hover"
+                  aria-label="YouTube, opens in a new tab"
+                  className="text-lime-300 hover:underline bouncy-hover"
                 >
                   YouTube
                 </a>
@@ -651,14 +711,15 @@ export const ChatInterface: React.FC = () => {
                   href="https://github.com/Neuwair"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-indigo-300 hover:underline bouncy-hover"
+                  aria-label="GitHub, opens in a new tab"
+                  className="text-lime-300 hover:underline bouncy-hover"
                 >
                   GitHub
                 </a>
               </div>
               <div className="">
                 <p></p>
-                <div className=" wrap-break-word max-w-lg text-lg">
+                <div className="text-center max-w-lg wrap-break-word text-xs sm:text-sm lg:text-2xl">
                   {" "}
                   This project is intended solely as a demonstration of my
                   programming skills. To properly test the messaging system, you
@@ -669,11 +730,12 @@ export const ChatInterface: React.FC = () => {
               </div>
             </div>
           ) : isLoading && messages.length === 0 ? (
-            <div className=" text-neutral-50/70 text-center">
-              <span className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin inline-block" />
+            <div role="status" aria-live="polite" className=" text-neutral-50/70 text-center">
+              <span aria-hidden="true" className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin inline-block" />
+              <span className="sr-only">Loading messages</span>
             </div>
           ) : messages.length === 0 ? (
-            <div className="text-neutral-50/70 text-center">
+            <div className="text-neutral-50/70 text-center text-xs sm:text-sm lg:text-2xl">
               No messages yet
             </div>
           ) : (
@@ -692,7 +754,7 @@ export const ChatInterface: React.FC = () => {
               <button
                 type="button"
                 onClick={handleNewMessageBadgeClick}
-                className="relative isolate flex  justify-center p-4 animate-pulse bg-lime-700/50 hover:bg-lime-500/50 text-neutral-50 rounded-lg save-btn backdrop-blur-lg"
+                className="relative isolate flex  justify-center p-4 animate-pulse bg-lime-700/50 hover:bg-lime-500/50 text-neutral-50 rounded-lg save-btn backdrop-blur-lg text-xs sm:text-sm"
                 style={{
                   backdropFilter: "blur(1rem)",
                   WebkitBackdropFilter: "blur(1rem)",
@@ -704,7 +766,6 @@ export const ChatInterface: React.FC = () => {
             </div>
           ) : null}
         </div>
-
         <div
           className={
             "shrink-0 " + (showInputBounce ? "animate-input-push" : "")
@@ -714,6 +775,8 @@ export const ChatInterface: React.FC = () => {
             <div className="flex flex-col relative">
               {(showLimitMessage || isLimitMessageAnimatingOut) && (
                 <div
+                  role="alert"
+                  aria-live="assertive"
                   className={`flex flex-row justify-center align-middle text-center p-4 text-red-100 cursor-default ${isLimitMessageAnimatingOut ? "animate-input-push-down" : "animate-input-push"}`}
                 >
                   You can only attach up to 4 media files.
@@ -737,12 +800,12 @@ export const ChatInterface: React.FC = () => {
                 onDismissPreview={dismissLinkPreview}
               />
               {sendError ? (
-                <div className="mt-2 text-sm text-red-200/80 text-center">
+                <div role="alert" aria-live="assertive" className="mt-2 text-sm text-red-200/80 text-center">
                   {sendError}
                 </div>
               ) : null}
               {!canSend ? (
-                <div className="mt-2 text-sm text-red-200/80 bg-neutral-700/50 p-4 text-center animate-alert-bounce-in">
+                <div role="status" aria-live="polite" className="mt-2 text-sm text-red-200/80 bg-neutral-700/50 p-4 text-center animate-alert-bounce-in">
                   {blockState.blockedByFriend
                     ? "You cannot message this user right now"
                     : blockState.blockedBySelf

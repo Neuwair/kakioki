@@ -62,9 +62,9 @@ export default function UserSettings({ onBack }: { onBack?: () => void } = {}) {
   const statusContent = (() => {
     if (!presence.isReady) {
       return (
-        <div className="flex items-center gap-2 text-xs cursor-default text-neutral-100/80">
+        <div className="flex items-center gap-2 cursor-default text-neutral-100/80">
           <span className="relative flex h-2.5 w-2.5">
-            <span className="absolute inline-flex h-full w-full rounded-full bg-amber-600 "></span>
+            <span className="absolute inline-flex h-full w-full rounded-full bg-amber-600 text-xs sm:text-sm lg:text-lg "></span>
           </span>
           Checking status…
         </div>
@@ -93,7 +93,7 @@ export default function UserSettings({ onBack }: { onBack?: () => void } = {}) {
 
     return (
       <div
-        className={`flex items-center gap-2 text-sm cursor-default ${labelColor}`}
+        className={`flex items-center gap-2 cursor-default text-xs sm:text-sm lg:text-lg${labelColor}`}
       >
         <span className="relative flex h-2.5 w-2.5">
           <span
@@ -537,10 +537,12 @@ export default function UserSettings({ onBack }: { onBack?: () => void } = {}) {
         {onBack && (
           <div className="flex flex-row-reverse">
             <button
+              type="button"
               onClick={onBack}
-              className="p-4 rounded-lg hover:bg-neutral-700/50 text-neutral-50 border border-white/20 bg-white/5 flex items-center justify-center cursor-pointer interface-btn"
+              aria-label="Back to chat"
+              className="p-4 rounded-lg hover:bg-neutral-700/50 text-neutral-50 border border-white/20 bg-white/5 flex items-center justify-center cursor-pointer interface-btn text-xs sm:text-sm"
             >
-              ← Back to Chat
+              Back to Chat
             </button>
           </div>
         )}
@@ -551,10 +553,12 @@ export default function UserSettings({ onBack }: { onBack?: () => void } = {}) {
             <div className="flex flex-row gap-4 p-4 bg-white/5 rounded-tl-lg rounded-tr-lg">
               {" "}
               <div className="flex align-middle justify-center items-center">
-                <div
+                <button
+                  type="button"
                   className="w-20 h-20 rounded-full bg-white/5 border border-white/20 overflow-hidden flex items-center justify-center cursor-pointer"
                   onClick={openAvatarModal}
                   title="Change avatar"
+                  aria-label="Change avatar"
                 >
                   {user?.avatarUrl ? (
                     <div className="relative w-full h-full">
@@ -569,14 +573,14 @@ export default function UserSettings({ onBack }: { onBack?: () => void } = {}) {
                   ) : (
                     "Avatar"
                   )}
-                </div>
+                </button>
               </div>
               <div className="flex flex-col justify-center flex-1 min-w-0 ">
-                <div className="h-full text-sm flex items-center text-neutral-50 cursor-default">
+                <div className="h-full flex items-center text-neutral-50 cursor-default text-xs sm:text-lg lg:text-2xl">
                   {user?.username || "Your Username"}
                 </div>
                 {statusContent}
-                <div className="h-full text-sm flex items-center text-neutral-50/70">
+                <div className="h-full flex items-center text-neutral-50/70 text-xs sm:text-sm lg:text-lg">
                   {user?.userId ? `ID: ${user.userId}` : "Your ID"}
                 </div>
               </div>
@@ -600,7 +604,7 @@ export default function UserSettings({ onBack }: { onBack?: () => void } = {}) {
                         }}
                         onKeyDown={handleBioKeyDown}
                         maxLength={100}
-                        className="text-lg p-4 w-full h-24 bg-transparent text-neutral-50 focus:outline-none focus:ring focus:ring-lime-500 focus:rounded-bl-lg focus:rounded-br-lg resize-none"
+                        className="text-xs sm:text-sm lg:text-lg p-4 w-full h-24 bg-transparent text-neutral-50 focus:outline-none focus:ring focus:ring-lime-500 focus:rounded-bl-lg focus:rounded-br-lg resize-none"
                         placeholder="Enter your biography"
                       />
                       <div className="hidden md:flex p-2 w-full flex-row">
@@ -608,9 +612,10 @@ export default function UserSettings({ onBack }: { onBack?: () => void } = {}) {
                           ref={bioEmojiButtonRef}
                           type="button"
                           onClick={() => setIsEmojiPickerOpen((prev) => !prev)}
-                          className="rounded-lg p-2 hover:bg-neutral-700/50 text-neutral-50 flex items-center justify-center text-center transition-colors duration-200 interface-btn emoji-button"
+                          aria-label={isEmojiPickerOpen ? "Close emoji picker" : "Open emoji picker"}
+                          className="rounded-lg p-2 hover:bg-neutral-700/50 text-neutral-50 flex items-center justify-center text-center transition-colors duration-200 interface-btn emoji-button text-xs sm:text-sm"
                         >
-                          <FontAwesomeIcon icon={faFaceSmile} size="lg" />
+                          <FontAwesomeIcon aria-hidden="true" icon={faFaceSmile} size="lg" />
                         </button>
                       </div>
                     </div>
@@ -618,7 +623,7 @@ export default function UserSettings({ onBack }: { onBack?: () => void } = {}) {
                       <button
                         type="button"
                         onClick={cancelBioEdit}
-                        className="px-4 py-2 rounded-lg no-theme bg-white/5 border border-white/20 hover:bg-red-700 text-neutral-50 cancel-btn cursor-pointer"
+                        className="px-4 py-2 rounded-lg no-theme bg-white/5 border border-white/20 hover:bg-red-700 text-neutral-50 cancel-btn cursor-pointer text-xs sm:text-sm"
                       >
                         Cancel
                       </button>
@@ -626,7 +631,7 @@ export default function UserSettings({ onBack }: { onBack?: () => void } = {}) {
                         type="button"
                         onClick={saveBio}
                         disabled={isSavingBio}
-                        className="px-4 py-2 rounded-lg no-theme bg-lime-700 hover:bg-lime-800 text-neutral-50 save-btn cursor-pointer disabled:cursor-not-allowed"
+                        className="px-4 py-2 rounded-lg no-theme bg-lime-700 hover:bg-lime-800 text-neutral-50 save-btn cursor-pointer disabled:cursor-not-allowed text-xs sm:text-sm"
                       >
                         {isSavingBio ? (
                           <span className="flex items-center gap-2 justify-center">
@@ -640,25 +645,27 @@ export default function UserSettings({ onBack }: { onBack?: () => void } = {}) {
                     </div>
                   </div>
                 ) : (
-                  <div
+                  <button
+                    type="button"
                     onClick={() => setIsEditingBio(true)}
-                    className="cursor-pointer text-sm text-neutral-50/80 p-4 flex h-full items-center"
+                    className="cursor-pointer text-neutral-50/80 p-4 flex h-full items-center text-xs sm:text-sm lg:text-lg"
                     title="Click to edit biography"
+                    aria-label="Edit biography"
                   >
                     {isLoading ? "" : bio || KAKIOKI_CONFIG.account.defaultBio}
-                  </div>
+                  </button>
                 )}
               </div>
             </div>
           </div>
         </div>
         <div className="flex flex-col flex-wrap p-4 rounded-lg bg-white/5 border border-white/10 flex-1 justify-center">
-          <form onSubmit={handleSubmit} className="flex flex-col flex-1">
+          <form aria-label="Change password" aria-busy={isSavingPassword} onSubmit={handleSubmit} className="flex flex-col flex-1">
             <div className="flex flex-col flex-1 gap-4 mb-4">
               <div className="flex flex-col gap-4">
                 <label
                   htmlFor="currentPassword"
-                  className="block text-responsive text-neutral-50 text-2xl"
+                  className="block text-responsive text-neutral-50 text-xs sm:text-lg lg:text-2xl"
                 >
                   Current Password
                 </label>
@@ -669,14 +676,14 @@ export default function UserSettings({ onBack }: { onBack?: () => void } = {}) {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   autoComplete="current-password"
-                  className="w-full px-3 py-2 border-gray-300 bg-black/20 rounded-lg focus:outline-none focus:ring focus:ring-lime-500 text-gray-300"
+                  className="w-full px-3 py-2 border-gray-300 bg-black/20 rounded-lg focus:outline-none focus:ring focus:ring-lime-500 text-gray-300 text-xs sm:text-sm lg:text-2xl"
                   placeholder="Enter current password"
                 />
               </div>
               <div className="flex flex-col gap-4">
                 <label
                   htmlFor="newPassword"
-                  className="block text-responsive text-neutral-50 text-2xl"
+                  className="block text-responsive text-neutral-50 text-xs sm:text-lg lg:text-2xl"
                 >
                   New Password
                 </label>
@@ -688,7 +695,7 @@ export default function UserSettings({ onBack }: { onBack?: () => void } = {}) {
                     onChange={(e) => setNewPassword(e.target.value)}
                     required
                     autoComplete="new-password"
-                    className="w-full px-3 py-2 pr-10 border-gray-300 bg-black/20 rounded-lg focus:outline-none focus:ring focus:ring-lime-500 text-gray-300"
+                    className="w-full px-3 py-2 pr-10 border-gray-300 bg-black/20 rounded-lg focus:outline-none focus:ring focus:ring-lime-500 text-gray-300 text-xs sm:text-sm lg:text-2xl"
                     placeholder="Enter new password"
                   />
                   <button
@@ -707,6 +714,8 @@ export default function UserSettings({ onBack }: { onBack?: () => void } = {}) {
             <div className="flex flex-col gap-4">
               {(error || success || alertVisible) && (
                 <div
+                  role={error ? "alert" : "status"}
+                  aria-live={error ? "assertive" : "polite"}
                   className={`flex flex-row justify-start align-middle text-center cursor-default ${
                     alertVisible
                       ? "animate-alert-bounce-in"
@@ -722,14 +731,14 @@ export default function UserSettings({ onBack }: { onBack?: () => void } = {}) {
                   <button
                     type="button"
                     onClick={cancelPasswordChange}
-                    className="px-4 py-2 rounded-lg no-theme bg-white/5 border border-white/20 hover:bg-red-700 text-neutral-50 cancel-btn cursor-pointer"
+                    className="px-4 py-2 rounded-lg no-theme bg-white/5 border border-white/20 hover:bg-red-700 text-neutral-50 cancel-btn cursor-pointer text-xs sm:text-sm"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={isSavingPassword}
-                    className="px-4 py-2 rounded-lg no-theme bg-lime-700 hover:bg-lime-800 text-neutral-50 save-btn cursor-pointer disabled:cursor-not-allowed"
+                    className="px-4 py-2 rounded-lg no-theme bg-lime-700 hover:bg-lime-800 text-neutral-50 save-btn cursor-pointer disabled:cursor-not-allowed text-xs sm:text-sm"
                   >
                     {isSavingPassword ? (
                       <span className="flex items-center gap-2 justify-center">
@@ -747,6 +756,8 @@ export default function UserSettings({ onBack }: { onBack?: () => void } = {}) {
         </div>
         <div className="flex flex-col flex-wrap p-4 rounded-lg bg-white/5 border border-white/10 flex-1 justify-center">
           <form
+            aria-label="Change email"
+            aria-busy={isSavingEmail}
             onSubmit={handleEmailSubmit}
             noValidate
             className="flex flex-col flex-1"
@@ -755,7 +766,7 @@ export default function UserSettings({ onBack }: { onBack?: () => void } = {}) {
               <div className="flex flex-col gap-4">
                 <label
                   htmlFor="currentEmail"
-                  className="block text-responsive text-neutral-50 text-2xl"
+                  className="block text-responsive text-neutral-50 text-xs sm:text-lg lg:text-2xl"
                 >
                   This is your @email
                 </label>
@@ -768,7 +779,7 @@ export default function UserSettings({ onBack }: { onBack?: () => void } = {}) {
                   onChange={(e) => setEmail(e.target.value)}
                   readOnly={!isEditingEmail}
                   autoComplete="email"
-                  className="w-full px-3 py-2 pr-10 border-gray-300 bg-black/20 rounded-lg focus:outline-none focus:ring focus:ring-lime-500 text-gray-300"
+                  className="w-full px-3 py-2 pr-10 border-gray-300 bg-black/20 rounded-lg focus:outline-none focus:ring focus:ring-lime-500 text-gray-300 text-xs sm:text-sm lg:text-2xl"
                   placeholder="Enter your new @email"
                 />
               </div>
@@ -776,6 +787,8 @@ export default function UserSettings({ onBack }: { onBack?: () => void } = {}) {
             <div className="flex flex-col gap-4">
               {(emailError || emailSuccess || emailAlertVisible) && (
                 <div
+                  role={emailError ? "alert" : "status"}
+                  aria-live={emailError ? "assertive" : "polite"}
                   className={`flex flex-row justify-start align-middle text-center cursor-default ${
                     emailAlertVisible
                       ? "animate-alert-bounce-in"
@@ -794,14 +807,14 @@ export default function UserSettings({ onBack }: { onBack?: () => void } = {}) {
                   <button
                     type="button"
                     onClick={cancelEmailChange}
-                    className="px-4 py-2 rounded-lg no-theme bg-white/5 border border-white/20 hover:bg-red-700 text-neutral-50 cancel-btn cursor-pointer"
+                    className="px-4 py-2 rounded-lg no-theme bg-white/5 border border-white/20 hover:bg-red-700 text-neutral-50 cancel-btn cursor-pointer text-xs sm:text-sm"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={isSavingEmail}
-                    className="px-4 py-2 rounded-lg no-theme bg-lime-700 hover:bg-lime-800 text-neutral-50 save-btn cursor-pointer disabled:cursor-not-allowed"
+                    className="px-4 py-2 rounded-lg no-theme bg-lime-700 hover:bg-lime-800 text-neutral-50 save-btn cursor-pointer disabled:cursor-not-allowed text-xs sm:text-sm"
                   >
                     {isSavingEmail ? (
                       <span className="flex items-center gap-2 justify-center">
@@ -851,13 +864,13 @@ export default function UserSettings({ onBack }: { onBack?: () => void } = {}) {
       </div>
       <div className="flex flex-col flex-wrap p-4 rounded-lg bg-white/5 border border-white/10 flex-1 justify-start min-h-0">
         <div className="flex flex-col gap-4 min-h-0 flex-1 justify-center">
-          <label className="block text-responsive text-neutral-50 text-2xl">
+          <label className="block text-responsive text-neutral-50 text-xs sm:text-lg lg:text-2xl">
             Blocked users
           </label>
 
           <div className="rounded-lg border-white/10 bg-white/5 overflow-hidden min-h-0">
             {blockedUsers.length === 0 ? (
-              <div className="text-center text-neutral-50/70 bg-transparent py-6 text-sm">
+              <div className="text-center text-neutral-50/70 bg-transparent py-6 text-xs sm:text-sm lg:text-2xl">
                 You have not blocked anyone... yet
               </div>
             ) : (
@@ -891,10 +904,10 @@ export default function UserSettings({ onBack }: { onBack?: () => void } = {}) {
                             )}
                           </div>
                           <div className="flex flex-col justify-center flex-wrap">
-                            <h3 className="text-neutral-50">
+                            <h3 className="text-neutral-50 text-xs sm:text-lg lg:text-2xl">
                               {entry.user.username}
                             </h3>
-                            <p className="text-neutral-50/60 text-sm">
+                            <p className="text-neutral-50/60 text-xs sm:text-sm lg:text-lg">
                               ID: {entry.user.userId}
                             </p>
                           </div>
@@ -902,13 +915,15 @@ export default function UserSettings({ onBack }: { onBack?: () => void } = {}) {
                         <div className="flex flex-row gap-4 items-center flex-wrap">
                           <button
                             type="button"
-                            className="px-5 p-2 border border-white/20 hover:bg-red-800 text-neutral-50 rounded-md flex items-center gap-1 cancel-btn"
+                            className="px-5 p-2 border border-white/20 hover:bg-red-800 text-neutral-50 rounded-md flex items-center gap-1 cancel-btn text-xs sm:text-sm"
                             onClick={() => handleUnblockUser(entry.user.id)}
+                            aria-label={`Unblock ${entry.user.username}`}
                             disabled={isUnblocking}
                           >
                             {isUnblocking ? (
                               <FontAwesomeIcon
                                 icon={faSpinner}
+                                aria-hidden="true"
                                 className="animate-spin"
                               />
                             ) : null}
@@ -928,16 +943,17 @@ export default function UserSettings({ onBack }: { onBack?: () => void } = {}) {
         <div className="flex flex-col gap-4">
           <label
             htmlFor="setStatus"
-            className="block text-responsive text-neutral-50 text-2xl"
+            className="block text-responsive text-neutral-50 text-xs sm:text-lg lg:text-2xl"
           >
             Change your status
           </label>
-          <div className="flex flex-row gap-2">
+          <div role="group" aria-label="Change your status" className="flex flex-row gap-2">
             <button
               type="button"
               onClick={() => handleStatusChange("online")}
               disabled={isUpdatingStatus !== null}
-              className="px-4 py-2 rounded-lg no-theme bg-lime-700 hover:bg-lime-800 text-neutral-50 online-btn cursor-pointer disabled:cursor-not-allowed"
+              aria-pressed={presence.status === "online"}
+              className="px-4 py-2 rounded-lg no-theme bg-lime-700 hover:bg-lime-800 text-neutral-50 online-btn cursor-pointer disabled:cursor-not-allowed text-xs sm:text-sm"
             >
               {isUpdatingStatus === "online" ? (
                 <span className="flex items-center gap-2 justify-center">
@@ -952,7 +968,8 @@ export default function UserSettings({ onBack }: { onBack?: () => void } = {}) {
               type="button"
               onClick={() => handleStatusChange("away")}
               disabled={isUpdatingStatus !== null}
-              className="px-4 py-2 rounded-lg no-theme bg-amber-600 hover:bg-amber-700 text-neutral-50 away-btn cursor-pointer disabled:cursor-not-allowed"
+              aria-pressed={presence.status === "away"}
+              className="px-4 py-2 rounded-lg no-theme bg-amber-600 hover:bg-amber-700 text-neutral-50 away-btn cursor-pointer disabled:cursor-not-allowed text-xs sm:text-sm"
             >
               {isUpdatingStatus === "away" ? (
                 <span className="flex items-center gap-2 justify-center">
@@ -967,7 +984,8 @@ export default function UserSettings({ onBack }: { onBack?: () => void } = {}) {
               type="button"
               onClick={() => handleStatusChange("offline")}
               disabled={isUpdatingStatus !== null}
-              className="px-4 py-2 rounded-lg no-theme bg-red-600 hover:bg-red-800 text-neutral-50 offline-btn cursor-pointer disabled:cursor-not-allowed"
+              aria-pressed={presence.status === "offline"}
+              className="px-4 py-2 rounded-lg no-theme bg-red-600 hover:bg-red-800 text-neutral-50 offline-btn cursor-pointer disabled:cursor-not-allowed text-xs sm:text-sm"
             >
               {isUpdatingStatus === "offline" ? (
                 <span className="flex items-center gap-2 justify-center">

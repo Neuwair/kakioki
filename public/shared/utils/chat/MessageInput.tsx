@@ -2,7 +2,10 @@
 import React, { useEffect, useRef, useState } from "react";
 import type { LinkPreview } from "@/lib/media/MediaTypes";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPaperPlane, faPaperclip } from "@fortawesome/free-solid-svg-icons";
+import {
+  faPaperPlane,
+  faPaperclip,
+} from "@fortawesome/free-solid-svg-icons";
 import { faFaceSmile } from "@fortawesome/free-regular-svg-icons";
 import { InputLinkPreviewArea } from "@/public/shared/utils/chat/LinkPreview";
 
@@ -49,8 +52,12 @@ export const MessageInput: React.FC<MessageInputProps> = ({
   const resizeTextArea = (textArea: HTMLTextAreaElement | null) => {
     if (!textArea) return;
     textArea.style.height = "auto";
+    const minHeight = 40;
     const maxHeight = 180;
-    const newHeight = Math.min(textArea.scrollHeight, maxHeight);
+    const newHeight = Math.min(
+      Math.max(textArea.scrollHeight + 2, minHeight),
+      maxHeight,
+    );
     textArea.style.height = `${newHeight}px`;
     textArea.style.overflowY =
       textArea.scrollHeight > maxHeight ? "auto" : "hidden";
@@ -128,6 +135,9 @@ export const MessageInput: React.FC<MessageInputProps> = ({
       />
 
       <div
+        role="group"
+        aria-label="Message composer"
+        aria-busy={isSending}
         className={`flex items-center gap-2 p-4 bg-white/5 chatInputUI transition-colors duration-200 ${
           isDragging
             ? "bg-blue-500/20 border-2 border-dashed border-blue-400"
@@ -143,12 +153,16 @@ export const MessageInput: React.FC<MessageInputProps> = ({
             type="button"
             onClick={onEmojiClick}
             disabled={disabled}
+            aria-label="Open emoji picker"
             className={
-              "rounded-lg p-2 hover:bg-neutral-700/50 text-neutral-50 flex items-center justify-center text-center transition-colors duration-200 interface-btn emoji-button" +
+              "w-10 h-10 rounded-lg p-2 hover:bg-neutral-700/50 text-neutral-50 flex items-center justify-center text-center transition-colors duration-200 interface-btn emoji-button text-xs sm:text-sm" +
               (disabled ? " opacity-60 cursor-not-allowed" : "")
             }
           >
-            <FontAwesomeIcon icon={faFaceSmile} size="lg" />
+            <FontAwesomeIcon
+              icon={faFaceSmile}
+              className="text-lg sm:text-sm"
+            />
           </button>
         </div>
         <textarea
@@ -167,47 +181,60 @@ export const MessageInput: React.FC<MessageInputProps> = ({
           autoComplete="off"
           disabled={disabled}
           aria-disabled={disabled}
+          aria-label="Message"
           rows={1}
           className={
-            "flex-1 px-3 py-2 border border-white/20 rounded-lg bg-white/5 focus:outline-none focus:ring focus:ring-lime-500 text-neutral-50 resize-none max-h-44 overflow-y-auto scrollbar-hide" +
+            "flex-1 h-10 min-h-10 px-3 py-2.25 leading-5 border border-white/20 rounded-lg bg-white/5 focus:outline-none focus:ring focus:ring-lime-500 text-neutral-50 resize-none max-h-44 overflow-y-auto scrollbar-hide" +
             (disabled ? " opacity-60 cursor-not-allowed" : "")
           }
         />
-        <button
-          type="button"
-          onClick={() => fileInputRef.current?.click()}
-          disabled={disabled}
-          className={
-            "p-2 rounded-lg hover:bg-neutral-700/50 text-neutral-50 flex items-center justify-center interface-btn" +
-            (disabled ? " opacity-60 cursor-not-allowed" : "")
-          }
-        >
-          <FontAwesomeIcon icon={faPaperclip} size="lg" />
-          <input
-            ref={fileInputRef}
-            type="file"
-            id="media-file-input"
-            name="mediaFiles"
-            className="hidden"
-            accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt"
-            onChange={onMediaSelect}
-            autoComplete="off"
-            multiple
-            max="4"
+
+        <div className="flex flex-row gap-2">
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
             disabled={disabled}
-          />
-        </button>
-        <button
-          type="button"
-          onClick={() => handleSendDecision()}
-          disabled={disabled || isSending}
-          className={
-            "p-2 rounded-lg bg-lime-700 hover:bg-lime-800 text-neutral-50 flex items-center justify-center cursor-pointer send-message-btn send-btn" +
-            (disabled || isSending ? " opacity-60 cursor-not-allowed" : "")
-          }
-        >
-          <FontAwesomeIcon icon={faPaperPlane} size="lg" />
-        </button>
+            aria-label="Attach files"
+            className={
+              "w-10 h-10 p-2 rounded-lg hover:bg-neutral-700/50 text-neutral-50 flex items-center justify-center interface-btn text-xs sm:text-sm" +
+              (disabled ? " opacity-60 cursor-not-allowed" : "")
+            }
+          >
+            <FontAwesomeIcon
+              icon={faPaperclip}
+              className="text-lg sm:text-sm"
+            />
+            <input
+              ref={fileInputRef}
+              type="file"
+              id="media-file-input"
+              name="mediaFiles"
+              className="hidden"
+              aria-label="Choose files to attach"
+              accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt"
+              onChange={onMediaSelect}
+              autoComplete="off"
+              multiple
+              max="4"
+              disabled={disabled}
+            />
+          </button>
+          <button
+            type="button"
+            onClick={() => handleSendDecision()}
+            disabled={disabled || isSending}
+            aria-label={isSending ? "Sending message" : "Send message"}
+            className={
+              "w-10 h-10 flex items-center justify-center p-2 rounded-lg bg-lime-700 hover:bg-lime-800 text-neutral-50 cursor-pointer send-message-btn send-btn text-xs sm:text-sm" +
+              (disabled || isSending ? " opacity-60 cursor-not-allowed" : "")
+            }
+          >
+            <FontAwesomeIcon
+              icon={faPaperPlane}
+              className="text-lg sm:text-sm"
+            />
+          </button>
+        </div>
       </div>
     </div>
   );

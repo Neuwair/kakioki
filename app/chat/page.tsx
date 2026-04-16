@@ -4,14 +4,12 @@ import React, { useEffect, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { useAuth } from "@/lib/auth/ClientAuth";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faSpinner } from "@fortawesome/free-solid-svg-icons";
 const ChatInterface = dynamic(
   () =>
     import("@/public/shared/utils/home/ChatInterface").then(
-      (mod) => mod.ChatInterface
+      (mod) => mod.ChatInterface,
     ),
-  { ssr: false }
+  { ssr: false },
 );
 
 export default function ChatPage() {
@@ -27,11 +25,7 @@ export default function ChatPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <FontAwesomeIcon
-          icon={faSpinner}
-          className="text-neutral-50/70 animate-spin w-10 h-10"
-          style={{ width: '2.5rem', height: '2.5rem' }}
-        />
+        <span className="w-10 h-10 border-2 border-white/70 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -42,11 +36,7 @@ export default function ChatPage() {
         <Suspense
           fallback={
             <div className="min-h-screen flex items-center justify-center">
-              <FontAwesomeIcon
-                icon={faSpinner}
-                className="text-neutral-50/70 animate-spin w-10 h-10"
-                style={{ width: '2.5rem', height: '2.5rem' }}
-              />
+              <span className="w-10 h-10 border-2 border-white/70 border-t-transparent rounded-full animate-spin" />
             </div>
           }
         >

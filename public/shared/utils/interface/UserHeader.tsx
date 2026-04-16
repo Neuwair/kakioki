@@ -82,7 +82,7 @@ const PresenceDot: React.FC<{ status: PresenceStatus }> = ({ status }) => {
   const presentation = getPresencePresentation(status);
 
   return (
-    <span className="relative flex h-2.5 w-2.5 shrink-0">
+    <span aria-hidden="true" className="relative flex h-2.5 w-2.5 shrink-0">
       <span
         className={`absolute inline-flex h-full w-full rounded-full ${presentation.haloColor} ${presentation.haloAnimation}`}
       ></span>
@@ -104,6 +104,8 @@ const UserPresenceStatus: React.FC<{
 
   return (
     <div
+      role="status"
+      aria-live="polite"
       className={`flex items-center gap-2 ${presentation.labelColor} ${textClassName} ${className}`.trim()}
     >
       <PresenceDot status={resolvedStatus} />
@@ -194,7 +196,7 @@ export const ChatUserHeader: React.FC<{
   if (!selectedFriend) {
     return (
       <div className=" bg-white/5 sticky top-0 z-20 min-h-20 flex items-center justify-center user-header">
-        <p className="text-lg text-neutral-50/70 font-medium cursor-default">
+        <p className="text-xs sm:text-sm lg:text-2xl text-neutral-50/70 font-medium cursor-default">
           Select a friend to start a message
         </p>
       </div>
@@ -229,8 +231,7 @@ export const ChatUserHeader: React.FC<{
               return (
                 <FontAwesomeIcon
                   icon={faUser}
-                  size="lg"
-                  className="text-neutral-50/70"
+                  className="text-neutral-50/70 text-lg sm:text-lg lg:text-2xl"
                 />
               );
             }
@@ -248,18 +249,23 @@ export const ChatUserHeader: React.FC<{
           })()}
         </div>
         <div className="flex-1 cursor-default">
-          <h3 className=" text-lg text-neutral-50">
+          <h3 className="text-sm sm:text-lg text-neutral-50">
             {selectedFriend.username}
           </h3>
-          <UserPresenceStatus userId={selectedFriend.id} />
+          <UserPresenceStatus
+            userId={selectedFriend.id}
+            className="text-neutral-50/60 text-xs sm:text-sm"
+          />
         </div>
         <div className="flex items-center gap-2">
           {actions}
           <button
+            type="button"
             onClick={onClose}
-            className="p-2 rounded-lg bg-white/5 hover:bg-neutral-700/50 text-neutral-50 flex items-center justify-center cursor-pointer transition-all duration-200 interface-btn"
+            aria-label="Close conversation"
+            className="w-10 h-10 p-2 rounded-lg bg-white/5 hover:bg-neutral-700/50 text-neutral-50 flex items-center justify-center cursor-pointer transition-all duration-200 interface-btn text-xs sm:text-sm"
           >
-            <FontAwesomeIcon icon={faTimes} size="lg" />
+            <FontAwesomeIcon aria-hidden="true" icon={faTimes} className="text-lg sm:text-sm" />
           </button>
         </div>
       </div>
@@ -286,22 +292,21 @@ export const ChatUserHeader: React.FC<{
             ) : (
               <FontAwesomeIcon
                 icon={faUser}
-                size="2x"
-                className="text-neutral-50/70"
+                className="text-neutral-50/70 text-lg sm:text-lg lg:text-2xl"
               />
             )}
           </div>
           <div className="flex flex-col justify-center flex-1 min-w-0">
-            <div className="h-full text-sm flex items-center text-neutral-50 cursor-default">
+            <div className="h-full text-xs sm:text-lg flex items-center text-neutral-50 cursor-default">
               {previewUsername}
             </div>
-            <div className="h-full text-sm flex items-center text-neutral-50/70 cursor-default">
+            <div className="h-full text-xs sm:text-lg flex items-center text-neutral-50/70 cursor-default">
               ID: {previewUserId}
             </div>
           </div>
         </div>
         <div className="flex flex-1 min-w-0">
-          <div className="w-full items-center justify-center flex text-sm text-neutral-50/70 wrap-break-word whitespace-pre-wrap cursor-default">
+          <div className="w-full items-center justify-center flex text-xs sm:text-sm lg:text-lg text-neutral-50/70 wrap-break-word whitespace-pre-wrap cursor-default">
             {previewBio}
           </div>
         </div>
@@ -334,31 +339,39 @@ export const UserInfoHeader: React.FC<{}> = () => {
     <>
       <div className="flex flex-row flex-wrap items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold text-neutral-50 cursor-default">
-            Kakioki
+          <h2 className="text-lg lg:text-4xl font-bold text-neutral-50 cursor-default">
+            KAKiOKi
           </h2>
         </div>
-        <div className="flex flex-row flex-wrap gap-2">
-          <div className="flex flex-col flex-wrap justify-center text-right">
-            <h3 className="text-sm text-neutral-50 cursor-default">
+        <div className="flex flex-row flex-wrap rounded-full bg-white/5 border border-white/20 pl-4 gap-2">
+          <div className="flex flex-col flex-wrap justify-center items-end text-right rounded-full">
+            <h3 className="text-xs lg:text-sm text-neutral-50 cursor-default">
               {user ? user.username : "Your Username"}
             </h3>
             <button
+              type="button"
               onClick={handleLogout}
               disabled={isLoggingOut}
-              className="flex text-xs text-neutral-50/60  hover:text-neutral-50 cursor-pointer items-center gap-1 no-theme"
+              aria-label={isLoggingOut ? "Logging out" : "Log out"}
+              className="flex text-xs lg:text-sm text-neutral-50/60 hover:text-neutral-50 cursor-pointer items-center no-theme"
             >
               <div className="flex flex-row justify-center items-center align-middle gap-1">
-                <FontAwesomeIcon icon={faSignOutAlt} size="sm" />
+                <FontAwesomeIcon
+                  icon={faSignOutAlt}
+                  aria-hidden="true"
+                  className="text-xs lg:text-sm"
+                />
                 {isLoggingOut ? "Logging out..." : "Logout"}
               </div>
             </button>
           </div>
-          <div className="flex flex-col flex-wrap justify-center">
-            <div
-              className="w-10 h-10 rounded-full bg-white/5 border border-white/20 flex items-center justify-center overflow-hidden cursor-pointer"
+          <div className=" flex flex-col flex-wrap justify-center">
+            <button
+              type="button"
+              className="w-10 h-10 sm:w-11 sm:h-11 lg:w-13 lg:h-13 rounded-full bg-white/5 border border-white/20 flex items-center justify-center overflow-hidden cursor-pointer"
               onClick={openAvatarModal}
               title="Change profile picture"
+              aria-label="Change profile picture"
             >
               {user?.avatarUrl ? (
                 <div className="relative w-full h-full">
@@ -373,11 +386,11 @@ export const UserInfoHeader: React.FC<{}> = () => {
               ) : (
                 <FontAwesomeIcon
                   icon={faUser}
-                  size="lg"
-                  className="text-neutral-50/70"
+                  aria-hidden="true"
+                  className="text-neutral-50/70 text-lg sm:text-lg lg:text-2xl"
                 />
               )}
-            </div>
+            </button>
           </div>
         </div>
       </div>
@@ -403,8 +416,16 @@ export const FriendItem: React.FC<{
   const avatar = friend.avatar_url ?? friend.avatarUrl ?? undefined;
   return (
     <div
+      role="button"
+      aria-label={`Open conversation with ${friend.username}`}
       className="flex flex-col justify-center relative shrink-0 w-20 h-30 cursor-pointer group bouncy-hover"
       onClick={onClick}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onClick?.();
+        }
+      }}
       title={friend.username}
       tabIndex={0}
     >
@@ -424,19 +445,18 @@ export const FriendItem: React.FC<{
             ) : (
               <FontAwesomeIcon
                 icon={faUser}
-                size="lg"
-                className="text-neutral-50/70"
+                className="text-neutral-50/70 text-lg sm:text-lg lg:text-2xl"
               />
             )}
           </div>
         </div>
-        <span className="text-sm text-neutral-50 truncate w-full text-center flex justify-center">
+        <span className="text-xs sm:text-lg text-neutral-50 truncate w-full text-center flex justify-center">
           {friend.username}
         </span>
         <UserPresenceStatus
           userId={resolvedStatusUserId}
           className="flex justify-center"
-          textClassName="text-xs"
+          textClassName="text-neutral-50/60 text-xs sm:text-sm"
         />
       </div>
     </div>
@@ -522,9 +542,10 @@ export const FriendListHeader: React.FC<FriendListHeaderProps> = ({
   if (isLoading) {
     return (
       <div className="relative overflow-hidden">
-        <div className="flex items-center gap-3 min-h-20 p-4 rounded-lg bg-white/5 backdrop-blur-sm border border-white/10 text-neutral-50/60 my-2 animate-pulse">
+        <div role="status" aria-live="polite" className="flex items-center gap-3 min-h-20 p-4 rounded-lg bg-white/5 backdrop-blur-sm border border-white/10 text-neutral-50/60 my-2 animate-pulse">
           <div className="w-16 h-16 rounded-full bg-white/10" />
           <div className="flex-1 h-6 bg-white/10 rounded" />
+          <span className="sr-only">Loading friends</span>
         </div>
       </div>
     );
@@ -534,7 +555,9 @@ export const FriendListHeader: React.FC<FriendListHeaderProps> = ({
     return (
       <div className="relative overflow-hidden">
         <div className="flex items-center justify-center min-h-20 p-4 rounded-lg bg-white/5 border border-white/10 text-neutral-50/60 my-2">
-          <p className="text-center">You don&apos;t have any friends yet.</p>
+          <p className="text-xs sm:text-sm lg:text-2xl text-center">
+            You don&apos;t have any friends yet.
+          </p>
         </div>
       </div>
     );
@@ -544,6 +567,7 @@ export const FriendListHeader: React.FC<FriendListHeaderProps> = ({
     <div className="relative w-full overflow-hidden">
       <div
         ref={scrollRef}
+        aria-label="Friends list"
         className="w-full overflow-x-auto scrollbar-hide"
         style={{
           WebkitOverflowScrolling: "touch",
@@ -601,10 +625,12 @@ export const FriendRequestsHeader: React.FC<FriendRequestsHeaderProps> = ({
     <>
       {incomingCount > 0 || outgoingCount > 0 ? (
         <div className="flex flex-col flex-wrap relative animate-alert-bounce-in">
-          <div className="text-neutral-50/80 text-sm font-medium px-4 p-4 flex items-center justify-between cursor-default">
-            <span>Friend Requests ({incomingCount})</span>
+          <div className="text-neutral-50/80 py-4 flex items-center justify-between cursor-default">
+            <span className="text-xs sm:text-sm lg:text-2xl text-neutral-50/50">
+              Friend Requests ({incomingCount})
+            </span>
             {outgoingCount > 0 && (
-              <span className="text-xs text-neutral-50/50">
+              <span className="text-xs sm:text-sm lg:text-2xl text-neutral-50/50">
                 Outgoing: {outgoingCount}
               </span>
             )}
@@ -620,38 +646,48 @@ export const FriendRequestsHeader: React.FC<FriendRequestsHeaderProps> = ({
                   className="flex flex-row flex-wrap items-center justify-between px-4 py-4 bg-white/5 border border-white/10 rounded-lg animate-alert-bounce-in"
                 >
                   <div className="flex flex-col flex-wrap">
-                    <p className="text-neutral-50">{entry.user.username}</p>
-                    <p className="text-neutral-50/60 text-sm">
+                    <p className="text-neutral-50 text-xs sm:text-lg lg:text-2xl">
+                      {entry.user.username}
+                    </p>
+                    <p className="text-neutral-50/60 text-xs sm:text-sm lg:text-lg">
                       wants to connect
                     </p>
                   </div>
                   <div className="flex flex-row gap-4 items-center flex-wrap">
                     <button
                       type="button"
-                      className="px-5 p-2 bg-lime-700 hover:bg-lime-800 text-neutral-50 rounded-md text-sm flex items-center gap-1 accept-friend-btn"
+                      className="px-5 p-2 bg-lime-700 hover:bg-lime-800 text-neutral-50 rounded-md text-xs sm:text-sm flex items-center gap-1 accept-friend-btn"
                       onClick={() => onAccept(entry.user.id)}
+                      aria-label={`Accept friend request from ${entry.user.username}`}
                       disabled={isAccepting}
                     >
                       <div className="flex items-center gap-2 justify-center">
                         {isAccepting ? (
-                          <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin text-xs sm:text-sm lg:text-sm" />
                         ) : (
-                          <FontAwesomeIcon icon={faCheck} />
+                          <FontAwesomeIcon
+                            icon={faCheck}
+                            className="text-lg sm:text-sm"
+                          />
                         )}
                         {isAccepting ? "Accepting" : "Accept"}
                       </div>
                     </button>
                     <button
                       type="button"
-                      className="px-5 p-2 bg-red-700 hover:bg-red-800 text-neutral-50 rounded-md text-sm flex items-center gap-1 remove-friend-btn"
+                      className="px-5 p-2 bg-red-700 hover:bg-red-800 text-neutral-50 rounded-md text-xs sm:text-sm flex items-center gap-1 remove-friend-btn"
                       onClick={() => onDecline(entry.user.id)}
+                      aria-label={`Decline friend request from ${entry.user.username}`}
                       disabled={isDeclining}
                     >
                       <div className="flex items-center gap-2 justify-center">
                         {isDeclining ? (
-                          <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin text-xs sm:text-sm lg:text-sm" />
                         ) : (
-                          <FontAwesomeIcon icon={faTimes} />
+                          <FontAwesomeIcon
+                            icon={faTimes}
+                            className="text-lg sm:text-sm"
+                          />
                         )}
                         {isDeclining ? "Removing" : "Decline"}
                       </div>
@@ -669,22 +705,28 @@ export const FriendRequestsHeader: React.FC<FriendRequestsHeaderProps> = ({
                   className="flex flex-row flex-wrap items-center justify-between px-4 py-4 bg-white/5 border border-white/10 rounded-lg animate-alert-bounce-in"
                 >
                   <div className="flex flex-col flex-wrap">
-                    <p className="text-neutral-50">{entry.user.username}</p>
-                    <p className="text-neutral-50/60 text-sm">
+                    <p className="text-neutral-50 text-sm sm:text-lg">
+                      {entry.user.username}
+                    </p>
+                    <p className="text-neutral-50/60 text-xs sm:text-sm">
                       awaiting response
                     </p>
                   </div>
                   <button
                     type="button"
-                    className="px-5 p-2 bg-amber-600 hover:bg-amber-700 text-neutral-50 rounded-md text-sm flex items-center gap-1 cancel-btn"
+                    className="px-5 p-2 bg-amber-600 hover:bg-amber-700 text-neutral-50 rounded-md text-xs sm:text-sm flex items-center gap-1 cancel-btn"
                     onClick={() => onCancel(entry.user.id)}
+                    aria-label={`Cancel outgoing friend request to ${entry.user.username}`}
                     disabled={isCanceling}
                   >
                     <div className="flex items-center gap-2 justify-center">
                       {isCanceling ? (
                         <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                       ) : (
-                        <FontAwesomeIcon icon={faTimes} />
+                        <FontAwesomeIcon
+                          icon={faTimes}
+                          className="text-lg sm:text-sm"
+                        />
                       )}
                       {isCanceling ? "Cancelling" : "Cancel"}
                     </div>
