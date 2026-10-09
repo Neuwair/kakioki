@@ -63,28 +63,28 @@ export default function HomePage() {
                 >
                   Kakioki
                 </h1>
-                <p className=" text-neutral-50 text-xs sm:text-sm lg:text-2xl">
+                <p className="font-style: italic text-neutral-400 text-xs sm:text-sm lg:text-2xl">
                   Simple, light, fast, and secure.
                 </p>
               </div>
               <div className="flex flex-col gap-2">
                 <button
                   onClick={() => setCurrentView("signin")}
-                  className="w-full bg-lime-700 hover:bg-lime-800 text-neutral-50 py-3 px-4 rounded-lg transition-colors duration-200 border-none cursor-pointer signin-btn text-xs sm:text-sm disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-300 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
+                  className="w-full text-neutral-50 py-3 px-4 rounded-lg transition-colors duration-200 border-none cursor-pointer signin-btn text-xs sm:text-sm disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-300 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
                 >
                   Sign In
                 </button>
                 <button
                   onClick={() => setCurrentView("signup")}
-                  className="w-full bg-gray-300 hover:bg-gray-200 text-gray-800 hover:text-gray-900 py-3 px-4 rounded-lg transition-colors duration-233 border-none cursor-pointer signup-btn text-xs sm:text-sm accessibility-setting"
+                  className="w-full text-neutral-50 py-3 px-4 rounded-lg transition-colors duration-233 border-none cursor-pointer signup-btn text-xs sm:text-sm accessibility-setting"
                 >
                   Create Account
                 </button>
               </div>
-              <div className="flex flex-col gap-2 text-neutral-50/70 text-center cursor-default">
+              {/* <div className="flex flex-col gap-2 text-neutral-50/70 text-center cursor-default">
                 <div className="flex flex-row align-middle justify-center">
                   <div className="text-sm sm:text-lg">
-                    Created by Neuwair | Illustrator and Programmer
+                    Created by Neuwair | Illustrator & Programmer
                   </div>
                 </div>
                 <div className="text-lg flex flex-row flex-wrap items-center justify-center gap-4">
@@ -125,7 +125,7 @@ export default function HomePage() {
                     GitHub
                   </a>
                 </div>
-              </div>
+              </div> */} 
             </div>
           </div>
         );

@@ -56,7 +56,7 @@ export const SignInForm: React.FC<SignInFormProps> = ({
               autoComplete="email"
               maxLength={255}
               aria-required="true"
-              className="w-full px-3 py-2 border border-gray-300 bg-black/20 rounded-lg focus:outline-none focus:ring focus:ring-lime-500 text-gray-300 text-xs sm:text-sm lg:text-2xl"
+              className="w-full px-3 py-2 border border-white/20 bg-black/20 rounded-lg focus:outline-none focus:ring focus:ring-lime-500 text-gray-300 text-xs sm:text-sm lg:text-2xl"
               placeholder="Enter your email"
             />
           </div>
@@ -78,7 +78,7 @@ export const SignInForm: React.FC<SignInFormProps> = ({
                 autoComplete="current-password"
                 maxLength={255}
                 aria-required="true"
-                className="w-full px-2 pr-10 py-2 border border-gray-300 bg-black/20 rounded-lg focus:outline-none focus:ring focus:ring-lime-500 text-gray-300 text-xs sm:text-sm lg:text-2xl"
+                className="w-full px-2 pr-10 py-2 border border-white/20 bg-black/20 rounded-lg focus:outline-none focus:ring focus:ring-lime-500 text-gray-300 text-xs sm:text-sm lg:text-2xl"
                 placeholder="Enter a password"
               />
               <button

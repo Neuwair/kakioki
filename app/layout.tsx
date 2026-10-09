@@ -21,6 +21,7 @@ export default function RootLayout({
         <ThemeInitializer />
         <AuthProvider>{children}</AuthProvider>
         <Analytics />
+        <div className="crt-overlay" aria-hidden="true" />
       </body>
     </html>
   );

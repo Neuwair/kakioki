@@ -560,12 +560,18 @@ export const ChatInterface: React.FC = () => {
                 type="button"
                 onClick={() => setIsUserPreviewVisible((previous) => !previous)}
                 aria-label={
-                  isUserPreviewVisible ? "Hide user preview" : "Show user preview"
+                  isUserPreviewVisible
+                    ? "Hide user preview"
+                    : "Show user preview"
                 }
                 title="Toggle input bounce"
                 className="w-10 h-10 p-2 rounded-lg flex items-center justify-center cursor-pointer view-btn transition-colors bg-white/5 text-neutral-50 hover:bg-lime-800"
               >
-                <FontAwesomeIcon aria-hidden="true" icon={faEye} className="text-lg sm:text-sm" />
+                <FontAwesomeIcon
+                  aria-hidden="true"
+                  icon={faEye}
+                  className="text-lg sm:text-sm"
+                />
               </button>
             </>
           ) : null;
@@ -600,10 +606,16 @@ export const ChatInterface: React.FC = () => {
               aria-describedby="nuke-dialog-description"
               className="flex flex-col flex-wrap bg-white/5 backdrop-blur-lg rounded-lg p-6 w-[90%] max-w-md border border-white/20 shadow-xl"
             >
-              <h2 id="nuke-dialog-title" className="text-sm sm:text-2xl lg:text-4xl text-center font-bold mb-5 text-neutral-50">
+              <h2
+                id="nuke-dialog-title"
+                className="text-sm sm:text-2xl lg:text-4xl text-center font-bold mb-5 text-neutral-50"
+              >
                 Confirm nuke messages
               </h2>
-              <p id="nuke-dialog-description" className="text-xs sm:text-sm lg:text-2xl text-neutral-50 mb-5 font-light">
+              <p
+                id="nuke-dialog-description"
+                className="text-xs sm:text-sm lg:text-2xl text-neutral-50 mb-5 font-light"
+              >
                 This will permanently delete the entire conversation history for
                 both users. This cannot be undone.
               </p>
@@ -672,66 +684,84 @@ export const ChatInterface: React.FC = () => {
           }`}
         >
           {!selectedFriend ? (
-            <div className="text-neutral-50/70 text-center cursor-default flex flex-col flex-wrap gap-2">
-              <div className="text-xs sm:text-sm lg:text-2xl">
-                Created by Neuwair
+            <div className=" text-neutral-50/70 text-center cursor-default flex flex-col-reverse flex-wrap gap-4">
+              <div className=" flex flex-col">
+                <div className="text-xs sm:text-sm lg:text-lg">
+                  Created by Neuwair
+                </div>
+                <div className="font-style: italic text-xs sm:text-sm lg:text-lg">
+                  Illustrator & Programmer
+                </div>
+                <div className="flex flex-row items-center justify-center gap-4 text-xs sm:text-sm lg:text-lg">
+                  <a
+                    href="https://x.com/neuwair"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Twitter, opens in a new tab"
+                    className="text-lime-300 hover:underline bouncy-hover"
+                  >
+                    Twitter
+                  </a>
+                  <a
+                    href="https://www.pixiv.net/en/users/102019144"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Pixiv, opens in a new tab"
+                    className="text-lime-300 hover:underline bouncy-hover"
+                  >
+                    Pixiv
+                  </a>
+                  <a
+                    href="https://www.youtube.com/@Neuwair"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="YouTube, opens in a new tab"
+                    className="text-lime-300 hover:underline bouncy-hover"
+                  >
+                    YouTube
+                  </a>
+                  <a
+                    href="https://github.com/Neuwair"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="GitHub, opens in a new tab"
+                    className="text-lime-300 hover:underline bouncy-hover"
+                  >
+                    GitHub
+                  </a>
+                </div>
               </div>
-              <div className="text-xs sm:text-sm lg:text-2xl">
-                Illustrator and Programmer
-              </div>
-              <div className="flex flex-row items-center justify-center gap-4 text-xs sm:text-sm lg:text-2xl">
-                <a
-                  href="https://x.com/neuwair"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Twitter, opens in a new tab"
-                  className="text-lime-300 hover:underline bouncy-hover"
-                >
-                  Twitter
-                </a>
-                <a
-                  href="https://www.pixiv.net/en/users/102019144"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Pixiv, opens in a new tab"
-                  className="text-lime-300 hover:underline bouncy-hover"
-                >
-                  Pixiv
-                </a>
-                <a
-                  href="https://www.youtube.com/@Neuwair"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="YouTube, opens in a new tab"
-                  className="text-lime-300 hover:underline bouncy-hover"
-                >
-                  YouTube
-                </a>
-                <a
-                  href="https://github.com/Neuwair"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="GitHub, opens in a new tab"
-                  className="text-lime-300 hover:underline bouncy-hover"
-                >
-                  GitHub
-                </a>
-              </div>
-              <div className="">
-                <p></p>
-                <div className="text-center max-w-lg wrap-break-word text-xs sm:text-sm lg:text-2xl">
-                  {" "}
-                  This project is intended solely as a demonstration of my
-                  programming skills. To properly test the messaging system, you
-                  will need to create a second account in a separate window or
-                  have another user create an account so you can add each other
-                  and exchange messages.
+
+              <div className="flex flex-col-reverse gap-4">
+                <div className="flex flex-col">
+                  <div className="max-w-2xl wrap-break-word text-xs sm:text-sm lg:text-lg">
+                    {" "}
+                    This project is intended solely as a demonstration of my
+                    programming skills. To properly test the messaging system,
+                    you will need to create a second account in a separate
+                    window or have another user create an account so you can add
+                    each other and exchange messages.
+                  </div>
+                </div>
+                <div className="flex flex-col">
+                  <div className="font-style: italic text-center max-w-4xl wrap-break-word text-xs sm:text-sm lg:text-lg">
+                    {" "}
+                    Type the word &quot;Sys&quot; in the searchbar to find
+                    default system users.
+                  </div>
                 </div>
               </div>
             </div>
           ) : isLoading && messages.length === 0 ? (
-            <div role="status" aria-live="polite" className=" text-neutral-50/70 text-center">
-              <span aria-hidden="true" className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin inline-block" />
+            <div
+              role="status"
+              aria-live="polite"
+              className=" text-neutral-50/70 text-center"
+            >
+              <span
+                aria-hidden="true"
+                className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin inline-block"
+              />
               <span className="sr-only">Loading messages</span>
             </div>
           ) : messages.length === 0 ? (
@@ -800,12 +830,20 @@ export const ChatInterface: React.FC = () => {
                 onDismissPreview={dismissLinkPreview}
               />
               {sendError ? (
-                <div role="alert" aria-live="assertive" className="mt-2 text-sm text-red-200/80 text-center">
+                <div
+                  role="alert"
+                  aria-live="assertive"
+                  className="mt-2 text-sm text-red-200/80 text-center"
+                >
                   {sendError}
                 </div>
               ) : null}
               {!canSend ? (
-                <div role="status" aria-live="polite" className="mt-2 text-sm text-red-200/80 bg-neutral-700/50 p-4 text-center animate-alert-bounce-in">
+                <div
+                  role="status"
+                  aria-live="polite"
+                  className="mt-2 text-sm text-red-200/80 bg-neutral-700/50 p-4 text-center animate-alert-bounce-in"
+                >
                   {blockState.blockedByFriend
                     ? "You cannot message this user right now"
                     : blockState.blockedBySelf

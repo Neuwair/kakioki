@@ -14,10 +14,13 @@
 .accept-friend-btn,
 .signin-btn,
 .signup-btn {
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow:
-    0 4px 6px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  border: solid 1px;
+  border-color: color-mix(
+    in oklab,
+    var(--color-white) /* #fff = #ffffff */ 20%,
+    transparent
+  );
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   overflow: hidden;
 }
 
@@ -44,9 +47,9 @@
   right: 0;
   bottom: 0;
   background: linear-gradient(
-    to bottom right,
+    to top left,
     rgba(255, 255, 255, 0.2) 0%,
-    rgba(255, 255, 255, 0.05) 40%,
+    rgba(255, 255, 255, 0.05) 50%,
     rgba(255, 255, 255, 0) 100%
   );
   pointer-events: none;
@@ -70,9 +73,12 @@
 .accept-friend-btn:hover,
 .signin-btn:hover,
 .signup-btn:hover {
-  box-shadow:
-    0 8px 12px rgba(0, 0, 0, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  border: solid 1px;
+  border-color: color-mix(
+    in oklab,
+    var(--color-white) /* #fff = #ffffff */ 50%,
+    transparent
+  );
   transform: translateY(-1px);
 }
 

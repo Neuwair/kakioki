@@ -71,7 +71,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
             autoComplete="email"
             maxLength={255}
             aria-required="true"
-            className="w-full px-3 py-2 border border-gray-300 bg-black/20 rounded-lg focus:outline-none focus:ring focus:ring-lime-500 text-gray-300 text-xs sm:text-sm lg:text-2xl"
+            className="w-full px-3 py-2 border border-white/20 bg-black/20 rounded-lg focus:outline-none focus:ring focus:ring-lime-500 text-gray-300 text-xs sm:text-sm lg:text-2xl"
             placeholder="Enter your email"
           />
         </div>
@@ -91,7 +91,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
             autoComplete="username"
             maxLength={KAKIOKI_CONFIG.account.maxUsernameLength}
             aria-required="true"
-            className="w-full px-3 py-2 border border-gray-300 bg-black/20 rounded-lg focus:outline-none focus:ring focus:ring-lime-500 text-gray-300 text-xs sm:text-sm lg:text-2xl"
+            className="w-full px-3 py-2 border border-white/20 bg-black/20 rounded-lg focus:outline-none focus:ring focus:ring-lime-500 text-gray-300 text-xs sm:text-sm lg:text-2xl"
             placeholder="Choose a username"
           />
         </div>
@@ -112,7 +112,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
               required
               autoComplete="new-password"
               aria-required="true"
-              className="w-full px-3 pr-10 py-2 border border-gray-300 bg-black/20 rounded-lg focus:outline-none focus:ring focus:ring-lime-500 text-gray-300 text-xs sm:text-sm lg:text-2xl"
+              className="w-full px-3 pr-10 py-2 border border-white/20 bg-black/20 rounded-lg focus:outline-none focus:ring focus:ring-lime-500 text-gray-300 text-xs sm:text-sm lg:text-2xl"
               placeholder="Create a password"
             />
             <button
@@ -144,7 +144,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
               aria-required="true"
               aria-invalid={passwordsMismatch}
               aria-describedby={passwordsMismatch ? mismatchId : undefined}
-              className="w-full px-3 pr-10 py-2 border border-gray-300 bg-black/20 rounded-lg focus:outline-none focus:ring focus:ring-lime-500 text-gray-300 text-xs sm:text-sm lg:text-2xl"
+              className="w-full px-3 pr-10 py-2 border border-white/20 bg-black/20 rounded-lg focus:outline-none focus:ring focus:ring-lime-500 text-gray-300 text-xs sm:text-sm lg:text-2xl"
               placeholder="Confirm your password"
             />
             <button

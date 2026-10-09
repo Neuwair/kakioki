@@ -117,10 +117,12 @@ export async function processDueAccountDeletions(
   try {
     await ensureAccountDeletionQueueTable();
     const rows = (await sql`
-      SELECT user_id
-      FROM account_deletion_queue
-      WHERE execute_at <= NOW()
-      ORDER BY execute_at
+      SELECT queue.user_id
+      FROM account_deletion_queue AS queue
+      JOIN users ON users.id = queue.user_id
+      WHERE users.is_default = FALSE
+        AND queue.execute_at <= NOW()
+      ORDER BY queue.execute_at
       LIMIT ${limit}
     `) as Array<{ user_id: number }>;
     let processed = 0;
@@ -145,7 +147,7 @@ export async function processDueAccountDeletions(
 }
 
 export async function scheduleAccountDeletion(user: DbUser): Promise<void> {
-  if (!user.id) {
+  if (!user.id || user.is_default) {
     return;
   }
 

@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS users (
     bio TEXT NOT NULL DEFAULT 'Using Kakioki, enjoying my time on Earth.',
     is_verified BOOLEAN DEFAULT FALSE,
     verification_token VARCHAR(255),
+    is_default BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT users_user_id_length_check CHECK (char_length(user_id) = 8),
@@ -25,6 +26,8 @@ ALTER TABLE users
     ALTER COLUMN email TYPE VARCHAR(255),
     ALTER COLUMN username TYPE VARCHAR(10),
     ALTER COLUMN bio SET DEFAULT 'Using Kakioki, enjoying my time on Earth.';
+
+ALTER TABLE users ADD COLUMN IF NOT EXISTS is_default BOOLEAN NOT NULL DEFAULT FALSE;
 
 DO $$
 BEGIN
@@ -178,10 +181,16 @@ RETURNS INTEGER AS $$
 DECLARE
     queued_count INTEGER;
 BEGIN
+    DELETE FROM account_deletion_queue AS queue
+    USING users
+    WHERE users.id = queue.user_id
+      AND users.is_default = TRUE;
+
     INSERT INTO account_deletion_queue (user_id, execute_at)
     SELECT id, CURRENT_TIMESTAMP
     FROM users
-    WHERE created_at < CURRENT_TIMESTAMP - INTERVAL '2 days'
+    WHERE is_default = FALSE
+      AND created_at < CURRENT_TIMESTAMP - INTERVAL '2 days'
     ON CONFLICT (user_id) DO NOTHING;
 
     GET DIAGNOSTICS queued_count = ROW_COUNT;

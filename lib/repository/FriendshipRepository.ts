@@ -63,6 +63,7 @@ export class FriendRepository {
           u.avatar_url,
           u.public_key,
           u.secret_key_encrypted,
+          u.is_default,
           u.is_verified,
           u.verification_token,
           u.created_at,
@@ -136,6 +137,50 @@ export class FriendRepository {
         throw error;
       }
       throw wrapDatabaseError("Failed to send friend request", error);
+    }
+  }
+
+  async addDefaultFriend(
+    fromUserId: number,
+    defaultUserId: number,
+  ): Promise<FriendRequestRecord> {
+    if (fromUserId === defaultUserId) {
+      throw new DatabaseError("Cannot add yourself as a friend");
+    }
+
+    try {
+      const existing = await sql`
+        SELECT * FROM friend_requests
+        WHERE (from_id = ${fromUserId} AND to_id = ${defaultUserId})
+           OR (from_id = ${defaultUserId} AND to_id = ${fromUserId})
+        LIMIT 1
+      `;
+
+      if (existing.length > 0) {
+        const record = existing[0] as FriendRequestRecord;
+        if (record.status === "accepted") {
+          return record;
+        }
+
+        const accepted = await sql`
+          UPDATE friend_requests
+          SET status = 'accepted', updated_at = CURRENT_TIMESTAMP
+          WHERE id = ${record.id}
+          RETURNING *
+        `;
+        return accepted[0] as FriendRequestRecord;
+      }
+
+      const inserted = await sql`
+        INSERT INTO friend_requests (from_id, to_id, status)
+        VALUES (${fromUserId}, ${defaultUserId}, 'accepted')
+        ON CONFLICT (from_id, to_id) DO UPDATE
+        SET status = 'accepted', updated_at = CURRENT_TIMESTAMP
+        RETURNING *
+      `;
+      return inserted[0] as FriendRequestRecord;
+    } catch (error) {
+      throw wrapDatabaseError("Failed to add default friend", error);
     }
   }
 

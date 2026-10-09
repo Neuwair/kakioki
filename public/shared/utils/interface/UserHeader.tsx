@@ -265,7 +265,11 @@ export const ChatUserHeader: React.FC<{
             aria-label="Close conversation"
             className="w-10 h-10 p-2 rounded-lg bg-white/5 hover:bg-neutral-700/50 text-neutral-50 flex items-center justify-center cursor-pointer transition-all duration-200 interface-btn text-xs sm:text-sm"
           >
-            <FontAwesomeIcon aria-hidden="true" icon={faTimes} className="text-lg sm:text-sm" />
+            <FontAwesomeIcon
+              aria-hidden="true"
+              icon={faTimes}
+              className="text-lg sm:text-sm"
+            />
           </button>
         </div>
       </div>
@@ -429,7 +433,7 @@ export const FriendItem: React.FC<{
       title={friend.username}
       tabIndex={0}
     >
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col h-full items-center  justify-between">
         <div className="flex justify-center">
           <div className="w-16 h-16 rounded-full bg-white/5 border border-white/20 flex items-center justify-center overflow-hidden transition-transform duration-200 group-hover:transform group-hover:scale-110">
             {avatar ? (
@@ -542,7 +546,11 @@ export const FriendListHeader: React.FC<FriendListHeaderProps> = ({
   if (isLoading) {
     return (
       <div className="relative overflow-hidden">
-        <div role="status" aria-live="polite" className="flex items-center gap-3 min-h-20 p-4 rounded-lg bg-white/5 backdrop-blur-sm border border-white/10 text-neutral-50/60 my-2 animate-pulse">
+        <div
+          role="status"
+          aria-live="polite"
+          className="flex items-center gap-3 min-h-20 p-4 rounded-lg bg-white/5 backdrop-blur-sm border border-white/10 text-neutral-50/60 my-2 animate-pulse"
+        >
           <div className="w-16 h-16 rounded-full bg-white/10" />
           <div className="flex-1 h-6 bg-white/10 rounded" />
           <span className="sr-only">Loading friends</span>
@@ -577,8 +585,8 @@ export const FriendListHeader: React.FC<FriendListHeaderProps> = ({
           scrollBehavior: "smooth",
         }}
       >
-        <div className="inline-block min-w-full p-4 rounded-lg bg-white/5 border border-white/10 text-neutral-50">
-          <div className="flex flex-row items-center whitespace-nowrap">
+        <div className="inline-block min-w-full p-4 rounded-lg bg-white/5 border-white/10 text-neutral-50">
+          <div className="flex flex-row items-center whitespace-nowrap gap-2">
             {friends.map((entry) => (
               <FriendItem
                 key={entry.user.id}
@@ -720,13 +728,8 @@ export const FriendRequestsHeader: React.FC<FriendRequestsHeaderProps> = ({
                     disabled={isCanceling}
                   >
                     <div className="flex items-center gap-2 justify-center">
-                      {isCanceling ? (
+                      {isCanceling && (
                         <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      ) : (
-                        <FontAwesomeIcon
-                          icon={faTimes}
-                          className="text-lg sm:text-sm"
-                        />
                       )}
                       {isCanceling ? "Cancelling" : "Cancel"}
                     </div>

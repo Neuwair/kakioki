@@ -196,7 +196,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
             disabled={disabled}
             aria-label="Attach files"
             className={
-              "w-10 h-10 p-2 rounded-lg hover:bg-neutral-700/50 text-neutral-50 flex items-center justify-center interface-btn text-xs sm:text-sm" +
+              "w-10 h-10 p-2 rounded-lg hover:bg-neutral-700/50 text-neutral-50 flex items-center justify-center interface-btn  text-xs sm:text-sm" +
               (disabled ? " opacity-60 cursor-not-allowed" : "")
             }
           >

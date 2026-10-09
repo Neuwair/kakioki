@@ -1,5 +1,5 @@
 .chat-background {
-  background: rgba(53, 53, 53, 0.6);
+  background: rgba(15, 15, 15, 0.9);
 }
 
 .chat-container {
@@ -24,4 +24,14 @@
 .accessibility-setting:focus-visible {
   outline: none;
   box-shadow: 0 0 0 2px rgb(245 245 245 / 1);
+}
+.dropdown-ui {
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+  border: solid 1px;
+  border-color: color-mix(
+    in oklab,
+    var(--color-white) /* #fff = #ffffff */ 20%,
+    transparent
+  );
 }

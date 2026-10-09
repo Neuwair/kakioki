@@ -84,6 +84,7 @@ local.properties
 .project
 .buildpath
 pnpm-lock.yaml
+.Nuclear_Launch_Codes
 
 # Config
 .DS_Store

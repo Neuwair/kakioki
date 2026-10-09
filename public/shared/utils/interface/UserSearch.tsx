@@ -106,6 +106,9 @@ export const FriendSearchDropdown: React.FC<FriendSearchDropdownProps> = ({
         const isRequesting = requestingIds.has(user.id);
         const isCanceling = cancelingIds.has(user.id);
         const isAccepting = acceptingIds.has(user.id);
+        const requestingLabel = user.isDefault
+          ? "Adding friend"
+          : "Sending request";
 
         return (
           <li
@@ -180,7 +183,11 @@ export const FriendSearchDropdown: React.FC<FriendSearchDropdownProps> = ({
                   type="button"
                   className="px-5 p-2 border border-white/20 bg-white/5 hover:bg-neutral-700/50 text-neutral-50 rounded-lg flex items-center gap-1 interface-btn text-xs sm:text-sm"
                   onClick={() => onAdd(user.id)}
-                  aria-label={`Send friend request to ${user.username}`}
+                  aria-label={
+                    user.isDefault
+                      ? `Add ${user.username} as a friend`
+                      : `Send friend request to ${user.username}`
+                  }
                   disabled={isRequesting}
                 >
                   <div className="flex items-center gap-2 justify-center">
@@ -192,7 +199,7 @@ export const FriendSearchDropdown: React.FC<FriendSearchDropdownProps> = ({
                         className="text-lg sm:text-sm"
                       />
                     )}
-                    {isRequesting ? "Sending request" : "Add"}
+                    {isRequesting ? requestingLabel : "Add"}
                   </div>
                 </button>
               )}
@@ -204,7 +211,13 @@ export const FriendSearchDropdown: React.FC<FriendSearchDropdownProps> = ({
   );
 };
 
-export const FriendSearchHeader: React.FC<{}> = () => {
+interface FriendSearchHeaderProps {
+  onDefaultUserAdded?: () => void | Promise<void>;
+}
+
+export const FriendSearchHeader: React.FC<FriendSearchHeaderProps> = ({
+  onDefaultUserAdded,
+}) => {
   const router = useRouter();
   const {
     query,
@@ -260,10 +273,17 @@ export const FriendSearchHeader: React.FC<{}> = () => {
     setIsOpen(false);
   };
 
+  const handleAdd = async (userId: number) => {
+    const user = results.find((result) => result.id === userId);
+    if (await sendFriendRequest(userId) && user?.isDefault) {
+      await onDefaultUserAdded?.();
+    }
+  };
+
   return (
     <div className="relative transition-all duration-300" ref={containerRef}>
-      <div className="flex flex-row flex-wrap gap-2">
-        <div className="relative flex-1">
+      <div className="flex flex-row flex-wrap gap-2 items-center">
+        <div className="relative min-w-32 flex-1">
           <input
             type="text"
             id="friend-search-header-input"
@@ -273,7 +293,7 @@ export const FriendSearchHeader: React.FC<{}> = () => {
             placeholder="Search a friend"
             autoComplete="off"
             maxLength={10}
-            className="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg focus:outline-none focus:ring focus:ring-lime-500 text-neutral-50 placeholder-amber-50/50 searchbar-item text-xs sm:text-sm lg:text-2xl"
+            className="w-full h-10 min-w-0 pl-3 pr-10 bg-white/5 border border-white/20 rounded-lg focus:outline-none focus:ring focus:ring-lime-500 text-neutral-50 placeholder-amber-50/50 searchbar-item text-xs sm:text-sm lg:text-base"
             value={query}
             onChange={(e) => {
               const newQuery = e.target.value;
@@ -293,37 +313,39 @@ export const FriendSearchHeader: React.FC<{}> = () => {
               onClick={handleSearchClear}
               aria-label="Clear search"
             >
-              <FontAwesomeIcon aria-hidden="true" icon={faTimes} className="text-lg sm:text-sm" />
+              <FontAwesomeIcon aria-hidden="true" icon={faTimes} className="text-base" />
             </button>
           )}
         </div>
-        <button
-          type="button"
-          className="w-10 h-10 p-2 rounded-lg hover:bg-neutral-700/50 text-neutral-50 border border-white/20 bg-white/5 flex items-center justify-center cursor-pointer interface-btn"
-          onClick={handleSearchButtonClick}
-          aria-label={showDropdown ? "Close friend search results" : "Open friend search results"}
-          aria-expanded={showDropdown}
-          aria-controls="friend-search-dropdown"
-        >
-          <FontAwesomeIcon
-            icon={faMagnifyingGlass}
-            aria-hidden="true"
-            className="text-lg sm:text-sm"
-          />
-        </button>
-        <button
-          type="button"
-          className="w-10 h-10 p-2 rounded-lg hover:bg-neutral-700/50 text-neutral-50 border border-white/20 bg-white/5 flex items-center justify-center cursor-pointer interface-btn"
-          onClick={() => router.push("/settings")}
-          aria-label="Open settings"
-        >
-          <FontAwesomeIcon aria-hidden="true" icon={faUserGear} className="text-lg sm:text-sm" />
-        </button>
-        <ThemeToggle />
+        <div className="flex shrink-0 gap-2">
+          <button
+            type="button"
+            className="h-10 w-10 shrink-0 rounded-lg hover:bg-neutral-700/50 text-neutral-50 border border-white/20 bg-white/5 flex items-center justify-center cursor-pointer interface-btn"
+            onClick={handleSearchButtonClick}
+            aria-label={showDropdown ? "Close friend search results" : "Open friend search results"}
+            aria-expanded={showDropdown}
+            aria-controls="friend-search-dropdown"
+          >
+            <FontAwesomeIcon
+              icon={faMagnifyingGlass}
+              aria-hidden="true"
+              className="text-base"
+            />
+          </button>
+          <button
+            type="button"
+            className="h-10 w-10 shrink-0 rounded-lg hover:bg-neutral-700/50 text-neutral-50 border border-white/20 bg-white/5 flex items-center justify-center cursor-pointer interface-btn"
+            onClick={() => router.push("/settings")}
+            aria-label="Open settings"
+          >
+            <FontAwesomeIcon aria-hidden="true" icon={faUserGear} className="text-base" />
+          </button>
+          <ThemeToggle />
+        </div>
       </div>
 
       {showDropdown && (
-        <div id="friend-search-dropdown" role="region" aria-label="Friend search results" className="absolute z-50 mt-3 w-full backdrop-blur-sm bg-white/20 border border-white/20 rounded-lg shadow-lg max-h-50 overflow-y-auto scrollbar-hide dropdown-ui animate-dropdown-appear">
+        <div id="friend-search-dropdown" role="region" aria-label="Friend search results" className="absolute z-50 mt-3 w-full backdrop-blur-sm  rounded-lg max-h-50 overflow-y-auto scrollbar-hide dropdown-ui animate-dropdown-appear">
           <FriendSearchDropdown
             query={query}
             results={results}
@@ -332,7 +354,9 @@ export const FriendSearchHeader: React.FC<{}> = () => {
             requestingIds={requestingIds}
             cancelingIds={cancelingIds}
             acceptingIds={acceptingIds}
-            onAdd={sendFriendRequest}
+            onAdd={(userId) => {
+              void handleAdd(userId);
+            }}
             onCancel={cancelFriendRequest}
             onAccept={acceptFriendRequest}
           />
@@ -363,6 +387,7 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
     acceptRequest,
     cancelOutgoing,
     declineIncoming,
+    refresh,
   } = useFriendRelationships();
 
   return (
@@ -373,7 +398,7 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
         <UserInfoHeader />
         {!isCollapsed && (
           <>
-            <FriendSearchHeader />
+            <FriendSearchHeader onDefaultUserAdded={refresh} />
             {error && <div role="alert" aria-live="assertive" className="text-sm text-red-400 px-2">{error}</div>}
             <FriendListHeader
               friends={friends}

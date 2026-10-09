@@ -74,6 +74,7 @@ export async function POST(request: NextRequest) {
       userId: match.user_id,
       username: match.username,
       avatarUrl: match.avatar_url,
+      isDefault: match.is_default ?? false,
       status: mapRelationship(
         user.id,
         match.friendship_status,

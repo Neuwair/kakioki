@@ -31,6 +31,7 @@ export interface DbUser {
   secret_key_encrypted?: string;
   is_verified?: boolean;
   verification_token?: string;
+  is_default?: boolean;
   last_seen_at?: string | null;
   created_at?: string;
   updated_at?: string;
@@ -187,6 +188,7 @@ export interface CreateUserData {
   avatar_url?: string;
   bio?: string;
   verification_token?: string;
+  is_default?: boolean;
 }
 
 export interface UpdateUserData {

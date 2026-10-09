@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "db:migrate": "tsx scripts/DatabaseMigrate.ts",
+    "db:seed-demo-users": "tsx scripts/SeedDefaultUsers.ts"
   },
   "dependencies": {
     "@emoji-mart/data": "^1.2.1",

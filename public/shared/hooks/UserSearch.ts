@@ -15,6 +15,7 @@ export interface FriendSearchItem {
   userId: string;
   username: string;
   avatarUrl?: string;
+  isDefault: boolean;
   status: FriendRelationshipStatus;
   requestId: number | null;
   requesterId: number | null;
@@ -27,6 +28,7 @@ interface FriendSearchResponse {
     userId: string;
     username: string;
     avatarUrl?: string;
+    isDefault?: boolean;
     status: FriendRelationshipStatus;
     requestId: number | null;
     requesterId: number | null;
@@ -92,6 +94,7 @@ export function useFriendSearch() {
             userId: item.userId,
             username: item.username,
             avatarUrl: item.avatarUrl,
+            isDefault: item.isDefault ?? false,
             status: item.status,
             requestId: item.requestId,
             requesterId: item.requesterId,
@@ -125,9 +128,9 @@ export function useFriendSearch() {
   );
 
   const sendFriendRequest = useCallback(
-    async (targetUserId: number) => {
+    async (targetUserId: number): Promise<boolean> => {
       if (requestingIds.has(targetUserId)) {
-        return;
+        return false;
       }
 
       const previous = results.find((item) => item.id === targetUserId);
@@ -146,12 +149,30 @@ export function useFriendSearch() {
         if (!response.ok) {
           throw new Error(`Request failed with status ${response.status}`);
         }
+        const data = (await response.json()) as {
+          status?: FriendRelationshipStatus;
+          request?: {
+            id?: number;
+            from_id?: number;
+            to_id?: number;
+          };
+        };
+        updateResult(targetUserId, (item) => ({
+          ...item,
+          status: data.status ?? "outgoing",
+          requestId: data.request?.id ?? item.requestId,
+          requesterId: data.request?.from_id ?? item.requesterId,
+          addresseeId: data.request?.to_id ?? item.addresseeId,
+        }));
+        return true;
       } catch (err) {
         console.error("Send friend request error:", err);
         if (previous) {
           updateResult(targetUserId, () => previous);
         }
         setError("Unable to send friend request");
+        return false;
+      } finally {
         setRequestingIds((prev) => {
           const next = new Set(prev);
           next.delete(targetUserId);

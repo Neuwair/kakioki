@@ -45,6 +45,41 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
+    if (targetUser.is_default) {
+      const requestRecord = await friendRepository.addDefaultFriend(
+        user.id,
+        toUserId,
+      );
+      const currentUserFull = await userRepository.findById(user.id);
+      if (!currentUserFull) {
+        return NextResponse.json({ error: "User not found" }, { status: 404 });
+      }
+
+      const [thread, blockStatus] = await Promise.all([
+        messageRepository.getOrCreateThread(user.id, toUserId),
+        messageRepository.getBlockStatus(user.id, toUserId),
+      ]);
+
+      await publishFriendEvent({
+        type: "friend_request_accepted",
+        request: requestRecord,
+        fromUser: toFriendUserPayload(currentUserFull),
+        toUser: toFriendUserPayload(targetUser),
+        blockedBySelf:
+          blockStatus.isBlocked && blockStatus.blockedBy === user.id,
+        blockedByFriend:
+          blockStatus.isBlocked && blockStatus.blockedBy === toUserId,
+        blockCreatedAt: blockStatus.recordCreatedAt ?? null,
+      });
+
+      return NextResponse.json({
+        success: true,
+        request: requestRecord,
+        status: "friends",
+        threadId: thread.threadId,
+      });
+    }
+
     const requestRecord = await friendRepository.sendFriendRequest(
       user.id,
       toUserId,
@@ -62,7 +97,11 @@ export async function POST(request: NextRequest) {
       toUser: toFriendUserPayload(targetUser),
     });
 
-    return NextResponse.json({ success: true, request: requestRecord });
+    return NextResponse.json({
+      success: true,
+      request: requestRecord,
+      status: "outgoing",
+    });
   } catch (error) {
     if (error instanceof DatabaseError) {
       return NextResponse.json({ error: error.message }, { status: 400 });

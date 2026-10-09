@@ -11,7 +11,7 @@ export class UserRepository {
     try {
       const defaultBio = userData.bio || KAKIOKI_CONFIG.account.defaultBio;
       const result = await sql`
-        INSERT INTO users (user_id, email, username, password_hash, public_key, secret_key_encrypted, avatar_url, bio, verification_token)
+        INSERT INTO users (user_id, email, username, password_hash, public_key, secret_key_encrypted, avatar_url, bio, verification_token, is_default)
         VALUES (
           ${userData.user_id},
           ${userData.email},
@@ -21,7 +21,8 @@ export class UserRepository {
           ${userData.secret_key_encrypted ?? null},
           ${userData.avatar_url ?? null},
           ${defaultBio},
-          ${userData.verification_token ?? null}
+          ${userData.verification_token ?? null},
+          ${userData.is_default ?? false}
         )
         RETURNING *
       `;
@@ -39,6 +40,32 @@ export class UserRepository {
       return (result[0] as DbUser) || null;
     } catch (error) {
       throw new DatabaseError("Failed to find DbUser by ID", error as Error);
+    }
+  }
+
+  async findDefaultUsers(): Promise<DbUser[]> {
+    try {
+      const result = await sql`
+        SELECT * FROM users
+        WHERE is_default = TRUE
+        ORDER BY id
+      `;
+      return result as DbUser[];
+    } catch (error) {
+      throw new DatabaseError("Failed to find default users", error as Error);
+    }
+  }
+
+  async deleteDefaultUserById(id: number): Promise<boolean> {
+    try {
+      const result = await sql`
+        DELETE FROM users
+        WHERE id = ${id} AND is_default = TRUE
+        RETURNING id
+      `;
+      return result.length > 0;
+    } catch (error) {
+      throw new DatabaseError("Failed to delete default user", error as Error);
     }
   }
 
@@ -71,7 +98,9 @@ export class UserRepository {
   async deleteById(id: number): Promise<boolean> {
     try {
       const result = await sql`
-        DELETE FROM users WHERE id = ${id} RETURNING id
+        DELETE FROM users
+        WHERE id = ${id} AND is_default = FALSE
+        RETURNING id
       `;
       return result.length > 0;
     } catch (error) {

@@ -8,7 +8,6 @@
 [data-theme="dark"] .block-btn,
 [data-theme="dark"] .nuke-btn,
 [data-theme="dark"] .view-btn,
-[data-theme="dark"] .cancel-btn,
 [data-theme="dark"] .btn-close {
   backdrop-filter: blur(6px);
   background: rgba(39, 39, 39, 0.5);
@@ -18,8 +17,7 @@
 [data-theme="dark"] .interface-btn:hover,
 [data-theme="dark"] .remove-friend-btn:hover,
 [data-theme="dark"] .accept-friend-btn:hover,
-[data-theme="dark"] .btn-close:hover,
-[data-theme="dark"] .cancel-btn:hover {
+[data-theme="dark"] .btn-close:hover {
   background: rgba(34, 34, 34, 0.9);
 }
 
@@ -37,16 +35,6 @@
 
 [data-theme="dark"] .text-status-item {
   color: lightgray;
-}
-
-[data-theme="dark"] .send-btn {
-  backdrop-filter: blur(6px);
-  background: rgba(36, 144, 238, 0.5);
-  border-color: rgba(255, 255, 255, 0.06);
-}
-
-[data-theme="dark"] .send-btn:hover {
-  background: rgba(78, 184, 246, 0.683);
 }
 
 [data-theme="dark"] .btnRemoveMedia:hover,
