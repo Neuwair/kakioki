@@ -33,21 +33,18 @@ Getting started with React was challenging at first, but I got used to it pretty
 Tailwind can feel a bit messy, but in my experience, it’s much more efficient and faster than plain CSS though, as always, it’s a trade-off.
 
 ## UI Overview
-### Dark mode
-<img width="396" height="816" alt="1" src="https://github.com/user-attachments/assets/258c32db-482b-43e3-a5f2-0f1f80bfbff0" />
-<img width="397" height="813" alt="3" src="https://github.com/user-attachments/assets/64fa2248-3907-4a48-9213-843b2ca9414f" />
 
-### Friend search
-<img width="597" height="309" alt="2" src="https://github.com/user-attachments/assets/4df4825e-1c18-4850-ac67-b5dfb0061f7e" />
-<img width="597" height="613" alt="5" src="https://github.com/user-attachments/assets/1f6ae646-8e7d-4589-8e73-0164c5c7fc28" />
+### Homepage
+<img width="1459" height="728" alt="kakioki1 BfSSiWai" src="https://github.com/user-attachments/assets/ea1a26b8-38b7-427d-af1b-eef3ea9e7f29" />
 
-### Avatar cropper
-<img width="393" height="814" alt="4" src="https://github.com/user-attachments/assets/d2779655-60db-4136-a76b-7aed2e374e8c" />
 
 ### Chat interface
-<img width="598" height="614" alt="7" src="https://github.com/user-attachments/assets/41dd1683-e1d5-45be-a610-693dda4317ae" />
-<img width="597" height="613" alt="8" src="https://github.com/user-attachments/assets/3074284d-32cd-40f8-90fa-46af66130a09" />
-<img width="599" height="615" alt="9" src="https://github.com/user-attachments/assets/e966e3a4-b84e-4c3b-957f-cf4e3835bbaa" />
+<img width="1457" height="727" alt="kakioki3 DU749zNP" src="https://github.com/user-attachments/assets/6d9b4e8c-b748-437b-b6f4-e719c5d3bf19" />
+<img width="1459" height="729" alt="kakioki2 BsPrTtfi" src="https://github.com/user-attachments/assets/128a9410-de86-42b4-8b67-8b992c03a1fb" />
+
+### User Settings
+<img width="1073" height="465" alt="kakioki4 BqD0wJgV" src="https://github.com/user-attachments/assets/34eb81b1-9f51-4e58-a66b-c1fa44351eff" />
+
 
 # FAQ
 ## How does the user authentication work?
